@@ -13,6 +13,18 @@ interface Props {
   showStatus?: boolean;
   /** 이 회차 이후가 재산정분이면 번호를 넘겨 표시한다. */
   recalculatedFrom?: number | null;
+  /** 다음 납입 회차. 그 행에 `is-current` 를 붙이고 행 안에 "다음 납입" 글자를 둔다(색만으로 표시하지 않는다). */
+  currentNo?: number | null;
+}
+
+/** 원금 비중 막대 한 칸: 공용 `.bar-cell .bar-track`(base.css) + 숫자 라벨. */
+function ShareBar({ share }: { share: number }) {
+  return (
+    <span className="bar-cell">
+      <span className="bar-track" role="img" aria-label={`원금 ${share}%, 이자 ${100 - share}%`}><i style={{ width: `${share}%` }} /></span>
+      <span className="num">{share}%</span>
+    </span>
+  );
 }
 
 /**
@@ -20,11 +32,12 @@ interface Props {
  * 모바일(740px 이하)은 "회차·납입일·납입액·잔액" 4열로 줄이고, 행마다 "자세히" 버튼으로 원금·이자·비중·약정일을 펼친다.
  * 합계는 tfoot. 숫자는 Money·td.num(tabular-nums, 오른쪽 정렬).
  */
-export default function ScheduleTable({ rows, caption, captionNote, showStatus = false, recalculatedFrom = null }: Props) {
+export default function ScheduleTable({ rows, caption, captionNote, showStatus = false, recalculatedFrom = null, currentNo = null }: Props) {
   const [open, setOpen] = useState<Record<number, boolean>>({});
   const totals = rows.reduce((t, r) => ({ principal: t.principal + r.principal, interest: t.interest + r.interest, payment: t.payment + r.payment }), { principal: 0, interest: 0, payment: 0 });
   const deferred = rows.filter(r => r.adjustedDueDate !== r.dueDate).length;
   const toggle = (no: number) => setOpen(prev => ({ ...prev, [no]: !prev[no] }));
+  const totalShare = totals.payment > 0 ? Math.round((totals.principal / totals.payment) * 100) : 0;
 
   return (
     <div className="table-scroll sched-scroll">
@@ -56,11 +69,17 @@ export default function ScheduleTable({ rows, caption, captionNote, showStatus =
             const isDeferred = row.adjustedDueDate !== row.dueDate;
             const status = row.status ? ROW_STATUS_LABEL[row.status] : null;
             const expanded = !!open[row.installmentNo];
+            const marks = [
+              recalculatedFrom !== null && row.installmentNo >= recalculatedFrom ? "is-recalculated" : "",
+              row.status === "OVERDUE" ? "is-overdue" : "",
+              currentNo !== null && row.installmentNo === currentNo ? "is-current" : "",
+            ].filter(Boolean).join(" ");
             return [
-              <tr key={row.installmentNo} className={`${recalculatedFrom !== null && row.installmentNo >= recalculatedFrom ? "is-recalculated" : ""}${row.status === "OVERDUE" ? " is-overdue" : ""}`.trim() || undefined}>
+              <tr key={row.installmentNo} className={marks || undefined}>
                 <th scope="row" className="num">{row.installmentNo}</th>
                 <td className="sched-date">
                   <time dateTime={row.adjustedDueDate}>{formatDate(row.adjustedDueDate)}</time>
+                  {currentNo !== null && row.installmentNo === currentNo && <span className="sched-current">다음 납입</span>}
                   {isDeferred && <span className="sched-deferred">이연 · 약정 {formatDate(row.dueDate)}</span>}
                   {showStatus && row.paidOn && row.paidOn !== row.adjustedDueDate && <span className="sched-deferred">납입 {formatDate(row.paidOn)}</span>}
                 </td>
@@ -68,10 +87,7 @@ export default function ScheduleTable({ rows, caption, captionNote, showStatus =
                 <td className="num sched-detail"><Money value={row.interest} /></td>
                 <td className="num"><Money value={row.payment} /></td>
                 <td className="num"><Money value={row.balanceAfter} /></td>
-                <td className="sched-detail">
-                  <span className="sched-bar" role="img" aria-label={`원금 ${share}%, 이자 ${100 - share}%`}><i style={{ width: `${share}%` }} /></span>
-                  <span className="sched-share">{share}%</span>
-                </td>
+                <td className="sched-detail"><ShareBar share={share} /></td>
                 {showStatus && <td className="sched-detail">{status ? <StatusChip label={status.label} tone={status.tone} /> : "—"}</td>}
                 <td className="sched-toggle-col">
                   <button type="button" className="sched-toggle" aria-expanded={expanded} aria-controls={`sched-x-${row.installmentNo}`} onClick={() => toggle(row.installmentNo)}>
@@ -84,7 +100,7 @@ export default function ScheduleTable({ rows, caption, captionNote, showStatus =
                   <dl className="sched-expand-list">
                     <div><dt>원금</dt><dd><Money value={row.principal} /></dd></div>
                     <div><dt>이자</dt><dd><Money value={row.interest} /></dd></div>
-                    <div><dt>원금 비중</dt><dd>{share}% <span className="sched-bar" aria-hidden="true"><i style={{ width: `${share}%` }} /></span></dd></div>
+                    <div><dt>원금 비중</dt><dd><ShareBar share={share} /></dd></div>
                     <div><dt>약정일</dt><dd>{formatDate(row.dueDate)}{isDeferred && " (토·일이라 이연)"}</dd></div>
                     {showStatus && <div><dt>상태</dt><dd>{status ? <StatusChip label={status.label} tone={status.tone} /> : "—"}{row.paidOn && ` · 납입 ${formatDate(row.paidOn)}`}</dd></div>}
                   </dl>
@@ -100,7 +116,7 @@ export default function ScheduleTable({ rows, caption, captionNote, showStatus =
             <td className="num sched-detail"><Money value={totals.interest} /></td>
             <td className="num"><Money value={totals.payment} /></td>
             <td className="num">—</td>
-            <td className="sched-detail">이자 합 <Money value={totals.interest} /></td>
+            <td className="sched-detail"><ShareBar share={totalShare} /></td>
             {showStatus && <td className="sched-detail" />}
             <td className="sched-toggle-col" />
           </tr>

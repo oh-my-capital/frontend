@@ -2,17 +2,20 @@ import Money from "../../../components/Money";
 import type { ScreeningResult } from "../../../api/types";
 import { pct } from "./labels";
 
-/** 금리 구성 표: 기준금리 + 스프레드(밴드) − 우대(자동이체) = 적용 금리. 20%를 넘으면 상한으로 자른 것을 표시한다. */
+/**
+ * 금리 구성 근거 표: 기준금리 + 스프레드(밴드) − 우대(자동이체) = 적용 금리.
+ * 같은 내용을 위 그림(RateWaterfall)이 계단으로 보여 주므로 여기서는 숫자와 근거만 적는다.
+ */
 export default function RateBreakdown({ result, autoDebit, monthlyPayment }: { result: ScreeningResult; autoDebit: boolean; monthlyPayment?: number | null }) {
   const { rate, creditBand } = result;
   // 자격 단계에서 걸리면 금리를 매기지 않는다(rate 가 null).
   if (!rate) {
-    return <p className="muted breakdown-none">자격 단계에서 미충족이라 금리를 매기지 않았어요. 근거 표에서 어느 규칙이 걸렸는지 확인해요.</p>;
+    return <p className="muted breakdown-none">자격 단계에서 미충족이라 금리를 매기지 않았어요. 아래 근거 표에서 어느 자격 규칙이 걸렸는지 확인해요.</p>;
   }
   const raw = Math.round((rate.base + rate.spread - rate.discount) * 100) / 100;
   return (
-    <table className="table table-compact breakdown">
-      <caption>금리 구성<span className="table-caption-note">기준금리 + 신용 스프레드 − 우대 = 적용 금리. 신용 밴드는 점수 구간으로 정해진다.</span></caption>
+    <div className="table-scroll"><table className="table table-compact breakdown">
+      <caption>금리 구성 근거<span className="table-caption-note">위 그림과 같은 값이다. 신용 밴드는 점수 구간으로 정해진다.</span></caption>
       <thead><tr><th scope="col">항목</th><th scope="col">근거</th><th scope="col" className="num">값</th></tr></thead>
       <tbody>
         <tr><th scope="row">기준금리</th><td>상품의 기준금리</td><td className="num">{pct(rate.base)}</td></tr>
@@ -23,6 +26,6 @@ export default function RateBreakdown({ result, autoDebit, monthlyPayment }: { r
       <tfoot>
         <tr><th scope="row">= 적용 금리</th><td>{monthlyPayment !== null && monthlyPayment !== undefined ? <>신청 조건의 월 납입액 <Money value={monthlyPayment} /></> : "연 %, 소수 둘째 자리"}</td><td className="num is-strong">{pct(rate.applied)}</td></tr>
       </tfoot>
-    </table>
+    </table></div>
   );
 }
