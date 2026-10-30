@@ -21,6 +21,9 @@
 .site-utility-inner > * + *::before { content: ''; position: absolute; left: 0; top: 50%; width: 1px; height: 11px; margin-top: -5px; background: var(--border-strong); }
 .site-utility-inner > a:hover, .site-utility-inner > button:hover { color: var(--primary); text-decoration: none; }
 .site-utility-inner > :last-child { padding-right: 0; }
+/* 로그아웃 버튼: 보이는 줄 높이(36px)는 그대로 두고 터치 영역만 44px로(ui-guidelines §8). 아래쪽으로 8px 늘리고 같은 만큼 padding 을 줘 글자 위치는 유지한다. */
+.site-utility-inner > button { min-height: 44px; margin-bottom: -8px; padding-bottom: 8px; cursor: pointer; }
+.site-utility-inner > button::before { top: 18px; }
 .site-utility-inner .account-email { color: var(--text); font-weight: 600; }
 .site-header-inner { width: min(100% - 64px, 1200px); min-height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .site-nav { display: flex; align-items: stretch; align-self: stretch; justify-content: flex-end; gap: 4px; }
