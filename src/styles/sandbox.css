@@ -17,8 +17,9 @@
 .sandbox-steps li.is-done a { color: var(--text-faint); }
 .panel-link { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch); margin-top: var(--sp-2); font-size: var(--fs-base); font-weight: var(--fw-semibold); }
 .sandbox .admin-sub { display: block; margin-top: 2px; }
-/* 계약 목록의 상환 진행 칸. 좁은 화면에서 막대가 표를 넓히지 않게 폭을 묶어 둔다. */
-.sandbox-progress-cell { min-width: 112px; }
+/* 계약 목록의 상환 진행 칸: 막대 아래에 비율을 글자로 둔다(색만으로 말하지 않는다). 좁은 열이라 가로로 늘어놓지 않는다. */
+.sandbox-progress-cell { display: grid; gap: var(--sp-1); min-width: 72px; }
+.sandbox-progress-cell .num { color: var(--text-muted); font-size: var(--fs-caption); text-align: left; }
 
 /* ── 가상 시계 ──────────────────────────────────────────────────────────── */
 .clock { display: grid; gap: var(--sp-3); padding: var(--sp-5) var(--sp-6); border: var(--rule) solid var(--border-strong); border-left: var(--sp-1) solid var(--accent); background: var(--surface); }
@@ -70,7 +71,9 @@
 .apply-step { margin: 0; padding: var(--sp-6); border: var(--rule) solid var(--border); background: var(--surface); min-width: 0; display: grid; gap: var(--sp-4); }
 .apply-step > legend, .apply-step > h2 { float: left; width: 100%; padding: 0 0 var(--sp-2); margin-bottom: var(--sp-2); border-bottom: var(--rule-heavy) solid var(--text); font-size: var(--fs-h2); font-weight: var(--fw-bold); }
 .apply-step > legend + * { clear: both; }
-.apply-products td:first-child { width: var(--sp-9); }
+.apply-products .apply-pick { width: var(--sp-10); }
+/* 라디오 자체는 작게 두되 누르는 영역은 칸 전체(44px 이상)로 넓힌다. */
+.apply-products .apply-pick-label { display: flex; align-items: center; justify-content: center; min-height: var(--touch); margin: calc(var(--sp-2) * -1) calc(var(--sp-3) * -1); cursor: pointer; }
 .apply-products input[type='radio'] { width: 22px; height: 22px; margin: 0; accent-color: var(--primary); }
 .apply-products th[scope='row'] label { display: flex; align-items: center; min-height: var(--touch); cursor: pointer; font-weight: var(--fw-bold); }
 .apply-products tr.is-selected > * { background: var(--primary-tint); }
@@ -132,6 +135,7 @@
 .prepay-form { display: grid; gap: var(--sp-3); margin-top: var(--sp-2); }
 .prepay-mode { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 2px; }
 .prepay-mode > legend { padding: 0; margin-bottom: var(--sp-1); }
+.prepay-mode .field-check { align-items: center; min-height: var(--touch); }
 .prepay-mode .field-check input { width: var(--sp-5); height: var(--sp-5); }
 .prepay-quote { display: grid; gap: var(--sp-3); margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: var(--rule) solid var(--border); }
 .prepay-confirm { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--warn-line); background: var(--warn-bg); font-size: var(--fs-small); line-height: var(--lh-body); }

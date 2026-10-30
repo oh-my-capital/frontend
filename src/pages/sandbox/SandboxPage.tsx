@@ -90,7 +90,7 @@ export default function SandboxPage() {
                     <div className="table-scroll">
                       <table className="table table-links">
                         <caption>내 계약 {list.length}건<span className="table-caption-note">잔액은 남은 원금, 건전성은 연체일수로 매일 다시 분류한다(정상 0~29일 · 요주의 30~89일 · 고정 90~179일 · 회수의문 180~364일 · 추정손실 365일 이상).</span></caption>
-                        <thead><tr><th scope="col">계약번호</th><th scope="col">상품</th><th scope="col" className="num">원금</th><th scope="col" className="num">잔액</th><th scope="col">상환 진행</th><th scope="col" className="num">금리</th><th scope="col">상태</th><th scope="col">건전성</th><th scope="col">다음 납입</th></tr></thead>
+                        <thead><tr><th scope="col">계약번호</th><th scope="col">상품</th><th scope="col" className="num">잔액 / 원금</th><th scope="col">상환 진행</th><th scope="col" className="num">금리</th><th scope="col">상태</th><th scope="col">건전성</th><th scope="col">다음 납입</th></tr></thead>
                         <tbody>
                           {list.map(c => {
                             const klass = statusLabel(c.assetClass);
@@ -100,9 +100,8 @@ export default function SandboxPage() {
                               <tr key={c.id}>
                                 <th scope="row"><Link to={`/sandbox/contracts/${c.id}`}>{c.contractNo}</Link></th>
                                 <td>{c.productName}</td>
-                                <td className="num"><Money value={c.principal} /></td>
-                                <td className="num"><Money value={c.outstandingPrincipal} /></td>
-                                <td className="bar-cell sandbox-progress-cell">
+                                <td className="num"><Money value={c.outstandingPrincipal} strong /><span className="admin-sub faint">원금 <Money value={c.principal} /></span></td>
+                                <td className="sandbox-progress-cell">
                                   <span className="bar-track" role="img" aria-label={`원금 ${share}% 상환`}><i style={{ width: `${share}%` }} /></span>
                                   <span className="num">{share}%</span>
                                 </td>
