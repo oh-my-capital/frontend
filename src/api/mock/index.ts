@@ -5,6 +5,7 @@
  */
 import type { Credentials, Error as ApiErrorBody, Session, User } from "../types";
 import * as F from "./fixtures";
+import { mockLearn } from "./learn-fixtures";
 import { mockAdmin } from "./admin";
 
 export interface MockResult { status: number; body: unknown; requestId: string }
@@ -76,45 +77,11 @@ export async function mockFetch(method: string, path: string, body: unknown, tok
     registry.delete(me!.email);
     return ok(undefined, 204);
   }
-  if (key === "GET /me/learning") return requireLogin() ?? ok(F.MY_LEARNING);
 
-  // ── learning · glossary · methodology
-  if (key === "GET /learning/concepts") return ok(F.CONCEPTS);
-  let m = pathname.match(/^\/learning\/concepts\/([^/]+)(\/quiz(\/attempts)?)?$/);
-  if (m) {
-    const concept = F.CONCEPTS.find(c => c.id === m![1]);
-    if (!concept) return fail(404, "NOT_FOUND", "그 개념을 찾지 못했어요. 입문 과정 목차에서 다시 골라요.");
-    if (!m[2] && method === "GET") return ok(F.conceptDetail(concept));
-    if (m[2] === "/quiz" && method === "GET") return ok(F.quizFor(concept.id));
-    if (m[3] && method === "POST") {
-      const { contentVersion, answers } = body as { contentVersion: number; answers: Record<string, number> };
-      if (contentVersion !== 1) return fail(409, "CONFLICT", "문제 내용이 바뀌었어요. 문제를 다시 불러와요.");
-      const quiz = F.quizFor(concept.id);
-      const items = quiz.questions.map(q => {
-        const selected = answers[String(q.id)] ?? 0;
-        const correct = selected === 1;
-        return { quizId: q.id, correct, selectedOptionId: selected, correctOptionId: 1, feedback: correct ? "맞았어요." : "다시 생각해 봐요.", explanation: "선택지 1이 정답인 이유를 설명하는 해설이다.", nextAction: correct ? "다음 문제로 가요." : "개념 본문의 정의 절을 다시 읽어요." };
-      });
-      const score = Math.round(items.filter(i => i.correct).length / items.length * 100);
-      return ok({ score, passed: score >= 80, saved: !!me, items });
-    }
-  }
-  if (key === "GET /glossary") {
-    const q = params.get("q")?.trim().toLowerCase();
-    const category = params.get("category");
-    const initial = params.get("initial");
-    let terms = F.TERMS;
-    if (category) terms = terms.filter(t => t.category === category);
-    if (q) terms = terms.filter(t => t.term.toLowerCase().includes(q) || (t.english ?? "").toLowerCase().includes(q) || t.definition.includes(q));
-    if (initial) terms = terms.filter(t => t.term.toUpperCase().startsWith(initial.toUpperCase()));
-    return ok(terms);
-  }
-  m = pathname.match(/^\/glossary\/([^/]+)$/);
-  if (m && method === "GET") {
-    const term = F.TERMS.find(t => t.slug === m![1]);
-    return term ? ok(F.termDetail(term)) : fail(404, "NOT_FOUND", "그 용어를 찾지 못했어요. 용어 사전에서 검색해요.");
-  }
-  if (key === "GET /methodology") return ok(F.METHODOLOGY);
+  // ── learning · glossary · methodology · me/learning — WP6 영역은 learn-fixtures.ts 가 응답한다(콘텐츠·채점·메모리 진척).
+  const learn = mockLearn(method, pathname, params, body, me);
+  if (learn) return learn;
+  let m: RegExpMatchArray | null;
 
   // ── calculators
   if (key === "POST /calculators/schedule") {
