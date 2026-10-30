@@ -1,53 +1,59 @@
-/* 계정 화면(S-30~S-32)과 404(S-40). 로그인·가입은 데스크톱 한 화면 안에 들어가게 폼을 위쪽에 모은다. 소셜 버튼 없음. */
-.account-main { width: min(100% - 64px, 1200px); margin: 0 auto; padding: 40px 0 64px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 56px; align-items: start; }
-.account-intro { max-width: 520px; padding-top: 12px; }
-.account-intro h1 { margin-top: 8px; }
-.account-intro > p { margin-top: 14px; color: var(--text-muted); font-size: var(--fs-body); line-height: 1.75; }
-.account-intro dl { margin-top: 24px; border-top: 1px solid var(--border); }
-.account-intro dl > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
-.account-intro dt { color: var(--text-muted); font-weight: 600; }
-.account-intro dd { color: var(--text); line-height: 1.6; }
+/*
+ * 계정 화면(S-30~S-32)과 404(S-40). 로그인·가입은 데스크톱 한 화면 안에 들어가게 폼을 위쪽에 모은다. 소셜 버튼 없음.
+ * 색·글자 크기·간격은 토큰만 쓴다.
+ */
+.account-main { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding: var(--sp-8) 0 var(--sp-10); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 56px; align-items: start; }
+.account-intro { max-width: 520px; padding-top: var(--sp-3); }
+.account-intro h1 { margin-top: var(--sp-2); }
+.account-intro > p { margin-top: 14px; color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-loose); }
+.account-intro dl { margin-top: var(--sp-6); border-top: var(--rule) solid var(--border); }
+.account-intro dl > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--border); font-size: var(--fs-base); }
+.account-intro dt { color: var(--text-muted); font-weight: var(--fw-semibold); }
+.account-intro dd { color: var(--text); line-height: var(--lh-body); }
 .account-art { width: 100%; max-width: 380px; height: auto; margin: var(--sp-3) auto 0; }
-.account-form { display: grid; gap: 18px; padding: 32px 32px 28px; border: 1px solid var(--border); background: var(--surface); }
-.account-form h2 { font-size: 24px; }
-.account-form > p.muted { margin-top: -8px; font-size: 15px; }
+.account-form { display: grid; gap: var(--sp-5); padding: var(--sp-7) var(--sp-7) var(--sp-7); border: var(--rule) solid var(--border); background: var(--surface); }
+.account-form h2 { font-size: var(--fs-h2-lg); }
+.account-form > p.muted { margin-top: calc(var(--sp-2) * -1); font-size: var(--fs-base); }
 .account-form .field-input { min-height: 50px; }
 .account-form > .btn { min-height: 52px; font-size: var(--fs-body); }
-.account-switch { color: var(--text-muted); font-size: 15px; text-align: center; }
-.account-switch a { font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
-.account-mock { padding: 10px 14px; border: 1px dashed var(--border-strong); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.6; }
-.account-mock code { font-size: 12px; }
+.account-switch { color: var(--text-muted); font-size: var(--fs-base); text-align: center; }
+.account-switch a { font-weight: var(--fw-bold); text-decoration: underline; text-underline-offset: var(--sp-1); }
+.account-mock { padding: 10px 14px; border: var(--rule) dashed var(--border-strong); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
+.account-mock code { font-size: var(--fs-micro); }
 
 /* 설정: 2열(주 내용 + 보조 정보) */
-.settings-main .panel h2 { font-size: 20px; }
-.settings-main .panel > p { margin-bottom: 14px; color: var(--text-muted); font-size: 15px; line-height: 1.7; }
-.settings-form { display: grid; gap: 16px; max-width: 480px; }
-.settings-danger { border-color: #e7bfb6; }
+.settings-main .panel h2 { font-size: var(--fs-h3); }
+.settings-main .panel > p { margin-bottom: 14px; color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-loose); }
+.settings-main aside .panel > p { margin-top: var(--sp-2); margin-bottom: 0; }
+.settings-main .btn-row { margin-top: 14px; }
+.settings-form { display: grid; gap: var(--sp-4); max-width: 480px; }
+.settings-danger { border-color: var(--danger-line); }
 .settings-danger h2 { color: var(--danger); }
 
 /* 404 */
-.not-found-main { width: min(100% - 64px, 1200px); margin: 0 auto; padding: 72px 0 96px; }
+.not-found-main { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding: var(--sp-10) 0 var(--sp-12); }
 .not-found-main .panel { max-width: 640px; }
 .not-found-main h1 { margin-top: 6px; }
-.not-found-main p { margin-top: 12px; color: var(--text-muted); line-height: 1.7; }
+.not-found-main p { margin-top: var(--sp-3); color: var(--text-muted); line-height: var(--lh-loose); }
 .not-found-main code { overflow-wrap: anywhere; }
-.not-found-main form { display: flex; gap: 8px; margin-top: 20px; }
+.not-found-main form { display: flex; gap: var(--sp-2); margin-top: var(--sp-5); }
 .not-found-main form input { flex: 1; min-width: 0; }
+.not-found-main .btn-row { margin-top: var(--sp-5); }
 
 @media (max-width: 1000px) {
-  .account-main { width: calc(100% - 48px); grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 32px; }
+  .account-main { width: calc(100% - var(--content-gutter-sm) - var(--sp-2)); grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: var(--sp-7); }
 }
 @media (max-width: 740px) {
-  .account-main, .not-found-main { width: calc(100% - 40px); padding: 24px 0 48px; }
-  .account-main { grid-template-columns: 1fr; gap: 24px; }
+  .account-main, .not-found-main { width: calc(100% - var(--content-gutter-sm)); padding: var(--sp-6) 0 var(--sp-9); }
+  .account-main { grid-template-columns: 1fr; gap: var(--sp-6); }
   .account-intro { padding-top: 0; }
   .account-intro dl, .account-art { display: none; }
-  .account-form { padding: 24px 20px 22px; }
-  .not-found-main { padding-top: 40px; }
+  .account-form { padding: var(--sp-6) var(--sp-5); }
+  .not-found-main { padding-top: var(--sp-8); }
   .not-found-main form { flex-direction: column; }
 }
 @media (min-width: 741px) and (max-height: 820px) {
-  .account-main { padding-top: 24px; }
+  .account-main { padding-top: var(--sp-6); }
   .account-art { display: none; }
-  .account-form { gap: 14px; padding: 24px 28px 22px; }
+  .account-form { gap: 14px; padding: var(--sp-6) var(--sp-7); }
 }

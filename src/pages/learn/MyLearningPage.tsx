@@ -5,6 +5,7 @@ import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
+import ProgressBar from "../../components/ProgressBar";
 import StatusChip from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatDate } from "../../lib/format";
@@ -86,9 +87,9 @@ export default function MyLearningPage() {
             <aside aria-label="진척과 다음 추천">
               <div className="panel learn-progress">
                 <h3>완료</h3>
-                <div className="learn-progress-count"><strong>{data.completedCount}</strong><span className="muted"> / {data.totalCount}</span></div>
-                <div className="progress-bar" role="img" aria-label={`${data.totalCount}개 중 ${data.completedCount}개 완료`}><i style={{ width: `${data.totalCount ? (data.completedCount / data.totalCount) * 100 : 0}%` }} /></div>
-                <dl className="def-list" style={{ marginTop: 12 }}>
+                <p className="progress-meta"><span className="muted">완료한 개념</span><strong>{data.completedCount} / {data.totalCount}</strong></p>
+                <ProgressBar value={data.completedCount} total={data.totalCount} label={`${data.totalCount}개 중 ${data.completedCount}개 완료`} />
+                <dl className="def-list learn-progress-parts">
                   {COURSE_PARTS.map(part => {
                     const inPart = rows.filter(r => { const n = order.get(r.conceptId)?.orderNo ?? 0; return n >= part.from && n <= part.to; });
                     return <div key={part.label}><dt>{part.label}</dt><dd>{inPart.filter(r => r.completed).length} / {inPart.length}</dd></div>;
@@ -100,9 +101,9 @@ export default function MyLearningPage() {
                 {next ? (
                   <>
                     <p className="muted">아직 완료하지 않은 개념 중 가장 앞 순서예요.</p>
-                    <p style={{ marginTop: 8 }}><strong>{next.orderNo !== null ? `${next.orderNo}. ` : ""}{next.title}</strong></p>
-                    {next.summary && <p className="muted" style={{ marginTop: 4 }}>{next.summary}</p>}
-                    <Link className="btn btn-primary btn-small" to={`/learn/${next.id}`} style={{ marginTop: 14 }}>이 개념 읽기 <Icon name="next" size={15} /></Link>
+                    <p className="learn-next-title"><strong>{next.orderNo !== null ? `${next.orderNo}. ` : ""}{next.title}</strong></p>
+                    {next.summary && <p className="muted learn-next-summary">{next.summary}</p>}
+                    <Link className="btn btn-primary btn-small learn-panel-action" to={`/learn/${next.id}`}>이 개념 읽기 <Icon name="next" size={15} /></Link>
                   </>
                 ) : (
                   <p className="muted">12개 개념을 모두 완료했어요. 샌드박스에서 대출 한 건의 생애를 직접 겪어 봐요.</p>

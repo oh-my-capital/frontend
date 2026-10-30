@@ -102,9 +102,15 @@ export default function QuizPanel({ conceptId, reviewQuizIds, nextConceptId, onG
       <div className="quiz-summary" ref={summaryRef} tabIndex={-1} aria-live="polite" aria-atomic="true">
         {result && (
           <>
-            <StatusChip label={result.passed ? "통과" : "미통과"} tone={result.passed ? "good" : "warn"} />
-            <strong>{questions.length}문항 중 {correctCount}문항 정답 · {result.score}점</strong>
-            <span className="muted">{result.saved ? "내 학습에 기록했어요." : "로그인하지 않아 기록하지 않았어요."}{!result.passed && " 80점 이상이면 완료로 표시돼요. 해설을 읽고 다시 풀어요."}</span>
+            <dl className="figure-row">
+              <div><dt>점수</dt><dd className={result.passed ? undefined : "danger"}>{result.score}<small>점</small></dd></div>
+              <div><dt>정답 수</dt><dd>{correctCount}<small>/ {questions.length}문항</small></dd></div>
+              <div><dt>완료 여부</dt><dd><StatusChip label={result.passed ? "완료" : "미완료"} tone={result.passed ? "good" : "warn"} /></dd></div>
+            </dl>
+            <p className="quiz-summary-note">
+              {result.passed ? "80점 이상이라 완료로 표시했어요." : "80점 이상이면 완료로 표시돼요. 해설을 읽고 다시 풀어요."}{" "}
+              {result.saved ? "내 학습에 기록했어요." : "로그인하지 않아 기록하지 않았어요."}
+            </p>
           </>
         )}
       </div>

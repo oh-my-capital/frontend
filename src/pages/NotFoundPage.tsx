@@ -22,7 +22,7 @@ export default function NotFoundPage() {
           <input id="nf-search" className="field-input" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="용어 사전에서 찾기" />
           <button className="btn btn-secondary" type="submit"><Icon name="search" size={16} />검색</button>
         </form>
-        <div className="btn-row" style={{ marginTop: 20 }}>
+        <div className="btn-row">
           <Link className="btn btn-primary" to="/">홈으로</Link>
           <Link className="btn btn-secondary" to="/course">입문 과정</Link>
           <Link className="btn btn-secondary" to="/calculators/schedule">계산기</Link>
