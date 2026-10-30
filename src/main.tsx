@@ -8,6 +8,7 @@ import "./styles/home.css";
 import "./styles/account.css";
 import "./styles/learn.css";
 import "./styles/glossary.css";
+import "./styles/admin.css";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(

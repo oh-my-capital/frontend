@@ -492,3 +492,130 @@ export interface NotificationsReadRequest { ids: number[] }
 export interface AdminOverrideRequest { decision: Decision; amount?: Money; rate?: Rate; reason: string }
 /** POST /admin/batch/daily-close */
 export interface DailyCloseRequest { untilDate: DateString }
+
+// ── admin content(콘텐츠 운영, 2026-10-30 계약 추가분. WP8) ────────────────
+/** ContentStatus — 초안·게시·내림 */
+export type ContentStatus = "DRAFT" | "PUBLISHED" | "RETIRED";
+export type ContentEntityType = "CONCEPT" | "QUIZ" | "TERM";
+export type ContentRevisionAction = "DRAFT" | "PUBLISH" | "RETIRE";
+/** TermDraft.category 열거형 */
+export type TermCategory = "업무" | "금리" | "상환" | "심사" | "연체" | "건전성" | "리스";
+/** ContentSource — 공식 기관 URL만 */
+export interface ContentSource { title: string; url: string; checkedOn: DateString }
+export interface QuizDraftOption {
+  /** 기존 선택지면 id, 새 선택지면 null */
+  id?: number | null;
+  text: string;
+  correct: boolean;
+  feedback?: string;
+}
+/** QuizDraft — 선택지 4개, 정답은 정확히 1개 */
+export interface QuizDraft {
+  /** 기존 문항이면 id, 새 문항이면 null */
+  id?: number | null;
+  question: string;
+  options: QuizDraftOption[];
+  explanation: string;
+  nextAction?: string | null;
+}
+export interface ConceptDraftSection { heading: string; body: string; figure?: string | null }
+/** ConceptDraft — 초안 저장 본문. 학습 화면의 Concept과 같은 필드 + 문항 */
+export interface ConceptDraft {
+  orderNo: number;
+  title: string;
+  summary: string;
+  sections: ConceptDraftSection[];
+  misconceptions?: Misconception[];
+  checklist?: string[];
+  linkedCalculator?: LinkedCalculator | null;
+  sandboxTask?: string | null;
+  /** 1개 이상 */
+  sources: ContentSource[];
+  /** 1개 이상 */
+  quizzes: QuizDraft[];
+}
+export interface AdminConceptSummary {
+  id: string;
+  orderNo: number;
+  title: string;
+  status: ContentStatus;
+  contentVersion: number;
+  hasDraft: boolean;
+  quizCount: number;
+  publishedAt: DateTimeString | null;
+  updatedAt: DateTimeString;
+}
+export interface AdminConcept extends ConceptDraft {
+  id: string;
+  status: ContentStatus;
+  contentVersion: number;
+  /** 응답이 초안이면 true */
+  hasDraft: boolean;
+  publishedAt: DateTimeString | null;
+  updatedAt: DateTimeString;
+}
+/** TermDraft — 용어 초안 저장 본문 */
+export interface TermDraft {
+  term: string;
+  english?: string | null;
+  category: TermCategory;
+  definition: string;
+  formula?: string | null;
+  example?: string | null;
+  caution?: string | null;
+  relatedSlugs?: string[];
+  conceptIds?: string[];
+  sourceUrl: string;
+  sourceCheckedOn: DateString;
+}
+export interface AdminTermSummary {
+  slug: string;
+  term: string;
+  category: string;
+  status: ContentStatus;
+  contentVersion: number;
+  hasDraft: boolean;
+  updatedAt: DateTimeString;
+}
+export interface AdminTerm extends TermDraft {
+  slug: string;
+  status: ContentStatus;
+  contentVersion: number;
+  hasDraft: boolean;
+  updatedAt: DateTimeString;
+}
+export interface ContentValidationItem {
+  entityType: ContentEntityType;
+  entityId: string;
+  field?: string | null;
+  message: string;
+}
+export interface ContentValidationReport {
+  valid: boolean;
+  checkedAt: DateTimeString;
+  conceptCount: number;
+  quizCount: number;
+  termCount: number;
+  problems: ContentValidationItem[];
+}
+/** ContentValidationError — Error + problems(422 본문) */
+export interface ContentValidationError extends Error {
+  code: "CONTENT_INVALID";
+  problems: ContentValidationItem[];
+}
+export interface ContentRevision {
+  id: number;
+  entityType: ContentEntityType;
+  entityId: string;
+  action: ContentRevisionAction;
+  actorEmail: string;
+  contentVersion: number | null;
+  createdAt: DateTimeString;
+  snapshot: Record<string, unknown>;
+}
+/** GET /admin/applications 질의 */
+export interface AdminApplicationsQuery { status?: string; page?: number }
+/** GET /admin/content/revisions 질의 — limit 기본 50, 최대 200 */
+export interface ContentRevisionsQuery { entityType?: ContentEntityType; entityId?: string; limit?: number }
+/** GET /admin/batch/executions 질의 */
+export interface BatchExecutionsQuery { sandboxId?: number }

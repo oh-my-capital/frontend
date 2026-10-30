@@ -16,6 +16,8 @@ export class ApiError extends Error {
   code: string;
   requestId: string;
   details: { field?: string; message?: string }[];
+  /** 서버가 보낸 오류 본문 전체. 422 CONTENT_INVALID의 problems처럼 details 밖의 필드를 읽을 때 쓴다. */
+  body: ApiErrorBody & Record<string, unknown>;
   constructor(status: number, body: ApiErrorBody) {
     super(body.message);
     this.name = "ApiError";
@@ -23,6 +25,7 @@ export class ApiError extends Error {
     this.code = body.code;
     this.requestId = body.requestId;
     this.details = body.details ?? [];
+    this.body = body as ApiErrorBody & Record<string, unknown>;
   }
 }
 
