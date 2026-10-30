@@ -171,11 +171,11 @@ function ApplicationPanel({ application, onChanged, onClose }: { application: Ap
         <dt>상품</dt><dd>{application.product.name}</dd>
         <dt>신청 금액</dt><dd><Money value={application.requestedAmount} /></dd>
         <dt>조건</dt><dd>{application.termMonths}회 · {METHOD_LABEL[application.repaymentMethod] ?? application.repaymentMethod} · 납입일 {application.paymentDay}일 · 자동이체 {application.autoDebit ? "신청" : "미신청"}</dd>
-        <dt>적용 금리</dt><dd>{formatRate(s.rate.applied)} <span className="faint">(기준 {formatRate(s.rate.base)} + 스프레드 {formatRate(s.rate.spread)} − 우대 {formatRate(s.rate.discount)}{s.rate.capped ? " · 상한 적용" : ""})</span></dd>
-        <dt>최종 한도</dt><dd>{s.limits.finalLimit !== null ? <><Money value={s.limits.finalLimit} /> <span className="faint">({s.limits.bindingRule})</span></> : "—"}</dd>
+        <dt>적용 금리</dt><dd>{s.rate ? <>{formatRate(s.rate.applied)} <span className="faint">(기준 {formatRate(s.rate.base)} + 스프레드 {formatRate(s.rate.spread)} − 우대 {formatRate(s.rate.discount)}{s.rate.capped ? " · 상한 적용" : ""})</span></> : <span className="faint">자격 단계에서 걸려 금리를 매기지 않았다</span>}</dd>
+        <dt>최종 한도</dt><dd>{s.limits?.finalLimit != null ? <><Money value={s.limits.finalLimit} /> <span className="faint">({s.limits.bindingRule})</span></> : "—"}</dd>
         <dt>제안 금액</dt><dd><Money value={s.offeredAmount} /></dd>
         <dt>월 납입액</dt><dd><Money value={s.monthlyPayment} /></dd>
-        <dt>DSR</dt><dd>{s.dsr.ratio.toFixed(2)}% <span className="faint">(한도 {s.dsr.limit}% · 기존 {new Intl.NumberFormat("ko-KR").format(s.dsr.existingAnnual)}원 + 신규 {new Intl.NumberFormat("ko-KR").format(s.dsr.newAnnual)}원)</span></dd>
+        <dt>DSR</dt><dd>{s.dsr ? <>{s.dsr.ratio.toFixed(2)}% <span className="faint">(한도 {s.dsr.limit}% · 기존 {new Intl.NumberFormat("ko-KR").format(s.dsr.existingAnnual)}원 + 신규 {new Intl.NumberFormat("ko-KR").format(s.dsr.newAnnual)}원)</span></> : "—"}</dd>
         <dt>신청일 · 결정일</dt><dd>{formatDate(application.appliedOn)} · {formatDate(application.decidedOn)}</dd>
         {application.contractId !== null && <><dt>계약</dt><dd>계약 ID {application.contractId}</dd></>}
       </dl>

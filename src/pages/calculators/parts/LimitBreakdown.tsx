@@ -9,7 +9,8 @@ import { pct, won } from "./labels";
  */
 export default function LimitBreakdown({ result, requestedAmount }: { result: ScreeningResult; requestedAmount: number }) {
   const { limits, dsr } = result;
-  if (limits.finalLimit === null) {
+  // 자격 단계에서 걸리면 서버가 한도·DSR 을 아예 계산하지 않는다(limits·dsr 이 null).
+  if (!limits || !dsr || limits.finalLimit === null) {
     return <p className="muted breakdown-none">자격 단계에서 미충족이라 한도를 계산하지 않았어요. 근거 표에서 어느 규칙이 걸렸는지 확인해요.</p>;
   }
   const rows: { code: string; label: string; basis: string; value: number | null }[] = [

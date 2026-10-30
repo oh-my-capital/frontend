@@ -5,6 +5,10 @@ import { pct } from "./labels";
 /** 금리 구성 표: 기준금리 + 스프레드(밴드) − 우대(자동이체) = 적용 금리. 20%를 넘으면 상한으로 자른 것을 표시한다. */
 export default function RateBreakdown({ result, autoDebit, monthlyPayment }: { result: ScreeningResult; autoDebit: boolean; monthlyPayment?: number | null }) {
   const { rate, creditBand } = result;
+  // 자격 단계에서 걸리면 금리를 매기지 않는다(rate 가 null).
+  if (!rate) {
+    return <p className="muted breakdown-none">자격 단계에서 미충족이라 금리를 매기지 않았어요. 근거 표에서 어느 규칙이 걸렸는지 확인해요.</p>;
+  }
   const raw = Math.round((rate.base + rate.spread - rate.discount) * 100) / 100;
   return (
     <table className="table table-compact breakdown">

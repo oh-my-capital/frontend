@@ -229,9 +229,10 @@ export interface ScreeningResult {
   decision: Decision;
   source: ScreeningSource;
   creditBand: string | null;
-  rate: ScreeningRate;
-  limits: ScreeningLimits;
-  dsr: ScreeningDsr;
+  /** 자격 단계(연령·소득·신용점수·상품 범위)에서 걸리면 금리·한도·DSR 을 계산하지 않고 null 로 온다. */
+  rate: ScreeningRate | null;
+  limits: ScreeningLimits | null;
+  dsr: ScreeningDsr | null;
   monthlyPayment: Money | null;
   offeredAmount: Money | null;
   reasons: ScreeningReason[];

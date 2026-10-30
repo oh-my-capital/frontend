@@ -62,7 +62,7 @@ export function todayIso(): string {
 
 /** 결정 문장: "요청 3,000만 원은 한도 4,793만 원 안이어서 승인이에요" 꼴. */
 export function decisionSentence(result: ScreeningResult, requestedAmount: number, productMin: number | null): string {
-  const limit = result.limits.finalLimit;
+  const limit = result.limits?.finalLimit ?? null;
   if (result.decision === "APPROVED") return `요청 ${won(requestedAmount)}은 최종 한도 ${won(limit ?? requestedAmount)} 안이어서 승인이에요.`;
   if (result.decision === "CONDITIONAL") return `요청 ${won(requestedAmount)}이 최종 한도 ${won(limit ?? 0)}을 넘어서, 한도만큼인 ${won(result.offeredAmount ?? limit ?? 0)}으로 줄여 조건부 승인이에요.`;
   const failed = result.reasons.filter(r => r.ruleCode.startsWith("ELIG") && r.outcome === "FAIL");

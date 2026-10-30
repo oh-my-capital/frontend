@@ -15,8 +15,8 @@ export default function DecisionSummary({ result, requestedAmount, productMin, h
       </div>
       <p className="decision-sentence" tabIndex={-1}>{decisionSentence(result, requestedAmount, productMin)}</p>
       <dl className="decision-figures">
-        <div><dt>적용 금리</dt><dd>{result.limits.finalLimit === null ? "—" : pct(result.rate.applied)}</dd></div>
-        <div><dt>최종 한도</dt><dd><Money value={result.limits.finalLimit} /></dd></div>
+        <div><dt>적용 금리</dt><dd>{result.rate ? pct(result.rate.applied) : "—"}</dd></div>
+        <div><dt>최종 한도</dt><dd>{result.limits ? <Money value={result.limits.finalLimit} /> : "—"}</dd></div>
         <div><dt>{result.decision === "CONDITIONAL" ? "제안 한도" : "월 납입액"}</dt><dd>{result.decision === "CONDITIONAL" ? <Money value={result.offeredAmount} /> : <Money value={result.monthlyPayment} />}</dd></div>
       </dl>
     </section>

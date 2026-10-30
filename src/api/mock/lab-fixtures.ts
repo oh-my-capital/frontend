@@ -635,6 +635,8 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
     if (m[2] === "execute") {
       if (app.status !== "APPROVED") return fail(409, "NOT_APPROVED", `승인된 신청만 실행할 수 있습니다. 현재 ${app.status}`);
       const amount = app.requestedAmount;
+      // 승인 신청에는 금리가 반드시 있다(자격 단계 거절만 rate 가 null 이다).
+      if (!app.screening.rate) return fail(409, "NOT_APPROVED", "금리가 정해지지 않은 신청은 실행할 수 없습니다.");
       const rate = app.screening.rate.applied;
       const rows = schedule(amount, app.termMonths, rate, s.businessDate, app.paymentDay, app.repaymentMethod).map(r => ({ ...r, status: "SCHEDULED", paidInterest: 0, paidPrincipal: 0 }));
       const cid = nextId(s);

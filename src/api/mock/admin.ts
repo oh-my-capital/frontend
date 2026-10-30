@@ -210,7 +210,10 @@ function applyOverride(app: Application, req: AdminOverrideRequest): Application
     decision: req.decision,
     source: "OVERRIDE",
     offeredAmount: req.decision === "REJECTED" ? null : (req.amount ?? app.screening.offeredAmount ?? app.requestedAmount),
-    rate: req.rate !== undefined ? { ...app.screening.rate, applied: req.rate } : app.screening.rate,
+    // 자격 단계 거절이면 rate 자체가 없다. 운영자가 금리를 바꾸면 그 금리만 가진 구성으로 되살린다.
+    rate: req.rate === undefined ? app.screening.rate
+      : app.screening.rate ? { ...app.screening.rate, applied: req.rate }
+      : { base: req.rate, spread: 0, discount: 0, applied: req.rate, capped: false },
   };
   app.overrides = [...app.overrides, { beforeDecision: before, afterDecision: req.decision, afterAmount: req.decision === "REJECTED" ? null : (req.amount ?? null), reason: req.reason, createdAt: nowIso() }];
   return app;

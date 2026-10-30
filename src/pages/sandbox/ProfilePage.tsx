@@ -129,10 +129,10 @@ function ProfileForm({ initial, asOf, onSaved }: { initial: Profile | null; asOf
                   <dl className="def-list">
                     <div><dt>결정</dt><dd><StatusChip label={statusLabel(preview.decision).label} tone={statusLabel(preview.decision).tone} /></dd></div>
                     <div><dt>신용 밴드</dt><dd>{preview.creditBand ?? "없음(자격 미충족)"}</dd></div>
-                    <div><dt>예상 금리</dt><dd>{preview.limits.finalLimit === null ? "—" : <>{pct(preview.rate.applied)} <span className="faint">({pct(preview.rate.base)} + {pct(preview.rate.spread)} − {pct(preview.rate.discount)})</span></>}</dd></div>
-                    <div><dt>최종 한도</dt><dd><Money value={preview.limits.finalLimit} /></dd></div>
+                    <div><dt>예상 금리</dt><dd>{preview.rate ? <>{pct(preview.rate.applied)} <span className="faint">({pct(preview.rate.base)} + {pct(preview.rate.spread)} − {pct(preview.rate.discount)})</span></> : "—"}</dd></div>
+                    <div><dt>최종 한도</dt><dd>{preview.limits ? <Money value={preview.limits.finalLimit} /> : "—"}</dd></div>
                     <div><dt>월 납입액</dt><dd><Money value={preview.monthlyPayment} /></dd></div>
-                    <div><dt>DSR</dt><dd>{preview.limits.finalLimit === null ? "—" : pct(preview.dsr.ratio)}</dd></div>
+                    <div><dt>DSR</dt><dd>{preview.dsr ? pct(preview.dsr.ratio) : "—"}</dd></div>
                   </dl>
                 )}
                 {preview && <Disclosure data={preview.disclosure} />}
