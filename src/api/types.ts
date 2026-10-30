@@ -74,6 +74,11 @@ export interface Concept {
   quizCount: number;
   /** 게시된 개념 수(n / 12 표시용) */
   totalCount: number;
+  /** 그림(노드·엣지). 없으면 빈 배열 */
+  figures?: Figure[];
+  /** 본문 수치(제도 수치·가정값) */
+  numbers?: ContentNumber[];
+  relatedTerms?: TermSummary[];
   sources: Source[];
   contentVersion: number;
   prev: string | null;
@@ -523,6 +528,12 @@ export interface QuizDraft {
   explanation: string;
   nextAction?: string | null;
 }
+export interface FigureNode { id: string; label: string; kind?: string }
+export interface FigureEdge { from: string; to: string; label?: string }
+/** Figure — 개념 그림. ConceptDiagram이 노드·엣지로 그린다 */
+export interface Figure { id: string; title: string; nodes: FigureNode[]; edges: FigureEdge[] }
+/** ContentNumber — 본문 수치. statutory는 출처·확인일, assumption은 표기 */
+export interface ContentNumber { label: string; value: string; kind: "statutory" | "assumption"; note?: string | null; sourceUrl?: string | null; checkedOn?: string | null }
 export interface ConceptDraftSection { heading: string; body: string; figure?: string | null }
 /** ConceptDraft — 초안 저장 본문. 학습 화면의 Concept과 같은 필드 + 문항 */
 export interface ConceptDraft {
@@ -534,6 +545,11 @@ export interface ConceptDraft {
   checklist?: string[];
   linkedCalculator?: LinkedCalculator | null;
   sandboxTask?: string | null;
+  /** 그림(노드·엣지). 저장 시 응답 값을 그대로 보존한다 */
+  figures?: Figure[];
+  /** 본문 수치(제도 수치·가정값) */
+  numbers?: ContentNumber[];
+  relatedTermSlugs?: string[];
   /** 1개 이상 */
   sources: ContentSource[];
   /** 1개 이상 */

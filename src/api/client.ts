@@ -91,7 +91,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     let body: ApiErrorBody;
     try {
       const parsed = (await res.json()) as Partial<ApiErrorBody>;
-      body = { code: parsed.code ?? "UNKNOWN", message: parsed.message ?? defaultMessage(res.status), requestId: parsed.requestId ?? requestId, details: parsed.details };
+      // 서버 본문의 다른 필드(422 CONTENT_INVALID의 problems 등)도 ApiError.body에 남긴다.
+      body = { ...parsed, code: parsed.code ?? "UNKNOWN", message: parsed.message ?? defaultMessage(res.status), requestId: parsed.requestId ?? requestId, details: parsed.details };
     } catch {
       body = { code: "UNKNOWN", message: defaultMessage(res.status), requestId };
     }
