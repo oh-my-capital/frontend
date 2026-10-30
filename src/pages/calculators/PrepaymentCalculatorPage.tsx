@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { calculatorsApi } from "../../api/calculators";
-import type { PrepaymentCalcRequest, PrepaymentQuote, RepaymentMethod, ScheduleResponse } from "../../api/types";
+import type { PrepaymentCalcRequest, PrepaymentQuote, RepaymentMethod, ScheduleResponse, ScheduleRow } from "../../api/types";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -10,7 +11,7 @@ import Money from "../../components/Money";
 import MoneyInput from "../../components/MoneyInput";
 import RateInput from "../../components/RateInput";
 import SubPageHeader from "../../components/SubPageHeader";
-import { formatDate } from "../../lib/format";
+import { formatDate, formatNumber } from "../../lib/format";
 import FeeTrendChart, { type FeePoint } from "../../components/charts/FeeTrendChart";
 import { DateField, NumberField, SelectField } from "./parts/fields";
 import { METHOD_LABEL, METHODS, PAYMENT_DAY_OPTIONS, pct } from "./parts/labels";
@@ -40,8 +41,9 @@ function feeSeries(schedule: ScheduleResponse, quote: PrepaymentQuote, req: Prep
 }
 
 /**
- * 중도상환 견적(S-08): 폼 → 견적 표(잔액·경과이자·수수료·총액) → 잔존기간별 수수료 추이(SVG) → 일부 상환이면 재산정 회차표 → Disclosure.
- * 견적은 POST /calculators/prepayment, 추이는 같은 조건의 회차표로 시점별 수수료를 계산한다.
+ * 중도상환 견적(S-08): 폼 → 핵심 수치(figure-row) → "지금 갚으면 이자를 얼마 아끼나" 한 줄 → 견적 근거 표 →
+ * 잔존기간별 수수료 추이 그림 → 일부 상환이면 재산정 회차표 → Disclosure.
+ * 견적은 POST /calculators/prepayment, 추이·절약 이자는 같은 조건의 회차표로 계산한다.
  */
 export default function PrepaymentCalculatorPage() {
   const [principal, setPrincipal] = useState<number | null>(DEFAULTS.principal);
@@ -56,6 +58,7 @@ export default function PrepaymentCalculatorPage() {
   const [submitted, setSubmitted] = useState<PrepaymentCalcRequest | null>(null);
   const [quote, setQuote] = useState<PrepaymentQuote | null>(null);
   const [series, setSeries] = useState<FeePoint[]>([]);
+  const [baseRows, setBaseRows] = useState<ScheduleRow[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [fieldError, setFieldError] = useState<Record<string, string>>({});
@@ -67,7 +70,7 @@ export default function PrepaymentCalculatorPage() {
         calculatorsApi.prepayment(req),
         calculatorsApi.schedule({ principal: req.principal, termMonths: req.termMonths, annualRate: req.annualRate, startDate: req.startDate, paymentDay: req.paymentDay, methods: [req.repaymentMethod] }),
       ]);
-      setQuote(q); setSeries(feeSeries(s, q, req));
+      setQuote(q); setSeries(feeSeries(s, q, req)); setBaseRows(s.results[0]?.rows ?? []);
     } catch (err) { setError(err); } finally { setLoading(false); }
   };
 
@@ -89,6 +92,11 @@ export default function PrepaymentCalculatorPage() {
 
   const paidCount = submitted ? series.filter(p => p.installmentNo > 0 && p.date <= submitted.prepaymentDate).length : 0;
   const current = quote ? { installmentNo: paidCount, fee: quote.isFull ? quote.fee : Math.floor(quote.outstandingPrincipal * (quote.feeRate / 100) * quote.remainingDays / (quote.loanDays || 1) + 1e-7) } : null;
+  // "지금 갚으면 이자를 얼마 아끼나": 원래 회차표에서 상환일 뒤에 낼 이자 합과, 지금 갚을 때 내는 이자(경과이자 + 재산정 회차 이자)를 견준다.
+  const futureInterest = submitted ? baseRows.filter(r => r.dueDate > submitted.prepaymentDate).reduce((sum, r) => sum + r.interest, 0) : 0;
+  const afterInterest = quote ? quote.accruedInterest + quote.remainingSchedule.reduce((sum, r) => sum + r.interest, 0) : 0;
+  const savedInterest = futureInterest - afterInterest;
+  const netGain = quote ? savedInterest - quote.fee : 0;
 
   return (
     <>
@@ -123,12 +131,36 @@ export default function PrepaymentCalculatorPage() {
             <section className="calc-results" aria-live="polite">
               {!!error && <LoadError error={error} onRetry={() => submitted && run(submitted)} />}
               {!error && !quote && (loading ? <Loading message="견적을 계산하고 있어요" minHeight={200} /> : (
-                <div className="state-box is-empty"><h3>아직 견적을 받지 않았어요</h3><p>위 조건으로 "견적 받기"를 누르면 상환일 기준 총액과 수수료 추이가 여기에 나와요.</p></div>
+                <EmptyState
+                  title="아직 견적을 받지 않았어요"
+                  description={'위 조건으로 "견적 받기"를 누르면 상환일 기준 총액·수수료와, 지금 갚아서 아끼는 이자가 여기에 나와요. 수수료 규칙이 궁금하면 개념 글을 먼저 읽어요.'}
+                  action={{ to: "/learn/prepayment-and-fee", label: "개념 12 · 중도상환과 수수료 읽기" }}
+                />
               ))}
               {quote && submitted && (
                 <div className="stack calc-stack">
+                  <div>
+                    <p className="calc-figure-head">
+                      <strong>{quote.isFull ? "전액" : "일부"} 중도상환</strong>
+                      <span>상환일 {formatDate(quote.asOf)} · {paidCount > 0 ? `${paidCount}회차 납입 후` : "납입 전"} 잔액 {formatNumber(quote.outstandingPrincipal)}원 · 수수료율 {pct(quote.feeRate)} · 잔존 {quote.remainingDays}일 ÷ 대출기간 {quote.loanDays}일</span>
+                    </p>
+                    <dl className="figure-row" style={{ "--figure-cols": 4 } as CSSProperties}>
+                      <div><dt>갚는 원금</dt><dd><Money value={quote.principalAmount} /></dd></div>
+                      <div><dt>경과이자</dt><dd><Money value={quote.accruedInterest} /><small>{quote.accruedDays}일분</small></dd></div>
+                      <div><dt>중도상환수수료</dt><dd className={quote.feeWaived ? undefined : "accent"}><Money value={quote.fee} />{quote.feeWaived && <small>3년 경과 면제</small>}</dd></div>
+                      <div><dt>상환일에 내는 총액</dt><dd><Money value={quote.totalDue} /></dd></div>
+                    </dl>
+                  </div>
+                  {savedInterest > 0 && (
+                    <p className="calc-saving">
+                      {quote.isFull
+                        ? <>지금 전액을 갚으면 앞으로 낼 이자 <strong>{formatNumber(futureInterest)}원</strong> 대신 경과이자 <strong>{formatNumber(quote.accruedInterest)}원</strong>만 내서 이자를 <strong>{formatNumber(savedInterest)}원</strong> 아껴요.</>
+                        : <>지금 {formatNumber(quote.principalAmount)}원을 갚으면 앞으로 낼 이자가 <strong>{formatNumber(futureInterest)}원</strong>에서 <strong>{formatNumber(afterInterest)}원</strong>으로 <strong>{formatNumber(savedInterest)}원</strong> 줄어요.</>}
+                      <span className="faint">{quote.feeWaived ? "수수료가 면제라 아낀 이자가 그대로 이득이에요." : <>수수료 {formatNumber(quote.fee)}원을 빼면 실제 이득은 {formatNumber(netGain)}원이에요.</>}</span>
+                    </p>
+                  )}
                   <table className="table calc-quote">
-                    <caption>{quote.isFull ? "전액" : "일부"} 중도상환 견적 · 상환일 {formatDate(quote.asOf)}<span className="table-caption-note">경과이자와 수수료는 일할(연 365일)로 계산하고 원 미만은 절사한다. 수수료는 대출 실행 3년 뒤부터 면제된다.</span></caption>
+                    <caption>견적 근거 · {quote.isFull ? "전액" : "일부"} 중도상환<span className="table-caption-note">위 숫자를 어떻게 구했는지 적는다. 경과이자와 수수료는 일할(연 365일)로 계산하고 원 미만은 절사한다. 수수료는 대출 실행 3년 뒤부터 면제된다.</span></caption>
                     <thead><tr><th scope="col">항목</th><th scope="col">계산 근거</th><th scope="col" className="num">금액</th></tr></thead>
                     <tbody>
                       <tr><th scope="row">상환 시점 잔액</th><td>{paidCount > 0 ? `${paidCount}회차 납입 후 잔액` : "실행 직후(납입 전) 잔액"}</td><td className="num"><Money value={quote.outstandingPrincipal} /></td></tr>

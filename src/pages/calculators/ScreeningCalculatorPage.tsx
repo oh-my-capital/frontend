@@ -2,7 +2,10 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { calculatorsApi } from "../../api/calculators";
 import type { Product, RepaymentMethod, ScreeningRequest, ScreeningResult } from "../../api/types";
+import LimitLadder, { type LimitCandidate } from "../../components/charts/LimitLadder";
+import RateWaterfall, { type RateStep } from "../../components/charts/RateWaterfall";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -15,6 +18,31 @@ import LimitBreakdown from "./parts/LimitBreakdown";
 import RateBreakdown from "./parts/RateBreakdown";
 import ScreeningReasons from "./parts/ScreeningReasons";
 import { useLoad } from "./parts/useLoad";
+
+/** 법정 최고금리(business-rules §3.2). 금리 워터폴의 기준선으로만 쓴다. */
+const RATE_CAP = 20;
+
+/** 적용 금리 워터폴 입력: 기준금리에서 시작해 밴드 스프레드를 올리고 자동이체 우대를 내린다. */
+function rateSteps(result: ScreeningResult): RateStep[] {
+  const { rate } = result;
+  if (!rate) return [];
+  const steps: RateStep[] = [{ label: `신용 밴드 ${result.creditBand ?? "—"}`, delta: rate.spread, note: "상품별 가산" }];
+  if (rate.discount > 0) steps.push({ label: "자동이체 우대", delta: -rate.discount });
+  return steps;
+}
+
+/** 한도 사다리 입력: 담보(LTV) 또는 상품 최대 · 소득배수 · DSR 역산. 병목은 서버가 준 bindingRule 로 표시한다. */
+function limitCandidates(result: ScreeningResult, productName: string | undefined): LimitCandidate[] {
+  const { limits, dsr } = result;
+  if (!limits) return [];
+  const list: LimitCandidate[] = [];
+  const mark = (code: string) => limits.bindingRule === code;
+  if (limits.ltvCap !== null) list.push({ name: "담보(LTV 90%)", amount: limits.ltvCap, note: "차량가 × 0.9", binding: mark("LIMIT-LTV") });
+  else if (limits.productCap !== null) list.push({ name: "상품 최대", amount: limits.productCap, note: productName, binding: mark("LIMIT-PRODUCT") });
+  if (limits.incomeCap !== null) list.push({ name: "소득배수", amount: limits.incomeCap, note: `밴드 ${result.creditBand ?? "—"} 배수`, binding: mark("LIMIT-INCOME") });
+  if (limits.dsrCap !== null) list.push({ name: "DSR 역산", amount: limits.dsrCap, note: dsr ? `DSR ${dsr.limit}% 여유로 역산` : undefined, binding: mark("LIMIT-DSR") });
+  return list;
+}
 
 /** 신용 밴드 표(business-rules §3.2). 보조 열의 규칙 안내용이며 계산은 서버(또는 mock 엔진)가 한다. */
 const BAND_TABLE = [
@@ -49,6 +77,9 @@ export default function ScreeningCalculatorPage() {
 
   const product = products.data?.find(p => p.code === productCode) ?? null;
   const isAuto = product?.requiresCollateral ?? productCode === "AUTO_INSTALLMENT";
+  // 자격 미충족 거절이면 서버가 rate·limits 를 null 로 주므로 그림을 건너뛴다.
+  const rate = result?.rate ?? null;
+  const finalLimit = result?.limits?.finalLimit ?? null;
 
   /** 상품을 바꾸면 그 상품이 허용하는 기간·방식으로 맞춘다. */
   const chooseProduct = (code: string) => {
@@ -122,11 +153,17 @@ export default function ScreeningCalculatorPage() {
             <section className="calc-results" aria-live="polite">
               {!!error && <LoadError error={error} onRetry={() => submitted && run(submitted)} />}
               {!error && !result && (loading ? <Loading message="규칙을 순서대로 평가하고 있어요" minHeight={200} /> : (
-                <div className="state-box is-empty"><h3>아직 심사하지 않았어요</h3><p>위 조건으로 "심사하기"를 누르면 결정과 금리·한도 근거가 여기에 나와요.</p></div>
+                <EmptyState
+                  title="아직 심사하지 않았어요"
+                  description={'위 조건으로 "심사하기"를 누르면 금리가 어떻게 쌓였는지, 한도가 어디서 막혔는지 그림과 근거 표로 나와요. 규칙부터 보고 싶다면 한도 개념을 먼저 읽어요.'}
+                  action={{ to: "/learn/dsr-ltv-limit", label: "개념 7 · 한도의 규칙 읽기" }}
+                />
               ))}
               {result && submitted && (
                 <div className="stack calc-stack">
                   <DecisionSummary result={result} requestedAmount={submitted.requestedAmount} productMin={product?.minAmount ?? null} />
+                  {rate && <RateWaterfall base={{ label: "기준금리", delta: rate.base, note: product?.name }} steps={rateSteps(result)} finalRate={rate.applied} capRate={RATE_CAP} />}
+                  {finalLimit !== null && <LimitLadder candidates={limitCandidates(result, product?.name)} finalAmount={finalLimit} requestedAmount={submitted.requestedAmount} />}
                   <RateBreakdown result={result} autoDebit={submitted.autoDebit} monthlyPayment={result.monthlyPayment} />
                   <LimitBreakdown result={result} requestedAmount={submitted.requestedAmount} />
                   <ScreeningReasons reasons={result.reasons} />
