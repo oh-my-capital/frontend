@@ -31,8 +31,7 @@
 .calc-compare .bar-cell { justify-content: flex-end; }
 .calc-compare .bar-cell > .num { min-width: 0; white-space: nowrap; }
 .calc-method-note { margin: 0; color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
-/* 탭 내용은 그림 → 회차표 순서로 쌓는다(.tabs/.tabpanel 모양은 base.css). */
-.calc .tabpanel { display: grid; gap: var(--sp-5); padding-top: var(--sp-5); min-width: 0; }
+/* 탭 내용(.tabs/.tabpanel 모양은 base.css). 계산기는 그림 → 회차표가 쌓이므로 자식 폭만 0으로 묶는다. */
 .calc .tabpanel > * { min-width: 0; }
 .calc-howto { font-size: var(--fs-small); }
 .calc-howto dd { line-height: var(--lh-body); }
@@ -100,8 +99,6 @@
   .calc .page-grid > aside > table { grid-column: 1 / -1; }
 }
 @media (max-width: 740px) {
-  /* 큰 숫자 옆 보조 글자는 좁은 화면에서 줄을 바꿔 칸을 넘치지 않게 한다. */
-  .calc .figure-row dd small { display: block; margin-left: 0; }
   .calc .page-grid > aside { grid-template-columns: 1fr; }
   .calc-fields { grid-template-columns: 1fr; }
   .calc-form .form-actions .faint { margin-left: 0; flex-basis: 100%; }
