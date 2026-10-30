@@ -8,6 +8,8 @@
 
 /* ── 폼 ─────────────────────────────────────────────────────────────────── */
 .calc-main { min-width: 0; display: grid; gap: 28px; }
+/* 격자 자식은 min-width:auto 때문에 안의 표가 격자를 넓힐 수 있어 0으로 둔다(가로 스크롤은 .table-scroll 안에서만). */
+.calc-main > *, .sandbox-main > *, .contract-main > *, .apply > *, .notices > *, .calc-results > *, .calc-stack > * { min-width: 0; }
 .calc-form { display: grid; gap: 18px; }
 .calc-form > h2 { font-size: 22px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
 .calc-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; align-items: start; }
