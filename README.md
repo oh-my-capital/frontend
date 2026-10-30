@@ -15,7 +15,7 @@ npm run build          # tsc -b && vite build → dist/
 npm run preview        # dist/ 를 5190에서 확인
 ```
 
-백엔드를 다른 주소에 띄웠으면 `API_PROXY_TARGET=http://localhost:8091 npm run dev`처럼 프록시 대상만 바꾼다. 화면 코드는 언제나 같은 origin의 `/api`만 부른다(docs `contracts/runtime.md`).
+백엔드를 다른 주소에 띄웠으면 `API_PROXY_TARGET=http://localhost:8091 npm run dev`처럼 프록시 대상만 바꾼다. dev 서버 포트를 5190이 아닌 값으로 띄우면 백엔드의 `FRONTEND_ORIGIN`에 그 origin도 넣어야 한다(쉼표로 여러 개, 예: `FRONTEND_ORIGIN=http://localhost:5190,http://localhost:5199`). 화면 코드는 언제나 같은 origin의 `/api`만 부른다(docs `contracts/runtime.md`).
 
 ## 환경변수
 
