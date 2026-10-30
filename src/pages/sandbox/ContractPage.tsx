@@ -167,7 +167,7 @@ export default function ContractPage() {
                 {
                   id: "schedule", label: "회차표",
                   content: schedules.error ? <LoadError error={schedules.error} onRetry={schedules.reload} /> : !schedules.data ? <Loading message="회차표를 불러오고 있어요" /> : (
-                    <ScheduleTable rows={schedules.data} caption={`회차표 · ${schedules.data.length}회 · 현재 revision`} showStatus captionNote="납입일은 토·일이면 다음 월요일로 이연한 실제 납입일이다. 일부 중도상환 뒤에는 남은 회차가 재산정된다." />
+                    <ScheduleTable rows={schedules.data} caption={`회차표 · ${schedules.data.length}회 · 현재 revision`} showStatus currentNo={c.nextDueDate ? schedules.data.find(r => r.adjustedDueDate === c.nextDueDate)?.installmentNo ?? null : null} captionNote="납입일은 토·일이면 다음 월요일로 이연한 실제 납입일이다. 일부 중도상환 뒤에는 남은 회차가 재산정된다." />
                   ),
                 },
                 {

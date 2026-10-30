@@ -125,13 +125,13 @@ export default function ApplicationPage() {
             </section>
             {a.screening.rate && a.screening.limits ? (
               <>
-                <div className="table-scroll"><RateBreakdown result={a.screening} autoDebit={a.autoDebit} monthlyPayment={a.screening.monthlyPayment} /></div>
-                <div className="table-scroll"><LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} /></div>
+                <RateBreakdown result={a.screening} autoDebit={a.autoDebit} monthlyPayment={a.screening.monthlyPayment} />
+                <LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} />
               </>
             ) : (
               <p className="application-note is-danger">자격 단계에서 걸려 금리·한도는 계산하지 않았어요. 아래 근거 표에서 걸린 규칙을 확인해요.</p>
             )}
-            <div className="table-scroll"><ScreeningReasons reasons={a.screening.reasons} /></div>
+            <ScreeningReasons reasons={a.screening.reasons} />
             {a.overrides.length > 0 && (
               <table className="table table-compact">
                 <caption>운영자 결정 변경 이력 {a.overrides.length}건</caption>

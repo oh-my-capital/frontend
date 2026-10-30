@@ -78,7 +78,8 @@ export interface Concept {
   figures?: Figure[];
   /** 본문 수치(제도 수치·가정값) */
   numbers?: ContentNumber[];
-  relatedTerms?: TermSummary[];
+  /** 관련 용어의 slug 목록(본문이 아니라 slug 만 온다). 본문은 `GET /glossary/{slug}`. */
+  relatedTerms?: string[];
   sources: Source[];
   contentVersion: number;
   prev: string | null;

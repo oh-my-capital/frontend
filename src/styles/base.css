@@ -263,16 +263,16 @@ ul, ol { margin: 0; padding-left: 22px; }
 .timeline p { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
 
 /* 그림 틀: 개념 그림·추이·구성 그림이 같은 테두리와 설명 줄을 쓴다. */
-.concept-diagram, .figure-frame { border: var(--rule) solid var(--border); background: var(--surface); }
-.concept-diagram svg, .figure-frame svg { width: 100%; height: auto; }
-.concept-diagram figcaption, .figure-frame figcaption { padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.55; }
+.figure-frame { border: var(--rule) solid var(--border); background: var(--surface); }
+.figure-frame svg { width: 100%; height: auto; }
+.figure-frame figcaption { padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.55; }
 .figure-frame > figcaption:first-child { border-top: 0; border-bottom: var(--rule) solid var(--border); background: var(--surface-soft); color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-bold); }
 /* 그림 범례: 색 조각 + 한국어 라벨. 색만으로 뜻을 전하지 않는다. */
 .figure-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); }
 .figure-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .figure-legend i { width: 10px; height: 10px; flex-shrink: 0; background: currentColor; }
 /* SVG 안 글자는 CSS로 크기를 준다(속성 리터럴 금지). */
-.figure-frame text, .concept-diagram text { font-family: inherit; }
+.figure-frame text { font-family: inherit; }
 .figure-frame .axis-label { font-size: var(--fs-micro); fill: var(--text-faint); }
 .figure-frame .point-label { font-size: var(--fs-caption); fill: var(--text-muted); font-weight: var(--fw-semibold); }
 

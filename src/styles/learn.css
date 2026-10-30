@@ -42,8 +42,8 @@
 .concept-section h2 { padding-bottom: 10px; margin-bottom: 14px; border-bottom: var(--rule-heavy) solid var(--text); font-size: var(--fs-h2); }
 .concept-section > p { font-size: var(--fs-body); line-height: var(--lh-loose); }
 .concept-section > p + p { margin-top: 10px; }
-/* 개념 그림은 base.css 가 .concept-diagram·.figure-frame 에 같은 틀을 준다. 여백만 맞춘다. */
-.concept-section .concept-diagram, .concept-section .figure-frame { margin-top: var(--sp-5); }
+/* 개념 그림 틀은 base.css 의 .figure-frame 하나다. 여기서는 여백만 맞춘다. */
+.concept-section .figure-frame { margin-top: var(--sp-5); }
 .concept-misconceptions th[scope='row'] { width: 38%; color: var(--text-muted); font-weight: var(--fw-semibold); line-height: var(--lh-body); }
 .concept-misconceptions td { line-height: var(--lh-loose); }
 .concept-checklist { display: grid; gap: var(--sp-1); margin-top: var(--sp-3); padding: 0; list-style: none; }
