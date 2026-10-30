@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: lint and build
+        run: |
+          if [ ! -f package.json ]; then echo "package.json 없음 — 스캐폴드 전이라 건너뜀"; exit 0; fi
+          npm ci
+          npm run lint
+          npm run build
