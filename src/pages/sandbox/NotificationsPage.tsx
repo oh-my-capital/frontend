@@ -9,16 +9,27 @@ import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
 import StatusChip from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
+import { FilterGroup } from "../../components/Tabs";
 import { formatDate } from "../../lib/format";
 import { NOTIFICATION_TYPE_LABEL } from "../calculators/parts/labels";
 import { useLoad } from "../calculators/parts/useLoad";
 
-/** 알림함(S-16): 영업일별 목록, 읽음 처리(하나·전부), 계약 링크. 알림은 일마감이 만든다(납입 예정 D-3·완료·연체·통지·상실·완제). */
+/** 연체·상실 거르개가 고르는 알림 종류. 연체 흐름(연체 → 상실 예정 → 기한이익상실)만 남긴다. */
+const ARREARS_TYPES = ["OVERDUE_STARTED", "ACCELERATION_NOTICE", "ACCELERATED"];
+const FILTERS = [
+  { id: "all" as const, label: "전체" },
+  { id: "unread" as const, label: "읽지 않음" },
+  { id: "arrears" as const, label: "연체·상실" },
+];
+type Filter = (typeof FILTERS)[number]["id"];
+const matches = (n: Notification, filter: Filter) => (filter === "all" ? true : filter === "unread" ? !n.read : ARREARS_TYPES.includes(n.type));
+
+/** 알림함(S-16): 영업일별 목록, 거르개(전체·읽지 않음·연체·상실), 읽음 처리(하나·전부), 계약 링크. 알림은 일마감이 만든다(납입 예정 D-3·완료·연체·통지·상실·완제). */
 export default function NotificationsPage() {
   const list = useLoad<Notification[]>(signal => sandboxApi.notifications(false, signal), []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [filter, setFilter] = useState<Filter>("all");
 
   const markRead = async (ids: number[]) => {
     if (!ids.length || !list.data) return;
@@ -29,8 +40,10 @@ export default function NotificationsPage() {
     } catch (err) { setError(errorMessage(err, "읽음 처리하지 못했어요. 잠시 뒤 다시 시도해요.")); } finally { setBusy(false); }
   };
 
-  const items = (list.data ?? []).filter(n => filter === "all" || !n.read);
-  const unreadIds = (list.data ?? []).filter(n => !n.read).map(n => n.id);
+  const all = list.data ?? [];
+  const items = all.filter(n => matches(n, filter));
+  const unreadIds = all.filter(n => !n.read).map(n => n.id);
+  const counts: Record<Filter, number> = { all: all.length, unread: unreadIds.length, arrears: all.filter(n => matches(n, "arrears")).length };
   const groups = items.reduce<{ date: string; items: Notification[] }[]>((acc, n) => {
     const last = acc[acc.length - 1];
     if (last && last.date === n.businessDate) last.items.push(n); else acc.push({ date: n.businessDate, items: [n] });
@@ -51,16 +64,19 @@ export default function NotificationsPage() {
         {list.error ? <LoadError error={list.error} onRetry={list.reload} /> : !list.data ? <Loading message="알림을 불러오고 있어요" minHeight={300} /> : (
           <div className="page-grid">
             <div className="notices">
-              <div className="lab-tabs" role="group" aria-label="알림 필터">
-                <button type="button" className={filter === "all" ? "is-active" : undefined} aria-pressed={filter === "all"} onClick={() => setFilter("all")}>전체 {list.data.length}</button>
-                <button type="button" className={filter === "unread" ? "is-active" : undefined} aria-pressed={filter === "unread"} onClick={() => setFilter("unread")}>읽지 않음 {unreadIds.length}</button>
-              </div>
+              <FilterGroup label="알림 필터">
+                {FILTERS.map(f => (
+                  <button key={f.id} type="button" className={filter === f.id ? "is-active" : undefined} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                    {f.label} {counts[f.id]}
+                  </button>
+                ))}
+              </FilterGroup>
               {error && <p className="form-error" role="alert">{error}</p>}
               {items.length === 0 ? (
-                <EmptyState title={filter === "unread" ? "읽지 않은 알림이 없어요" : "아직 알림이 없어요"} description="대출을 실행하고 시간을 진행하면 납입 예정·자동이체·연체 알림이 여기에 쌓여요." action={{ to: "/sandbox", label: "시간 진행하러 가기" }} />
+                <EmptyState title={filter === "unread" ? "읽지 않은 알림이 없어요" : filter === "arrears" ? "연체·상실 알림이 없어요" : "아직 알림이 없어요"} description="대출을 실행하고 시간을 진행하면 납입 예정·자동이체·연체 알림이 여기에 쌓여요." action={{ to: "/sandbox", label: "시간 진행하러 가기" }} />
               ) : groups.map(group => (
                 <section key={group.date} className="notice-day" aria-labelledby={`notice-${group.date}`}>
-                  <h2 id={`notice-${group.date}`}><time dateTime={group.date}>{formatDate(group.date)}</time> <span className="faint">영업일</span></h2>
+                  <h2 id={`notice-${group.date}`}><time dateTime={group.date}>{formatDate(group.date)}</time> <span className="faint">영업일 · {group.items.length}건{group.items.filter(n => !n.read).length > 0 && ` · 읽지 않음 ${group.items.filter(n => !n.read).length}건`}</span></h2>
                   <ul className="notice-items">
                     {group.items.map(n => {
                       const t = NOTIFICATION_TYPE_LABEL[n.type] ?? { label: n.type, tone: "neutral" as const };

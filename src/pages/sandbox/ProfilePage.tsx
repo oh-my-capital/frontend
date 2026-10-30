@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { calculatorsApi } from "../../api/calculators";
 import { errorMessage } from "../../api/client";
@@ -19,6 +19,14 @@ import { useLoad } from "../calculators/parts/useLoad";
 /** 미리보기에 쓰는 고정 신청 조건: 신용대출 1,000만 원 · 12회 · 원리금균등 · 자동이체(예시 11의 첫 신청). */
 const PREVIEW = { productCode: "CREDIT_LOAN", requestedAmount: 10_000_000, termMonths: 12, repaymentMethod: "EQUAL_PAYMENT" as const, autoDebit: true };
 const EMPLOYMENTS: EmploymentType[] = ["EMPLOYEE", "SELF_EMPLOYED", "FREELANCER", "NONE"];
+/** 신용 밴드 사다리(business-rules §3.2). 슬라이더 아래에 지금 점수가 어느 칸인지 보여 준다. */
+const BANDS = [
+  { band: "거절", min: 300, max: 599, note: "자격 미충족" },
+  { band: "D", min: 600, max: 699, note: "+9.0%p · 소득배수 0.6" },
+  { band: "C", min: 700, max: 799, note: "+5.0%p · 소득배수 1.0" },
+  { band: "B", min: 800, max: 899, note: "+2.0%p · 소득배수 1.2" },
+  { band: "A", min: 900, max: 1000, note: "+0.0%p · 소득배수 1.5" },
+];
 
 /**
  * 가상 고객 프로필(S-12): 생년월일·고용형태·연소득·기존 연 원리금·신용점수(슬라이더+숫자) 폼과 "이 프로필이면" 미리보기.
@@ -97,7 +105,7 @@ function ProfileForm({ initial, asOf, onSaved }: { initial: Profile | null; asOf
   return (
           <div className="page-grid">
             <form className="panel profile-form" onSubmit={submit} aria-labelledby="profile-title" noValidate>
-              <h2 id="profile-title">프로필</h2>
+              <div className="panel-head"><h2 id="profile-title">프로필</h2><p>심사가 쓰는 값은 생년월일(나이)·연소득·기존 연 원리금·신용점수 네 가지다. 고용 형태는 1단계 규칙에서 기록만 한다.</p></div>
               <div className="calc-fields">
                 <DateField label="생년월일" value={birthDate} onChange={setBirthDate} hint="영업일 기준 만 19세 이상이어야 신청할 수 있어요" />
                 <SelectField label="고용 형태" value={employmentType} options={EMPLOYMENTS.map(e => ({ value: e, label: EMPLOYMENT_LABEL[e] }))} onChange={setEmploymentType} hint="1단계 규칙에서는 심사에 쓰지 않고 기록만 해요" />
@@ -111,7 +119,10 @@ function ProfileForm({ initial, asOf, onSaved }: { initial: Profile | null; asOf
                   <input className="field-input num" type="number" inputMode="numeric" min={300} max={1000} value={creditScore} aria-label="신용점수 숫자 입력" onChange={event => setCreditScore(Math.min(1000, Math.max(300, Number(event.target.value) || 300)))} />
                   <span aria-hidden="true">점</span>
                 </div>
-                <p id="profile-score-hint" className="field-hint">300~1000점. 900 이상 A, 800 이상 B, 700 이상 C, 600 이상 D, 600 미만은 거절.</p>
+                <ul className="profile-bands" aria-label="신용 밴드 구간">
+                  {BANDS.map(b => <li key={b.band} className={creditScore >= b.min && creditScore <= b.max ? "is-current" : undefined}><b>{b.band}</b>{b.min}~{b.max === 1000 ? "1000" : b.max}점<br />{b.note}</li>)}
+                </ul>
+                <p id="profile-score-hint" className="field-hint">300~1000점. 600점 미만이면 자격 규칙에서 바로 거절이에요. 밴드가 가산금리와 소득배수를 정해요.</p>
               </div>
               {saveError && <p className="form-error" role="alert">{saveError}</p>}
               {saved && <p className="form-done" role="status">{saved}</p>}
@@ -126,14 +137,19 @@ function ProfileForm({ initial, asOf, onSaved }: { initial: Profile | null; asOf
                 <h3>이 프로필이면</h3>
                 <p className="muted">신용대출 <Money value={PREVIEW.requestedAmount} /> · 12회 · 원리금균등 · 자동이체 기준으로 미리 심사한 값이에요.</p>
                 {previewError ? <LoadError error={previewError} message="미리보기를 계산하지 못했어요." /> : !preview ? <p className="muted">{valid ? "계산하고 있어요…" : "값을 모두 넣으면 계산해요."}</p> : (
-                  <dl className="def-list">
-                    <div><dt>결정</dt><dd><StatusChip label={statusLabel(preview.decision).label} tone={statusLabel(preview.decision).tone} /></dd></div>
-                    <div><dt>신용 밴드</dt><dd>{preview.creditBand ?? "없음(자격 미충족)"}</dd></div>
-                    <div><dt>예상 금리</dt><dd>{preview.rate ? <>{pct(preview.rate.applied)} <span className="faint">({pct(preview.rate.base)} + {pct(preview.rate.spread)} − {pct(preview.rate.discount)})</span></> : "—"}</dd></div>
-                    <div><dt>최종 한도</dt><dd>{preview.limits ? <Money value={preview.limits.finalLimit} /> : "—"}</dd></div>
-                    <div><dt>월 납입액</dt><dd><Money value={preview.monthlyPayment} /></dd></div>
-                    <div><dt>DSR</dt><dd>{preview.dsr ? pct(preview.dsr.ratio) : "—"}</dd></div>
-                  </dl>
+                  <>
+                    <dl className="figure-row" style={{ "--figure-cols": 2 } as CSSProperties}>
+                      <div><dt>예상 금리</dt><dd className="accent">{preview.rate ? pct(preview.rate.applied) : "—"}</dd></div>
+                      <div><dt>최종 한도</dt><dd><Money value={preview.limits?.finalLimit ?? null} /></dd></div>
+                    </dl>
+                    <dl className="def-list">
+                      <div><dt>결정</dt><dd><StatusChip label={statusLabel(preview.decision).label} tone={statusLabel(preview.decision).tone} /></dd></div>
+                      <div><dt>신용 밴드</dt><dd>{preview.creditBand ?? "없음(자격 미충족)"}</dd></div>
+                      <div><dt>금리 구성</dt><dd>{preview.rate ? <>{pct(preview.rate.base)} + {pct(preview.rate.spread)} − {pct(preview.rate.discount)}</> : "자격 단계에서 걸려 계산하지 않았어요"}</dd></div>
+                      <div><dt>월 납입액</dt><dd><Money value={preview.monthlyPayment} /></dd></div>
+                      <div><dt>DSR</dt><dd>{preview.dsr ? <>{pct(preview.dsr.ratio)} <span className="faint">한도 {preview.dsr.limit}%</span></> : "—"}</dd></div>
+                    </dl>
+                  </>
                 )}
                 {preview && <Disclosure data={preview.disclosure} />}
               </section>
