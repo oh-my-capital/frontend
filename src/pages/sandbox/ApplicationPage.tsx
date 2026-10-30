@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { sandboxApi } from "../../api/sandbox";
@@ -18,8 +18,17 @@ import RateBreakdown from "../calculators/parts/RateBreakdown";
 import ScreeningReasons from "../calculators/parts/ScreeningReasons";
 import { useLoad } from "../calculators/parts/useLoad";
 
+/** 한도를 정한 규칙 코드(ScreeningLimits.bindingRule) → 조건부 승인 안내에 쓰는 한국어 이름. */
+const BINDING_LABEL: Record<string, string> = {
+  "LIMIT-PRODUCT": "상품 최대 금액",
+  "LIMIT-INCOME": "소득배수 한도",
+  "LIMIT-DSR": "DSR 한도",
+  "LIMIT-LTV": "담보(LTV 90%) 한도",
+};
+
 /**
- * 신청·심사 결과(S-14): 결정 배지+문장 → 금리·한도 구성 → 근거 표(S-07과 같은 컴포넌트) → 행동(조건부 수락·취소·실행) → override 이력.
+ * 신청·심사 결과(S-14): 결정 배지+문장 → 결정별 숫자 정리(조건부면 얼마로 줄어드는지, 거절이면 걸린 규칙)
+ * → 금리·한도 구성 → 근거 표(S-07과 같은 컴포넌트) → 행동(조건부 수락·취소·실행) → override 이력.
  * 실행(POST /execute)이 성공하면 계약 상세로 이동한다.
  */
 export default function ApplicationPage() {
@@ -80,8 +89,28 @@ export default function ApplicationPage() {
             <section className="panel application-actions" aria-labelledby="actions-title" aria-live="polite">
               <h3 id="actions-title">다음 행동</h3>
               {a.status === "APPROVED" && <p>승인됐어요. 실행하면 영업일 기준으로 계약이 만들어지고 원금 <Money value={a.screening.offeredAmount ?? a.requestedAmount} />이 결제계좌에 입금돼요.</p>}
-              {a.status === "CONDITIONAL" && <p>요청 금액을 다 빌릴 수는 없지만 제안 한도 <Money value={a.screening.offeredAmount} strong />까지는 가능해요. 수락하면 승인 상태가 되고, 그 금액으로 실행할 수 있어요.</p>}
-              {a.status === "REJECTED" && <p>거절된 신청은 그대로 둬요. 근거 표에서 걸린 규칙을 확인하고 프로필이나 조건을 바꿔 다시 신청해 봐요.</p>}
+              {a.status === "CONDITIONAL" && (
+                <>
+                  <p>요청 금액을 다 빌릴 수는 없지만 제안 한도 <Money value={a.screening.offeredAmount} strong />까지는 가능해요. 수락하면 승인 상태가 되고, 그 금액으로 실행할 수 있어요.</p>
+                  <dl className="figure-row" style={{ "--figure-cols": 3 } as CSSProperties}>
+                    <div><dt>요청 금액</dt><dd><Money value={a.requestedAmount} /></dd></div>
+                    <div><dt>제안 한도</dt><dd className="accent"><Money value={a.screening.offeredAmount} /><small>요청의 {Math.round(((a.screening.offeredAmount ?? 0) / a.requestedAmount) * 100)}%</small></dd></div>
+                    <div><dt>줄어드는 금액</dt><dd className="danger">−<Money value={a.requestedAmount - (a.screening.offeredAmount ?? 0)} /></dd></div>
+                  </dl>
+                  <p className="application-note is-warn">{BINDING_LABEL[a.screening.limits?.bindingRule ?? ""] ?? "한도 규칙"}이 제안 한도를 정했어요(한도 구성 표의 "병목"). 월 납입액도 제안 한도 기준으로 {won(a.screening.monthlyPayment ?? 0)}이에요.</p>
+                </>
+              )}
+              {a.status === "REJECTED" && (
+                <>
+                  <p>거절된 신청이에요. 아래 사유를 고치고 다시 신청하면 결정이 달라져요.</p>
+                  <ul className="reject-list">
+                    {a.screening.reasons.filter(r => r.outcome === "FAIL").map(r => (
+                      <li key={r.orderNo}><strong>{r.message}</strong><span>{r.ruleCode} · 넣은 값 {r.input} · 기준 {r.threshold}</span></li>
+                    ))}
+                  </ul>
+                  <p className="application-note is-danger">자격 규칙 하나라도 걸리면 금리·한도는 계산하지 않고 바로 거절이에요.</p>
+                </>
+              )}
               {a.status === "CANCELLED" && <p>취소한 신청이에요. 다시 신청하려면 대출 신청으로 가요.</p>}
               {a.status === "EXECUTED" && <p>이미 실행되어 계약이 됐어요. {a.contractId !== null && <Link to={`/sandbox/contracts/${a.contractId}`}>계약 상세 보기</Link>}</p>}
               {actionError && <p className="form-error" role="alert">{actionError}</p>}
@@ -94,9 +123,15 @@ export default function ApplicationPage() {
                 {a.status === "EXECUTED" && a.contractId !== null && <Link className="btn btn-primary" to={`/sandbox/contracts/${a.contractId}`}>계약 상세로</Link>}
               </div>
             </section>
-            <RateBreakdown result={a.screening} autoDebit={a.autoDebit} monthlyPayment={a.screening.monthlyPayment} />
-            <LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} />
-            <ScreeningReasons reasons={a.screening.reasons} />
+            {a.screening.rate && a.screening.limits ? (
+              <>
+                <div className="table-scroll"><RateBreakdown result={a.screening} autoDebit={a.autoDebit} monthlyPayment={a.screening.monthlyPayment} /></div>
+                <div className="table-scroll"><LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} /></div>
+              </>
+            ) : (
+              <p className="application-note is-danger">자격 단계에서 걸려 금리·한도는 계산하지 않았어요. 아래 근거 표에서 걸린 규칙을 확인해요.</p>
+            )}
+            <div className="table-scroll"><ScreeningReasons reasons={a.screening.reasons} /></div>
             {a.overrides.length > 0 && (
               <table className="table table-compact">
                 <caption>운영자 결정 변경 이력 {a.overrides.length}건</caption>

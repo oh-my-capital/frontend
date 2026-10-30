@@ -104,23 +104,25 @@ export default function ApplyPage() {
                 <fieldset className="apply-step" aria-describedby="apply-step1-hint">
                   <legend>1단계 · 상품 선택</legend>
                   <p id="apply-step1-hint" className="muted">두 상품 모두 교육용 가정값이에요. 자동차 할부는 차량가의 90%까지, 원리금균등만 가능해요.</p>
-                  <table className="table apply-products">
-                    <caption>상품 2개</caption>
-                    <thead><tr><th scope="col">선택</th><th scope="col">상품</th><th scope="col">금액 범위</th><th scope="col">기간</th><th scope="col" className="num">기준금리</th><th scope="col">상환 방식</th><th scope="col" className="num">중도상환수수료</th></tr></thead>
-                    <tbody>
-                      {products.data.map(p => (
-                        <tr key={p.code} className={p.code === productCode ? "is-selected" : undefined}>
-                          <td><input type="radio" name="product" id={`product-${p.code}`} value={p.code} checked={p.code === productCode} onChange={() => chooseProduct(p.code)} aria-label={p.name} /></td>
-                          <th scope="row"><label htmlFor={`product-${p.code}`}>{p.name}</label><span className="admin-sub faint">{p.description}</span></th>
-                          <td>{formatNumber(p.minAmount)}원 ~ {p.maxAmount ? `${formatNumber(p.maxAmount)}원` : "차량가 90%"}</td>
-                          <td>{p.allowedTerms.join("·")}회</td>
-                          <td className="num">{pct(p.baseRate)}</td>
-                          <td>{p.allowedMethods.map(m => METHOD_LABEL[m]).join(" · ")}</td>
-                          <td className="num">{pct(p.prepaymentFeeRate)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="table-scroll">
+                    <table className="table apply-products">
+                      <caption>상품 2개<span className="table-caption-note">선택 칸의 라디오를 고르면 아래 조건 입력이 그 상품이 허용하는 기간·상환 방식으로 맞춰진다.</span></caption>
+                      <thead><tr><th scope="col">선택</th><th scope="col">상품</th><th scope="col">금액 범위</th><th scope="col">기간</th><th scope="col" className="num">기준금리</th><th scope="col">상환 방식</th><th scope="col" className="num">중도상환수수료</th></tr></thead>
+                      <tbody>
+                        {products.data.map(p => (
+                          <tr key={p.code} className={p.code === productCode ? "is-selected" : undefined}>
+                            <td className="apply-pick"><label className="apply-pick-label"><input type="radio" name="product" id={`product-${p.code}`} value={p.code} checked={p.code === productCode} onChange={() => chooseProduct(p.code)} aria-label={`${p.name} 고르기`} /></label></td>
+                            <th scope="row"><label htmlFor={`product-${p.code}`}>{p.name}</label><span className="admin-sub faint">{p.description}</span></th>
+                            <td>{formatNumber(p.minAmount)}원 ~ {p.maxAmount ? `${formatNumber(p.maxAmount)}원` : "차량가 90%"}</td>
+                            <td>{p.allowedTerms.join("·")}회</td>
+                            <td className="num">{pct(p.baseRate)}</td>
+                            <td>{p.allowedMethods.map(m => METHOD_LABEL[m]).join(" · ")}</td>
+                            <td className="num">{pct(p.prepaymentFeeRate)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                   <div className="form-actions"><button type="button" className="btn btn-primary" onClick={() => setStep(1)}>조건 입력으로 <Icon name="next" size={16} /></button></div>
                 </fieldset>
               )}
@@ -194,7 +196,7 @@ export default function ApplyPage() {
               <div className="panel panel-soft">
                 <h3>예시 11 조건</h3>
                 <p className="muted">신용대출 10,000,000원 · 12회 · 원리금균등 · 납입일 15일 · 자동이체. 820점 프로필이면 7.70%로 즉시 승인이에요.</p>
-                <Link to="/calculators/screening">심사 시뮬레이터에서 먼저 돌려 보기</Link>
+                <Link to="/calculators/screening" className="panel-link">심사 시뮬레이터에서 먼저 돌려 보기 <Icon name="next" size={16} /></Link>
               </div>
             </aside>
           </div>

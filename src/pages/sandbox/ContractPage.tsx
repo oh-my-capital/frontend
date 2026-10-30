@@ -1,14 +1,16 @@
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { sandboxApi } from "../../api/sandbox";
 import type { Contract, ContractEvent, PrepaymentQuote, Provision, Sandbox, ScheduleRow, Transaction } from "../../api/types";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
 import Money from "../../components/Money";
 import MoneyInput from "../../components/MoneyInput";
+import ProgressBar from "../../components/ProgressBar";
 import StatusChip, { ContractStatusChip, statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import Timeline, { type TimelineItem } from "../../components/Timeline";
@@ -22,8 +24,47 @@ import DepositForm from "./parts/DepositForm";
 
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 
+/** 충당금 탭(S-17) 한 줄 설명: 분류 → 적립률 → 적립액이 어떻게 이어지는지. */
+function ProvisionNote({ provision: p }: { provision: Provision }) {
+  const k = statusLabel(p.assetClass);
+  return (
+    <p className="provision-note">
+      {p.baseMonth} 기준 분류는 <strong>{ASSET_CLASS_LABEL[p.assetClass] ?? k.label}</strong>, 그래서 적립률이 <strong>{p.provisionRate}%</strong>이고
+      잔액 <strong>{won(p.outstandingPrincipal)}</strong> × {p.provisionRate}% = 충당금 <strong>{won(p.provisionAmount)}</strong>이에요.
+      연체가 길어져 분류가 내려가면 잔액이 그대로여도 적립률이 올라 충당금이 커져요.
+    </p>
+  );
+}
+
+const ALLOC_PARTS = [
+  { key: "fee", label: "수수료", cls: "alloc-fee" },
+  { key: "overdueInterest", label: "연체이자", cls: "alloc-overdue" },
+  { key: "interest", label: "이자", cls: "alloc-interest" },
+  { key: "principal", label: "원금", cls: "alloc-principal" },
+] as const;
+
+/** 거래 한 건의 변제충당 분해(수수료 → 연체이자 → 이자 → 원금)를 막대 한 줄 + 글자 범례로. */
+function AllocationBar({ fee, overdueInterest, interest, principal }: { fee: number; overdueInterest: number; interest: number; principal: number }) {
+  const values = { fee, overdueInterest, interest, principal };
+  const total = fee + overdueInterest + interest + principal;
+  if (total <= 0) return <span className="faint">충당 없음 — 실행 입금이라 나눌 금액이 없어요</span>;
+  const shown = ALLOC_PARTS.filter(part => values[part.key] > 0);
+  const label = shown.map(part => `${part.label} ${won(values[part.key])}`).join(", ");
+  return (
+    <>
+      <span className="alloc-bar" role="img" aria-label={`변제충당 ${label}`}>
+        {shown.map(part => <i key={part.key} className={part.cls} style={{ width: `${(values[part.key] / total) * 100}%` }} />)}
+      </span>
+      <span className="alloc-legend">
+        {shown.map(part => <span key={part.key}><i className={part.cls} aria-hidden="true" />{part.label} <b>{won(values[part.key])}</b></span>)}
+      </span>
+    </>
+  );
+}
+
 /**
- * 계약 상세(S-15·S-17): 요약 표(상태 라벨·잔액·금리·다음 납입·연체일수·건전성) → 탭(회차표 / 거래 내역(변제충당 분해) / 타임라인 / 충당금).
+ * 계약 상세(S-15·S-17): 지표 네 칸(잔액·다음 납입·연체일·건전성) → 상환 진행 막대 → 요약 표
+ * → 탭(회차표 / 거래 내역(변제충당 분해) / 타임라인 / 충당금).
  * 보조 열: 수동 상환 폼, 중도상환 견적 → 실행 확인, 이 계약의 다음 납입일까지 시간 진행, 결제계좌 입금.
  * 연체 중이면 상단에 "연체 12일 · 연체이자 4,380원 · 지금 갚아야 할 금액 892,868원" 요약을 둔다.
  */
@@ -64,6 +105,9 @@ export default function ContractPage() {
   const isOverdue = c.status === "OVERDUE" || c.status === "DEFAULTED";
   const klass = statusLabel(c.assetClass);
   const daysToDue = c.nextDueDate && c.nextDueDate >= s.businessDate ? daysBetween(s.businessDate, c.nextDueDate) + 1 : null;
+  const repaidPrincipal = Math.max(0, c.principal - c.outstandingPrincipal);
+  const repaidShare = c.principal > 0 ? Math.round((repaidPrincipal / c.principal) * 100) : 0;
+  const progressTone = c.status === "PAID_OFF" ? "good" : isOverdue ? "danger" : "primary";
 
   return (
     <>
@@ -92,14 +136,23 @@ export default function ContractPage() {
         )}
         <div className="page-grid">
           <div className="contract-main">
+            <dl className="figure-row" style={{ "--figure-cols": 4 } as CSSProperties}>
+              <div><dt>잔액(남은 원금)</dt><dd><Money value={c.outstandingPrincipal} /><small>원금 {won(c.principal)} 중</small></dd></div>
+              <div><dt>다음 납입</dt><dd>{c.nextDueDate ? <>{formatDate(c.nextDueDate)}<small>{won(c.nextPayment ?? 0)}</small></> : <>없음<small>{c.status === "PAID_OFF" ? "완제" : "예정 없음"}</small></>}</dd></div>
+              <div><dt>연체일</dt><dd className={isOverdue ? "danger" : undefined}>{c.overdueDays}일{isOverdue && <small>{c.status === "DEFAULTED" ? "기한이익상실" : "연체 중"}</small>}</dd></div>
+              <div><dt>건전성 분류</dt><dd className={klass.tone === "good" ? undefined : "accent"}>{ASSET_CLASS_LABEL[c.assetClass] ?? klass.label}<small>연체 {c.overdueDays}일 기준</small></dd></div>
+            </dl>
+            <div className="contract-progress">
+              <ProgressBar value={repaidPrincipal} total={c.principal} tone={progressTone} label={`총 원금 ${won(c.principal)} 중 ${won(repaidPrincipal)} 상환(${repaidShare}%)`} />
+              <p className="progress-meta"><strong>상환 진행 {repaidShare}%</strong> <span>갚은 원금 {won(repaidPrincipal)} / 총 원금 {won(c.principal)}</span></p>
+              <p className="contract-progress-note">{c.paidInstallments} / {c.totalInstallments}회 납입 · 총 납입 {won(c.totalPaid)}(그중 이자 {won(c.totalInterestPaid)}) · {c.status === "PAID_OFF" ? "완제된 계약이에요." : isOverdue ? "연체 중이라 막대를 붉게 표시했어요. 미납분을 갚으면 다시 진행돼요." : "자동이체·수동 상환으로 원금이 줄면 막대가 차요."}</p>
+            </div>
             <table className="table contract-summary">
               <caption>계약 요약 · 영업일 {formatDate(s.businessDate)} 기준</caption>
               <tbody>
-                <tr><th scope="row">상태</th><td><ContractStatusChip status={c.status} overdueDays={c.overdueDays} />{c.closedOn && <> · 완제일 {formatDate(c.closedOn)}</>}</td></tr>
-                <tr><th scope="row">잔액(남은 원금)</th><td><Money value={c.outstandingPrincipal} strong /> <span className="faint">원금 {won(c.principal)} 중</span></td></tr>
+                <tr><th scope="row">상태</th><td><ContractStatusChip status={c.status} overdueDays={c.overdueDays} />{c.closedOn && <> · 완제일 {formatDate(c.closedOn)}</>} <span className="faint">실행 {formatDate(c.startDate)} · 만기 {formatDate(c.maturityDate)} · {METHOD_LABEL[c.repaymentMethod]} {c.termMonths}회 · 매월 {c.paymentDay}일 · 자동이체 {c.autoDebit ? "있음" : "없음"}</span></td></tr>
                 <tr><th scope="row">금리</th><td>약정 {pct(c.contractRate)} · 연체이율 {pct(c.overdueRate)} <span className="faint">(약정 + 3%p, 최고 20%)</span></td></tr>
                 <tr><th scope="row">다음 납입</th><td>{c.nextDueDate ? <>{formatDate(c.nextDueDate)} · <Money value={c.nextPayment} />{daysToDue !== null ? <span className="faint"> · {daysToDue - 1}일 뒤</span> : <span className="faint"> · 납입일이 지난 미납 회차. 아래 "지금 갚아야 할 금액"으로 갚아요</span>}</> : "없음"}</td></tr>
-                <tr><th scope="row">납입 진행</th><td>{c.paidInstallments} / {c.totalInstallments}회 · 총 납입 <Money value={c.totalPaid} /> · 그중 이자 <Money value={c.totalInterestPaid} /></td></tr>
                 <tr><th scope="row">연체</th><td>{c.overdueDays > 0 ? <StatusChip label={`연체 ${c.overdueDays}일`} tone="danger" /> : isOverdue ? <><StatusChip label="연체 시작" tone="danger" /> <span className="faint">납입일 일마감에 미납 · 연체일수는 연체 시작일부터 1일씩</span></> : <StatusChip label="연체 없음" tone="good" />}</td></tr>
                 <tr><th scope="row">건전성 분류</th><td><StatusChip label={ASSET_CLASS_LABEL[c.assetClass] ?? klass.label} tone={klass.tone} /> <span className="faint">연체일수로 매일 재분류 · 정상 0~29 · 요주의 30~89 · 고정 90~179 · 회수의문 180~364 · 추정손실 365+</span></td></tr>
                 <tr><th scope="row">지금 갚아야 할 금액</th><td><Money value={c.amountDueNow} strong /> <span className="faint">{c.amountDueNow > 0 ? "미납 회차 + 연체이자(기한이익상실이면 잔액 전체)" : "미납이 없어요. 미리 갚으려면 중도상환"}</span></td></tr>
@@ -120,23 +173,20 @@ export default function ContractPage() {
                 {
                   id: "transactions", label: "거래 내역",
                   content: transactions.error ? <LoadError error={transactions.error} onRetry={transactions.reload} /> : !transactions.data ? <Loading message="거래 내역을 불러오고 있어요" /> : transactions.data.length === 0 ? (
-                    <div className="state-box is-empty"><h3>아직 거래가 없어요</h3><p>자동이체·수동 상환·중도상환이 일어나면 받은 금액을 수수료 → 연체이자 → 미납 이자 → 미납 원금 순으로 나눈 내역이 여기에 남아요.</p></div>
+                    <EmptyState title="아직 거래가 없어요" description="자동이체·수동 상환·중도상환이 일어나면 받은 금액을 수수료 → 연체이자 → 미납 이자 → 미납 원금 순으로 나눈 내역이 여기에 남아요." action={{ to: "/sandbox", label: "가상 시계로 시간 진행하기" }} />
                   ) : (
                     <div className="table-scroll">
                       <table className="table table-compact contract-tx">
                         <caption>거래 내역 {transactions.data.length}건<span className="table-caption-note">변제충당 순서: 수수료 → 연체이자 → 미납 이자 → 미납 원금, 오래된 회차부터(ADR-010).</span></caption>
-                        <thead><tr><th scope="col">영업일</th><th scope="col">종류</th><th scope="col" className="num">총액</th><th scope="col" className="num">수수료</th><th scope="col" className="num">연체이자</th><th scope="col" className="num">이자</th><th scope="col" className="num">원금</th><th scope="col">회차별 배분</th><th scope="col" className="num">계좌 잔액</th></tr></thead>
+                        <thead><tr><th scope="col">영업일</th><th scope="col">종류</th><th scope="col" className="num">총액</th><th scope="col">변제충당 분해</th><th scope="col">회차별 배분</th><th scope="col" className="num">계좌 잔액</th></tr></thead>
                         <tbody>
                           {transactions.data.map(t => (
                             <tr key={t.id}>
                               <td>{formatDate(t.businessDate)}</td>
                               <th scope="row">{TX_TYPE_LABEL[t.type] ?? t.type}</th>
                               <td className="num"><Money value={t.totalAmount} strong /></td>
-                              <td className="num"><Money value={t.fee} /></td>
-                              <td className="num"><Money value={t.overdueInterest} /></td>
-                              <td className="num"><Money value={t.interest} /></td>
-                              <td className="num"><Money value={t.principal} /></td>
-                              <td className="contract-alloc">{t.allocations.length === 0 ? <span className="faint">{t.type.startsWith("PREPAYMENT") ? "잔액에서 직접 차감" : "—"}</span> : t.allocations.map(a => <span key={a.installmentNo}>{a.installmentNo}회차 이자 {won(a.interest)} · 원금 {won(a.principal)}</span>)}</td>
+                              <td className="contract-alloc"><AllocationBar fee={t.fee} overdueInterest={t.overdueInterest} interest={t.interest} principal={t.principal} /></td>
+                              <td><div className="alloc-split">{t.allocations.length === 0 ? <span className="faint">{t.type.startsWith("PREPAYMENT") ? "잔액에서 직접 차감" : "—"}</span> : t.allocations.map(a => <span key={a.installmentNo}>{a.installmentNo}회차 이자 {won(a.interest)} · 원금 {won(a.principal)}</span>)}</div></td>
                               <td className="num"><Money value={t.settlementBalanceAfter} /></td>
                             </tr>
                           ))}
@@ -154,15 +204,20 @@ export default function ContractPage() {
                 {
                   id: "provisions", label: "충당금",
                   content: provisions.error ? <LoadError error={provisions.error} onRetry={provisions.reload} /> : !provisions.data ? <Loading message="충당금을 불러오고 있어요" /> : provisions.data.length === 0 ? (
-                    <div className="state-box is-empty"><h3>아직 월마감을 지나지 않았어요</h3><p>월말 일마감에서 잔액 × 분류별 적립률(정상 1% · 요주의 10% · 고정 20% · 회수의문 75% · 추정손실 100%)로 충당금을 쌓아요. 시간을 월말 너머로 진행해 봐요.</p></div>
+                    <EmptyState title="아직 월마감을 지나지 않았어요" description="월말 일마감에서 잔액 × 분류별 적립률(정상 1% · 요주의 10% · 고정 20% · 회수의문 75% · 추정손실 100%)로 충당금을 쌓아요. 시간을 월말 너머로 진행하면 생겨요." action={{ to: "/sandbox", label: "가상 시계로 시간 진행하기" }} />
                   ) : (
-                    <table className="table table-compact">
-                      <caption>월별 충당금 {provisions.data.length}건<span className="table-caption-note">충당금 = 잔여 원금 × 적립률(절사). 적립률은 교육용 가정값이다.</span></caption>
-                      <thead><tr><th scope="col">기준월</th><th scope="col">분류</th><th scope="col" className="num">잔액</th><th scope="col" className="num">적립률</th><th scope="col" className="num">충당금</th></tr></thead>
-                      <tbody>
-                        {provisions.data.map(p => { const k = statusLabel(p.assetClass); return <tr key={p.baseMonth}><th scope="row">{p.baseMonth}</th><td><StatusChip label={ASSET_CLASS_LABEL[p.assetClass] ?? k.label} tone={k.tone} /></td><td className="num"><Money value={p.outstandingPrincipal} /></td><td className="num">{p.provisionRate}%</td><td className="num"><Money value={p.provisionAmount} /></td></tr>; })}
-                      </tbody>
-                    </table>
+                    <>
+                      <ProvisionNote provision={provisions.data[provisions.data.length - 1]} />
+                      <div className="table-scroll">
+                        <table className="table table-compact">
+                          <caption>월별 충당금 {provisions.data.length}건<span className="table-caption-note">충당금 = 잔여 원금 × 적립률(절사). 적립률은 교육용 가정값이다(정상 1% · 요주의 10% · 고정 20% · 회수의문 75% · 추정손실 100%).</span></caption>
+                          <thead><tr><th scope="col">기준월</th><th scope="col">분류</th><th scope="col" className="num">잔액</th><th scope="col" className="num">적립률</th><th scope="col" className="num">충당금</th></tr></thead>
+                          <tbody>
+                            {provisions.data.map(p => { const k = statusLabel(p.assetClass); return <tr key={p.baseMonth}><th scope="row">{p.baseMonth}</th><td><StatusChip label={ASSET_CLASS_LABEL[p.assetClass] ?? k.label} tone={k.tone} /></td><td className="num"><Money value={p.outstandingPrincipal} /></td><td className="num">{p.provisionRate}%</td><td className="num"><Money value={p.provisionAmount} /></td></tr>; })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   ),
                 },
               ]}

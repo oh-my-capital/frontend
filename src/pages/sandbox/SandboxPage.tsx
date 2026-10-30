@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { sandboxApi } from "../../api/sandbox";
 import type { ContractSummary, Notification, Sandbox } from "../../api/types";
@@ -15,7 +16,8 @@ import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
 
 /**
- * 내 모의 여신(S-11): 현황 표(영업일·결제계좌·프로필·계약 수·연체·다음 납입) → 시간 진행 컨트롤 → 계약 목록 표.
+ * 내 모의 여신(S-11): 지표 네 칸(영업일·결제계좌 잔액·진행 중 계약·다음 납입일) → 한 줄 요약(프로필·연체·잔액·알림)
+ * → 가상 시계(진행 결과는 시계 안 aria-live 영역에 한 줄 요약) → 계약 목록 표(상환 진행 막대 포함).
  * 보조 열: 결제계좌 입금 폼, 미읽음 알림 5개, 다음 할 일. 시간 진행·입금 뒤에는 현황과 계약 목록을 다시 불러온다.
  */
 export default function SandboxPage() {
@@ -53,17 +55,30 @@ export default function SandboxPage() {
           <div className="sandbox-main">
             {!s ? <Loading message="샌드박스 현황을 불러오고 있어요" minHeight={220} /> : (
               <>
-                <table className="table sandbox-status">
-                  <caption>현황 · 영업일 {formatDate(s.businessDate)} 기준</caption>
-                  <tbody>
-                    <tr><th scope="row">영업일</th><td>{formatDate(s.businessDate)} <span className="faint">이 샌드박스의 "오늘". 실제 날짜와 달라요.</span></td></tr>
-                    <tr><th scope="row">결제계좌 잔액</th><td><Money value={s.settlementBalance} />{shortfall > 0 && <> · <StatusChip label={`다음 납입에 ${formatNumber(shortfall)}원 부족`} tone="warn" /></>}</td></tr>
-                    <tr><th scope="row">가상 고객 프로필</th><td>{s.profile ? <>신용점수 {s.profile.creditScore}점 · 연소득 <Money value={s.profile.annualIncome} /> · 기존 연 원리금 <Money value={s.profile.existingAnnualDebtService} /> · <Link to="/sandbox/profile">바꾸기</Link></> : <>아직 없어요. <Link to="/sandbox/profile">프로필을 만들고</Link> 첫 대출을 신청해 봐요.</>}</td></tr>
-                    <tr><th scope="row">진행 중 계약</th><td>{s.activeContracts}건{s.overdueContracts > 0 ? <> · <StatusChip label={`연체 ${s.overdueContracts}건`} tone="danger" /></> : s.activeContracts > 0 ? <> · <StatusChip label="연체 없음" tone="good" /></> : null}</td></tr>
-                    <tr><th scope="row">다음 납입</th><td>{nextDue ? <>{formatDate(nextDue)}{nextPayment > 0 && <> · <Money value={nextPayment} /></>}</> : "예정된 납입이 없어요"}</td></tr>
-                    <tr><th scope="row">읽지 않은 알림</th><td>{s.unreadNotifications > 0 ? <Link to="/sandbox/notifications">{s.unreadNotifications}개 보기</Link> : "없어요"}</td></tr>
-                  </tbody>
-                </table>
+                <dl className="figure-row" style={{ "--figure-cols": 4 } as CSSProperties}>
+                  <div><dt>영업일</dt><dd>{formatDate(s.businessDate)}<small>샌드박스의 오늘</small></dd></div>
+                  <div><dt>결제계좌 잔액</dt><dd className={shortfall > 0 ? "danger" : undefined}><Money value={s.settlementBalance} /></dd></div>
+                  <div><dt>진행 중 계약</dt><dd>{s.activeContracts}건{s.overdueContracts > 0 && <small>연체 {s.overdueContracts}건</small>}</dd></div>
+                  <div><dt>다음 납입일</dt><dd>{nextDue ? <>{formatDate(nextDue)}{nextPayment > 0 && <small>{formatNumber(nextPayment)}원</small>}</> : <>없음<small>예정된 납입 없음</small></>}</dd></div>
+                </dl>
+                <dl className="sandbox-facts">
+                  <div>
+                    <dt>가상 고객</dt>
+                    <dd>{s.profile ? <>신용점수 {s.profile.creditScore}점 · 연소득 {formatNumber(s.profile.annualIncome)}원 · 기존 연 원리금 {formatNumber(s.profile.existingAnnualDebtService)}원 <Link to="/sandbox/profile">바꾸기</Link></> : <><Link to="/sandbox/profile">프로필을 만들고</Link> 첫 대출을 신청해 봐요</>}</dd>
+                  </div>
+                  <div>
+                    <dt>연체</dt>
+                    <dd>{s.overdueContracts > 0 ? <StatusChip label={`연체 ${s.overdueContracts}건`} tone="danger" /> : s.activeContracts > 0 ? <StatusChip label="연체 없음" tone="good" /> : "진행 중 계약 없음"}</dd>
+                  </div>
+                  <div>
+                    <dt>잔액</dt>
+                    <dd>{shortfall > 0 ? <StatusChip label={`다음 납입에 ${formatNumber(shortfall)}원 부족`} tone="warn" /> : <StatusChip label="다음 납입분 충분" tone="good" />}</dd>
+                  </div>
+                  <div>
+                    <dt>읽지 않은 알림</dt>
+                    <dd>{s.unreadNotifications > 0 ? <Link to="/sandbox/notifications">{s.unreadNotifications}개 보기</Link> : "없음"}</dd>
+                  </div>
+                </dl>
 
                 <ClockControl businessDate={s.businessDate} nextDueDate={nextDue} onAdvanced={reloadAll} />
 
@@ -75,16 +90,21 @@ export default function SandboxPage() {
                     <div className="table-scroll">
                       <table className="table table-links">
                         <caption>내 계약 {list.length}건<span className="table-caption-note">잔액은 남은 원금, 건전성은 연체일수로 매일 다시 분류한다(정상 0~29일 · 요주의 30~89일 · 고정 90~179일 · 회수의문 180~364일 · 추정손실 365일 이상).</span></caption>
-                        <thead><tr><th scope="col">계약번호</th><th scope="col">상품</th><th scope="col" className="num">원금</th><th scope="col" className="num">잔액</th><th scope="col" className="num">금리</th><th scope="col">상태</th><th scope="col">건전성</th><th scope="col">다음 납입</th></tr></thead>
+                        <thead><tr><th scope="col">계약번호</th><th scope="col">상품</th><th scope="col" className="num">잔액 / 원금</th><th scope="col">상환 진행</th><th scope="col" className="num">금리</th><th scope="col">상태</th><th scope="col">건전성</th><th scope="col">다음 납입</th></tr></thead>
                         <tbody>
                           {list.map(c => {
                             const klass = statusLabel(c.assetClass);
+                            const repaid = Math.max(0, c.principal - c.outstandingPrincipal);
+                            const share = c.principal > 0 ? Math.round((repaid / c.principal) * 100) : 0;
                             return (
                               <tr key={c.id}>
                                 <th scope="row"><Link to={`/sandbox/contracts/${c.id}`}>{c.contractNo}</Link></th>
                                 <td>{c.productName}</td>
-                                <td className="num"><Money value={c.principal} /></td>
-                                <td className="num"><Money value={c.outstandingPrincipal} /></td>
+                                <td className="num"><Money value={c.outstandingPrincipal} strong /><span className="admin-sub faint">원금 <Money value={c.principal} /></span></td>
+                                <td className="sandbox-progress-cell">
+                                  <span className="bar-track" role="img" aria-label={`원금 ${share}% 상환`}><i style={{ width: `${share}%` }} /></span>
+                                  <span className="num">{share}%</span>
+                                </td>
                                 <td className="num">{pct(c.contractRate)}</td>
                                 <td><ContractStatusChip status={c.status} overdueDays={c.overdueDays} /></td>
                                 <td><StatusChip label={ASSET_CLASS_LABEL[c.assetClass] ?? klass.label} tone={klass.tone} /></td>
