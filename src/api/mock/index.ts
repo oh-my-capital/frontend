@@ -5,6 +5,7 @@
  */
 import type { Credentials, Error as ApiErrorBody, Session, User } from "../types";
 import * as F from "./fixtures";
+import { mockAdmin } from "./admin";
 
 export interface MockResult { status: number; body: unknown; requestId: string }
 
@@ -169,22 +170,11 @@ export async function mockFetch(method: string, path: string, body: unknown, tok
     if (key === "POST /sandbox/notifications/read") return ok(undefined, 204);
   }
 
-  // ── admin
+  // ── admin — 운영 콘솔 응답은 mock/admin.ts(WP8)가 맡는다. 권한 확인만 여기서 한다.
   if (pathname.startsWith("/admin")) {
     const denied = requireAdmin(); if (denied) return denied;
-    if (key === "GET /admin/applications") return ok(F.ADMIN_APPLICATIONS);
-    if (/^\/admin\/applications\/\d+\/override$/.test(pathname) && method === "POST") {
-      const req = body as { decision: string; reason: string };
-      if (!req.reason || req.reason.length < 10) return fail(400, "VALIDATION", "변경 사유를 10자 이상 적어요.", [{ field: "reason", message: "10자 이상" }]);
-      return ok({ ...F.APPLICATION, status: req.decision, overrides: [{ beforeDecision: "APPROVED", afterDecision: req.decision, afterAmount: null, reason: req.reason, createdAt: new Date().toISOString() }] });
-    }
-    if (key === "GET /admin/portfolio") return ok(F.PORTFOLIO);
-    if (key === "POST /admin/batch/daily-close") return ok(F.BATCH_EXECUTIONS);
-    if (key === "GET /admin/batch/executions") return ok(F.BATCH_EXECUTIONS);
-    if (key === "GET /admin/content/concepts") return ok(F.CONCEPTS.map(c => ({ ...c, status: "PUBLISHED", contentVersion: 1 })));
-    if (key === "GET /admin/content/terms") return ok(F.TERMS.map(t => ({ ...t, status: "PUBLISHED", contentVersion: 1 })));
-    if (key === "GET /admin/content/revisions") return ok([]);
-    if (/^\/admin\/content\/(concepts|terms)\/[^/]+(\/publish)?$/.test(pathname)) return ok({ saved: true });
+    const handled = mockAdmin(method, pathname, params, body, me!, ok, fail);
+    if (handled) return handled;
   }
 
   return fail(404, "NOT_FOUND", `mock에 ${method} ${pathname} 응답이 없어요. src/api/mock/index.ts에 추가해요.`);
