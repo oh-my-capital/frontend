@@ -220,6 +220,7 @@ export function learnConcept(summary: ConceptSummary): Concept {
   return {
     ...summary,
     ...body,
+    totalCount: CONCEPTS.length,
     contentVersion: 1,
     prev: index > 0 ? CONCEPTS[index - 1].id : null,
     next: index < CONCEPTS.length - 1 ? CONCEPTS[index + 1].id : null,

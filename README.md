@@ -32,7 +32,11 @@ npm run preview        # dist/ 를 5190에서 확인
 `VITE_MOCK=1`이면 `src/api/client.ts`가 네트워크 대신 `src/api/mock/index.ts`를 부른다(외부 라이브러리 없음). 응답 값은 docs `domain/calculation-examples.md`의 골든 값과 `business-rules.md`·`learning-roadmap.md` 수치를 그대로 쓴다.
 
 - 미리 만든 계정: `learner@example.com`(USER), `admin@example.com`(ADMIN), 비밀번호 `capimate-demo-2026`. 새로 가입해도 되고 새로 고침하면 메모리 사용자는 사라진다.
-- 응답이 없는 경로는 404로 "mock에 … 응답이 없어요"를 돌려준다. 필요한 경로는 `mock/index.ts`에 추가하고 데이터는 `mock/fixtures.ts`에 둔다.
+- 응답이 없는 경로는 404로 "mock에 … 응답이 없어요"를 돌려준다. 필요한 경로는 `mock/index.ts`에 추가하고 데이터는 영역별 파일에 둔다.
+  - `mock/fixtures.ts` — 계정·개념 목차·홈·용어 요약 등 공통 데이터(WP5)
+  - `mock/learn-fixtures.ts` — 학습·용어 사전·방법론·내 학습 응답(개념 본문·확인 문제 채점·메모리 진척, WP6)
+  - `mock/admin.ts` — 운영 콘솔 응답(심사 큐·포트폴리오·콘텐츠·배치, WP8)
+  - `mock/lab-fixtures.ts` — 계산기·샌드박스 응답(WP7이 추가)
 - 로그인 화면은 mock 모드일 때만 계정 안내를 보여 준다.
 
 ## 디렉터리와 소유(docs `architecture/repository-boundaries.md`)
@@ -43,7 +47,7 @@ src/
 │   ├── client.ts        fetch 래퍼(Bearer · X-Request-Id · Idempotency-Key · ApiError · mock 분기)   WP5
 │   ├── types.ts         OpenAPI(CapiMATE-API.yml) 전 스키마 + 요청 본문 타입                          WP5
 │   ├── auth.ts, home.ts 인증·홈이 쓰는 호출                                                          WP5
-│   ├── mock/            고정 응답(index.ts 라우터, fixtures.ts 데이터)                               WP5(각 WP가 추가 가능)
+│   ├── mock/            고정 응답(index.ts 라우터 · fixtures.ts · learn-fixtures.ts · admin.ts · lab-fixtures.ts)  WP5(각 WP가 추가 가능)
 │   └── learning.ts · glossary.ts · calculators.ts · sandbox.ts · admin.ts                            WP6 · WP6 · WP7 · WP7 · WP8
 ├── components/          Header, SiteFooter, Brand, Icon, PageTitle, SubPageHeader, Layout, LoadError, Loading,
 │                        EmptyState, Stepper, MoneyInput, RateInput, Money, DataTable, StatusChip, Disclosure,

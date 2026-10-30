@@ -70,6 +70,10 @@ export interface Concept {
   checklist: string[];
   linkedCalculator: LinkedCalculator | null;
   sandboxTask: string | null;
+  /** 게시된 확인 문제 수 */
+  quizCount: number;
+  /** 게시된 개념 수(n / 12 표시용) */
+  totalCount: number;
   sources: Source[];
   contentVersion: number;
   prev: string | null;
@@ -107,7 +111,8 @@ export interface TermSummary {
   slug: string;
   term: string;
   english: string | null;
-  category: string;
+  /** 계약은 string 이지만 값은 TermCategory 열거형(업무·금리·상환·심사·연체·건전성·리스) 중 하나다. */
+  category: TermCategory | string;
   definition: string;
 }
 export interface Term extends TermSummary {
