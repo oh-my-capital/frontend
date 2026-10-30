@@ -8,17 +8,13 @@ import type {
 /**
  * 운영 콘솔(S-20~S-23)이 쓰는 호출. 경로·본문·응답은 docs/contracts/CapiMATE-API.yml의 admin 태그 그대로다.
  * VITE_MOCK=1이면 client.ts가 src/api/mock/admin.ts의 고정 응답으로 분기한다.
- *
- * 계약에 없는 호출은 getApplication 하나뿐이다(아래 주석). 계약이 바뀌기 전까지 실 API에서는 404가 난다.
+ * 2차(실 API 연결)에서 확인한 것: page 는 0부터, 목록 size 기본 20(최대 100), 422 CONTENT_INVALID 의 problems 는 ApiError.body 에서 읽는다.
  */
 export const adminApi = {
   // ── 심사 큐(FR-23)
-  listApplications: (params: AdminApplicationsQuery = {}) =>
-    request<AdminApplicationPage>(`/admin/applications${query({ status: params.status, page: params.page })}`),
-  /**
-   * 신청 1건 상세(심사 근거·override 이력). 계약에는 아직 없는 경로다 — S-20 상세 패널이 근거 표를 그리려면 필요해
-   * `GET /admin/applications/{id}` 추가를 총괄에게 요청했다(응답은 Application 스키마). 계약 반영 전에는 mock에서만 동작한다.
-   */
+  listApplications: (params: AdminApplicationsQuery & { size?: number } = {}) =>
+    request<AdminApplicationPage>(`/admin/applications${query({ status: params.status, page: params.page, size: params.size })}`),
+  /** 신청 1건 상세(심사 근거·override 이력, 샌드박스 소유자와 무관). 계약 `GET /admin/applications/{id}`, 응답은 Application. */
   getApplication: (id: number) => request<Application>(`/admin/applications/${id}`),
   override: (id: number, body: AdminOverrideRequest) =>
     request<Application>(`/admin/applications/${id}/override`, { method: "POST", body }),

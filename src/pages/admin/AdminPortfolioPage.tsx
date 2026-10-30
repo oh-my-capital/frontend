@@ -30,7 +30,7 @@ export default function AdminPortfolioPage() {
         section="admin"
         current="/admin/portfolio"
         title="포트폴리오"
-        description="모든 샌드박스의 계약을 합친 현황이에요. 연체율은 잔액 기준이고, 충당금은 월말 월마감에 저장된 값이에요. 수치는 교육용 모의 계약에서 나온 것이에요."
+        description="모든 샌드박스의 계약을 합친 현황이에요. 연체율은 잔액 기준이고, 충당금은 건전성 분류별 적립률로 계산한 값이에요. 수치는 교육용 모의 계약에서 나온 것이에요."
         meta={data ? `기준 시점 ${formatDateTime(data.asOf)}${IS_MOCK ? " · mock 모드" : ""}` : undefined}
       />
       <main className="page-main admin-main">
@@ -72,21 +72,21 @@ interface SummaryRow { key: string; label: string; value: ReactNode; basis: stri
 
 function SummaryTable({ portfolio: p }: { portfolio: Portfolio }) {
   const rows: SummaryRow[] = [
-    { key: "asOf", label: "기준 시점", value: formatDateTime(p.asOf), basis: "마지막 일마감이 끝난 시각" },
-    { key: "contracts", label: "전체 계약", value: `${formatNumber(p.contracts)}건`, basis: "완제 제외, 실행된 계약 수" },
-    { key: "active", label: "정상 계약", value: `${formatNumber(p.activeContracts)}건`, basis: "연체 없는 ACTIVE 계약" },
-    { key: "overdue", label: "연체 계약", value: `${formatNumber(p.overdueContracts)}건`, basis: "OVERDUE·DEFAULTED 계약" },
-    { key: "outstanding", label: "총 잔액", value: <Money value={p.totalOutstanding} strong />, basis: "잔여 원금 합계" },
+    { key: "asOf", label: "기준 시점", value: formatDateTime(p.asOf), basis: "조회한 시각. 집계는 호출할 때마다 현재 계약으로 다시 계산한다" },
+    { key: "contracts", label: "전체 계약", value: `${formatNumber(p.contracts)}건`, basis: "실행된 계약 수(완제 포함)" },
+    { key: "active", label: "진행 중 계약", value: `${formatNumber(p.activeContracts)}건`, basis: "완제를 뺀 계약 수. 연체 계약도 포함한다" },
+    { key: "overdue", label: "연체 계약", value: `${formatNumber(p.overdueContracts)}건`, basis: "진행 중 계약 가운데 연체·기한이익상실 계약" },
+    { key: "outstanding", label: "총 잔액", value: <Money value={p.totalOutstanding} strong />, basis: "진행 중 계약의 잔여 원금 합계" },
     { key: "overdueOutstanding", label: "연체 잔액", value: <Money value={p.overdueOutstanding} />, basis: "연체 계약의 잔여 원금 합계" },
     { key: "ratio", label: "연체율(잔액 기준)", value: formatRate(p.overdueRatio), basis: "연체 잔액 ÷ 총 잔액" },
-    { key: "provision", label: "충당금 합계", value: <Money value={p.totalProvision} />, basis: "분류별 적립률로 절사한 값의 합" },
+    { key: "provision", label: "충당금 합계", value: <Money value={p.totalProvision} />, basis: "진행 중 계약의 잔여 원금 × 분류별 적립률(절사)의 합" },
   ];
   const columns: Column<SummaryRow>[] = [
     { key: "label", header: "항목", rowHeader: true, render: r => r.label, width: "30%" },
     { key: "value", header: "값", numeric: true, render: r => r.value },
     { key: "basis", header: "산출 기준", render: r => <span className="muted">{r.basis}</span> },
   ];
-  return <DataTable caption="요약" captionNote="전 샌드박스 합계. 값은 마지막 일마감 시점이다." columns={columns} rows={rows} rowKey={r => r.key} />;
+  return <DataTable caption="요약" captionNote="전 샌드박스 합계. 각 샌드박스의 영업일이 다르므로 값은 샌드박스별 마지막 일마감 결과를 지금 합친 것이다." columns={columns} rows={rows} rowKey={r => r.key} />;
 }
 
 function AssetClassTable({ portfolio: p }: { portfolio: Portfolio }) {

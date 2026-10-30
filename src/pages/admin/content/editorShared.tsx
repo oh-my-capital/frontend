@@ -1,13 +1,13 @@
 import { useState } from "react";
 import type { ContentStatus, ContentValidationItem } from "../../../api/types";
 import type { ActionKind } from "./useContentActions";
-import StatusChip from "../../../components/StatusChip";
-import { CONTENT_STATUS, formatDateTime } from "../parts/adminLabels";
+import StatusChip, { statusLabel } from "../../../components/StatusChip";
+import { formatDateTime } from "../parts/adminLabels";
 import ValidationList from "./ValidationList";
 
 /** 편집 머리: 식별자·상태·버전·초안 여부·수정 시각. */
 export function EditorHead({ eyebrow, title, id, status, contentVersion, hasDraft, updatedAt, publishedAt }: { eyebrow: string; title: string; id: string; status: ContentStatus; contentVersion: number; hasDraft: boolean; updatedAt: string; publishedAt?: string | null }) {
-  const chip = CONTENT_STATUS[status];
+  const chip = statusLabel(status);
   return (
     <div className="admin-editor-head">
       <div>

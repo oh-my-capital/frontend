@@ -26,14 +26,14 @@
 .admin-note { padding: 12px 14px; border: 1px dashed var(--border-strong); background: var(--surface-soft); font-size: 15px; }
 
 /* 상세 패널(심사 큐) */
-.admin-detail { display: grid; gap: 18px; }
+.admin-detail { display: grid; gap: 18px; min-width: 0; }
+.admin-detail > * { min-width: 0; }
 .admin-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .admin-detail-head h2 { font-size: 22px; font-variant-numeric: tabular-nums; }
 .admin-detail-head h2:focus-visible { outline-offset: 4px; }
 .admin-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .admin-def { font-size: var(--fs-small); }
 .admin-def dd .faint { display: inline; }
-.admin-overrides td, .admin-overrides th { vertical-align: top; }
 .admin-form { display: grid; gap: 14px; padding-top: 18px; border-top: 1px solid var(--border); }
 .admin-form h3 { font-size: 18px; }
 .admin-run { max-width: 420px; padding-top: 0; border-top: 0; }
