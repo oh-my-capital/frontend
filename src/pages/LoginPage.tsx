@@ -42,6 +42,7 @@ export default function LoginPage() {
           <div><dt>세션</dt><dd>로그인 상태는 30일 동안 이 브라우저에 남아요. 비밀번호를 바꾸면 다른 기기의 로그인은 끊겨요.</dd></div>
           <div><dt>교육용</dt><dd>이 서비스의 대출·심사·연체는 모두 모의이며 실제 신용과 무관해요.</dd></div>
         </dl>
+        <img className="account-art" src="/images/capital-branch.webp" width={1200} height={800} alt="불이 켜진 남색 2층 지점 건물로 노트를 든 사람이 계단을 올라 들어가는 일러스트" />
       </section>
       <form className="account-form" onSubmit={submit} aria-busy={busy} noValidate>
         <h2>로그인</h2>

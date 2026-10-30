@@ -11,9 +11,9 @@ import Money from "../../components/Money";
 import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatNumber, formatRate } from "../../lib/format";
-import AdminForbidden from "./parts/AdminForbidden";
-import TrendChart from "./parts/TrendChart";
-import { ASSET_CLASS_RULES, formatDateTime, formatMonth, isForbidden } from "./parts/adminLabels";
+import { ForbiddenPage } from "../../components/ProtectedRoute";
+import TrendChart from "../../components/charts/TrendChart";
+import { ASSET_CLASS_RULES, formatDateTime, formatMonth, isForbidden, requestIdOf } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 /**
@@ -22,7 +22,7 @@ import { useLoad } from "./parts/useLoad";
  */
 export default function AdminPortfolioPage() {
   const { data, error, loading, reload } = useLoad(() => adminApi.portfolio(), []);
-  if (isForbidden(error)) return <AdminForbidden error={error} />;
+  if (isForbidden(error)) return <ForbiddenPage requestId={requestIdOf(error)} />;
 
   return (
     <>

@@ -11,7 +11,7 @@ import MoneyInput from "../../components/MoneyInput";
 import RateInput from "../../components/RateInput";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatDate } from "../../lib/format";
-import FeeTrendChart, { type FeePoint } from "./parts/FeeTrendChart";
+import FeeTrendChart, { type FeePoint } from "../../components/charts/FeeTrendChart";
 import { DateField, NumberField, SelectField } from "./parts/fields";
 import { METHOD_LABEL, METHODS, PAYMENT_DAY_OPTIONS, pct } from "./parts/labels";
 import ScheduleTable from "./parts/ScheduleTable";

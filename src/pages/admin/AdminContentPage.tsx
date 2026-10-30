@@ -13,8 +13,8 @@ import ConceptEditor from "./content/ConceptEditor";
 import RevisionsTable from "./content/RevisionsTable";
 import TermEditor from "./content/TermEditor";
 import ValidationList from "./content/ValidationList";
-import AdminForbidden from "./parts/AdminForbidden";
-import { formatDateTime, isForbidden } from "./parts/adminLabels";
+import { ForbiddenPage } from "../../components/ProtectedRoute";
+import { formatDateTime, isForbidden, requestIdOf } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 type Tab = "concepts" | "terms";
@@ -45,7 +45,7 @@ export default function AdminContentPage() {
   useEffect(() => { if (selectedId) editorRef.current?.scrollIntoView({ block: "start" }); }, [selectedId]);
 
   const listError = tab === "concepts" ? concepts.error : terms.error;
-  if (isForbidden(listError)) return <AdminForbidden error={listError} />;
+  if (isForbidden(listError)) return <ForbiddenPage requestId={requestIdOf(listError)} />;
 
   return (
     <>

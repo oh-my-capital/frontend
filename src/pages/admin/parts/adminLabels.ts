@@ -29,13 +29,13 @@ export const APPLICATION_STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 export const METHOD_LABEL: Record<string, string> = { EQUAL_PAYMENT: "원리금균등", EQUAL_PRINCIPAL: "원금균등", BULLET: "만기일시" };
 
-/** 건전성 분류 기준(business-rules §9, 교육용 가정값). 분포 표의 "연체일수·적립률" 열에 쓴다. */
-export const ASSET_CLASS_RULES: { code: string; label: string; days: string; rate: string }[] = [
-  { code: "NORMAL", label: "정상", days: "0~29일", rate: "1%" },
-  { code: "PRECAUTIONARY", label: "요주의", days: "30~89일", rate: "10%" },
-  { code: "SUBSTANDARD", label: "고정", days: "90~179일", rate: "20%" },
-  { code: "DOUBTFUL", label: "회수의문", days: "180~364일", rate: "75%" },
-  { code: "ESTIMATED_LOSS", label: "추정손실", days: "365일 이상", rate: "100%" },
+/** 건전성 분류 기준(business-rules §9, 교육용 가정값). 분포 표의 "연체일수·적립률" 열과 구성 막대 색에 쓴다. */
+export const ASSET_CLASS_RULES: { code: string; label: string; days: string; rate: string; color: string }[] = [
+  { code: "NORMAL", label: "정상", days: "0~29일", rate: "1%", color: "var(--ac-normal)" },
+  { code: "PRECAUTIONARY", label: "요주의", days: "30~89일", rate: "10%", color: "var(--ac-precaution)" },
+  { code: "SUBSTANDARD", label: "고정", days: "90~179일", rate: "20%", color: "var(--ac-substandard)" },
+  { code: "DOUBTFUL", label: "회수의문", days: "180~364일", rate: "75%", color: "var(--ac-doubtful)" },
+  { code: "ESTIMATED_LOSS", label: "추정손실", days: "365일 이상", rate: "100%", color: "var(--ac-loss)" },
 ];
 
 /** ISO date-time → "2026. 10. 30. 14:20". 잘못된 값은 그대로. */
@@ -63,4 +63,9 @@ export function todayIso(): string {
 /** API 가 403 을 돌려줬는지(운영자 권한 없음). */
 export function isForbidden(error: unknown): boolean {
   return error instanceof ApiError && error.status === 403;
+}
+
+/** 403 화면에 띄울 요청 ID. 오류가 ApiError 가 아니면 비운다. */
+export function requestIdOf(error: unknown): string | undefined {
+  return error instanceof ApiError ? error.requestId : undefined;
 }

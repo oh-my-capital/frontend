@@ -1,86 +1,90 @@
 /*
  * CapiMATE 브랜드 공통: 장부(원장) 모양의 황토색 심볼, Arial 800 워드마크, 두 줄 머리(보조 링크 36px + 메뉴 76px), 푸터, 하위 화면 머리.
  * 토큰은 tokens.css, 기반 규칙은 base.css. 홈·계정 화면 규칙은 home.css·account.css.
+ * 색·글자 크기·간격 리터럴을 적지 않는다(ui-guidelines §2·§3).
  */
 @media (max-width: 1380px) { :root { --header-height: 69px; } }
 
-/* 워드마크 */
-.brand { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; color: var(--text); text-decoration: none; }
+/* 워드마크. 머리·푸터 모두 링크이므로 터치 영역을 44px 로 둔다(ui-guidelines §8). */
+.brand { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; min-height: var(--touch); color: var(--text); text-decoration: none; }
 .brand:hover { color: var(--text); text-decoration: none; }
 .brand-symbol { flex-shrink: 0; color: var(--accent); }
-.brand-name { font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1.4px; line-height: 1; }
-.brand-name > span { font-weight: 500; }
+.brand-name { font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: var(--fw-heavy); letter-spacing: -1.4px; line-height: 1; }
+.brand-name > span { font-weight: var(--fw-medium); }
 .brand-name > i { color: var(--accent); font-style: normal; }
-.brand-caption { margin-left: 6px; padding-left: 14px; border-left: 1px solid var(--border); color: var(--text-faint); font-size: var(--fs-caption); font-weight: 500; white-space: nowrap; }
+.brand-caption { margin-left: 6px; padding-left: 14px; border-left: var(--rule) solid var(--border); color: var(--text-faint); font-size: var(--fs-caption); font-weight: var(--fw-medium); white-space: nowrap; }
 
 /* 공통 머리 */
-.site-header { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); }
-.site-utility { border-bottom: 1px solid #ebe6da; }
-.site-utility-inner { width: min(100% - 64px, 1200px); min-height: 36px; margin: 0 auto; display: flex; align-items: center; justify-content: flex-end; }
-.site-utility-inner > a, .site-utility-inner > button { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 0; background: none; color: var(--text-muted); font-size: var(--fs-caption); font-weight: 500; text-decoration: none; }
+.site-header { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: var(--rule) solid var(--border); }
+.site-utility { border-bottom: var(--rule) solid var(--border-soft); }
+.site-utility-inner { width: min(100% - var(--content-gutter), var(--content-w)); min-height: 36px; margin: 0 auto; display: flex; align-items: center; justify-content: flex-end; }
+.site-utility-inner > a, .site-utility-inner > button { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--sp-3); border: 0; background: none; color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-medium); text-decoration: none; }
 .site-utility-inner > * + *::before { content: ''; position: absolute; left: 0; top: 50%; width: 1px; height: 11px; margin-top: -5px; background: var(--border-strong); }
 .site-utility-inner > a:hover, .site-utility-inner > button:hover { color: var(--primary); text-decoration: none; }
 .site-utility-inner > :last-child { padding-right: 0; }
-/* 로그아웃 버튼: 보이는 줄 높이(36px)는 그대로 두고 터치 영역만 44px로(ui-guidelines §8). 아래쪽으로 8px 늘리고 같은 만큼 padding 을 줘 글자 위치는 유지한다. */
-.site-utility-inner > button { min-height: 44px; margin-bottom: -8px; padding-bottom: 8px; cursor: pointer; }
-.site-utility-inner > button::before { top: 18px; }
-.site-utility-inner .account-email { color: var(--text); font-weight: 600; }
-.site-header-inner { width: min(100% - 64px, 1200px); min-height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.site-nav { display: flex; align-items: stretch; align-self: stretch; justify-content: flex-end; gap: 4px; }
-.site-nav-link { position: relative; display: inline-flex; align-items: center; padding: 0 16px; color: var(--text); font-size: 17px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; text-decoration: none; transition: color .15s; }
-.site-nav-link::after { content: ''; position: absolute; right: 16px; bottom: -1px; left: 16px; height: 3px; background: transparent; transition: background-color .15s; }
+/*
+ * 보조 링크 줄은 보이는 높이가 36px 이지만 터치 영역은 44px 이어야 한다(ui-guidelines §8).
+ * 위아래로 4px 씩 늘리고 같은 만큼 padding 을 줘 글자 위치는 그대로 둔다. 구분선은 늘어난 만큼 내려 맞춘다.
+ */
+.site-utility-inner > a, .site-utility-inner > button { min-height: var(--touch); margin: -4px 0; padding-top: var(--sp-1); padding-bottom: var(--sp-1); }
+.site-utility-inner > button { cursor: pointer; }
+.site-header-inner { width: min(100% - var(--content-gutter), var(--content-w)); min-height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6); }
+.site-nav { display: flex; align-items: stretch; align-self: stretch; justify-content: flex-end; gap: var(--sp-1); }
+.site-nav-link { position: relative; display: inline-flex; align-items: center; padding: 0 var(--sp-4); color: var(--text); font-size: var(--fs-nav); font-weight: var(--fw-bold); letter-spacing: var(--ls-tight); white-space: nowrap; text-decoration: none; transition: color var(--t-fast); }
+.site-nav-link::after { content: ''; position: absolute; right: var(--sp-4); bottom: -1px; left: var(--sp-4); height: var(--rule-accent); background: transparent; transition: background-color var(--t-fast); }
 .site-nav-link:hover { color: var(--primary); text-decoration: none; }
 .site-nav-link.is-active { color: var(--primary); }
 .site-nav-link.is-active::after { background: var(--primary); }
 .site-nav-account { display: none; }
-.nav-toggle { display: none; align-items: center; gap: 9px; min-height: 44px; padding: 9px 14px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-size: var(--fs-small); font-weight: 600; }
+.nav-toggle { display: none; align-items: center; gap: 9px; min-height: var(--touch); padding: 9px 14px; border: var(--rule) solid var(--border-strong); background: var(--surface); color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
 .menu-lines { display: grid; gap: 5px; width: 16px; }
-.menu-lines i { display: block; height: 1.5px; background: currentColor; transition: transform .15s; }
+.menu-lines i { display: block; height: 1.5px; background: currentColor; transition: transform var(--t-fast); }
 .menu-lines.is-open i:first-child { transform: translateY(3.25px) rotate(45deg); }
 .menu-lines.is-open i:last-child { transform: translateY(-3.25px) rotate(-45deg); }
 
 /* 공통 푸터 */
-.site-footer { margin-top: 96px; border-top: 1px solid var(--border); background: var(--surface-soft); }
-.site-footer-inner { width: min(100% - 64px, 1200px); margin: 0 auto; }
-.footer-links { border-bottom: 1px solid var(--border); background: var(--surface); }
+.site-footer { margin-top: var(--sp-12); border-top: var(--rule) solid var(--border); background: var(--surface-soft); }
+.site-footer-inner { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; }
+.footer-links { border-bottom: var(--rule) solid var(--border); background: var(--surface); }
 .footer-links .site-footer-inner { display: flex; flex-wrap: wrap; }
-.footer-links a { position: relative; display: inline-flex; align-items: center; min-height: 54px; padding: 0 18px; color: var(--text); font-size: var(--fs-small); font-weight: 700; text-decoration: none; }
+.footer-links a { position: relative; display: inline-flex; align-items: center; min-height: 54px; padding: 0 18px; color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-bold); text-decoration: none; }
 .footer-links a:first-child { padding-left: 0; }
-.footer-links a + a::before { content: ''; position: absolute; left: 0; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: var(--border-strong); }
+.footer-links a + a::before { content: ''; position: absolute; left: 0; top: 50%; width: 1px; height: var(--sp-3); margin-top: -6px; background: var(--border-strong); }
 .footer-links a:hover { color: var(--primary); }
-.footer-body { display: flex; align-items: flex-start; gap: 40px; padding: 32px 0 40px; }
+.footer-body { display: flex; align-items: flex-start; gap: var(--sp-8); padding: var(--sp-7) 0 var(--sp-8); }
 .footer-body .brand-symbol { width: 26px; height: 26px; }
 .footer-body .brand-name { font-size: 23px; }
-.footer-info { flex: 1; min-width: 0; display: grid; gap: 6px; color: var(--text-muted); font-size: var(--fs-small); line-height: 1.7; }
-.footer-info strong { margin-right: 8px; color: var(--text); }
+.footer-info { flex: 1; min-width: 0; display: grid; gap: 6px; color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-loose); }
+.footer-info strong { margin-right: var(--sp-2); color: var(--text); }
 .footer-copy { margin-top: 6px; color: var(--text-faint); font-size: var(--fs-caption); }
-.footer-top { flex-shrink: 0; min-height: 44px; padding: 0 16px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-caption); font-weight: 600; }
+.footer-top { flex-shrink: 0; min-height: var(--touch); padding: 0 var(--sp-4); border: var(--rule) solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
 .footer-top:hover { border-color: var(--primary); color: var(--primary); }
 
 /* 하위 화면 머리: 큰 제목 + 한 줄 설명 + 같은 묶음 탭. */
-.subpage-head { border-bottom: 1px solid var(--border); background: var(--surface-soft); }
-.subpage-inner { width: min(100% - 64px, 1200px); margin: 0 auto; }
+.subpage-head { border-bottom: var(--rule) solid var(--border); background: var(--surface-soft); }
+.subpage-inner { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; }
 .subpage-head > .subpage-inner { padding: 22px 0 30px; }
 .crumbs ol { display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: var(--fs-caption); }
 .crumbs li { display: inline-flex; align-items: center; }
 .crumbs li + li::before { content: ''; width: 6px; height: 6px; margin: 0 10px; border-top: 1.5px solid var(--text-faint); border-right: 1.5px solid var(--text-faint); transform: rotate(45deg); }
 .crumbs a { color: var(--text-muted); }
-.crumbs [aria-current='page'] { color: var(--text); font-weight: 700; }
-.subpage-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 18px; }
+.crumbs [aria-current='page'] { color: var(--text); font-weight: var(--fw-bold); }
+.subpage-title { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-6); margin-top: 18px; }
 .subpage-title h1 { font-size: clamp(28px, 3vw, 32px); }
-.subpage-description { max-width: 760px; margin-top: 10px; color: var(--text-muted); font-size: var(--fs-body); line-height: 1.7; }
-.subpage-meta { margin-top: 8px; color: var(--text-faint); font-size: var(--fs-caption); }
-.subpage-actions { display: flex; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
-.subpage-tabs { border-top: 1px solid var(--border); background: var(--surface); }
-.subpage-tabs .subpage-inner { display: flex; gap: 4px; overflow-x: auto; }
-.subpage-tabs a { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; min-height: 54px; padding: 0 20px; color: var(--text-muted); font-size: var(--fs-body); font-weight: 600; text-decoration: none; transition: color .15s; }
-.subpage-tabs a:first-child { padding-left: 4px; }
-.subpage-tabs a::after { content: ''; position: absolute; right: 20px; bottom: 0; left: 20px; height: 3px; background: transparent; }
-.subpage-tabs a:first-child::after { left: 4px; }
+.subpage-description { max-width: 760px; margin-top: 10px; color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-loose); }
+.subpage-meta { margin-top: var(--sp-2); color: var(--text-faint); font-size: var(--fs-caption); }
+.subpage-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); flex-shrink: 0; }
+/* 화면 머리 탭. 본문 안 `.tabs`(base.css)와 같은 모양이되 머리 줄에 맞춰 더 크다. */
+.subpage-tabs { border-top: var(--rule) solid var(--border); background: var(--surface); }
+.subpage-tabs .subpage-inner { display: flex; gap: var(--sp-1); overflow-x: auto; }
+.subpage-tabs a { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; min-height: 54px; padding: 0 var(--sp-5); color: var(--text-muted); font-size: var(--fs-body); font-weight: var(--fw-semibold); text-decoration: none; transition: color var(--t-fast); }
+.subpage-tabs a:first-child { padding-left: var(--sp-1); }
+.subpage-tabs a::after { content: ''; position: absolute; right: var(--sp-5); bottom: 0; left: var(--sp-5); height: var(--rule-accent); background: transparent; }
+.subpage-tabs a:first-child::after { left: var(--sp-1); }
 .subpage-tabs a:hover { color: var(--text); }
-.subpage-tabs a.is-active { color: var(--primary); font-weight: 700; }
+.subpage-tabs a.is-active { color: var(--primary); font-weight: var(--fw-bold); }
 .subpage-tabs a.is-active::after { background: var(--primary); }
-.subpage-head + main { padding-top: 40px; }
+.subpage-head + main { padding-top: var(--sp-8); }
 
 @media (max-width: 1460px) { .site-header .brand-caption { display: none; } }
 @media (max-width: 1380px) {
@@ -89,26 +93,26 @@
   .nav-toggle { display: inline-flex; }
   .site-nav { display: none; width: 100%; flex-direction: column; align-items: stretch; gap: 0; padding: 0 0 18px; max-height: calc(100dvh - 80px); overflow-y: auto; }
   .site-nav.is-open { display: flex; }
-  .site-nav-link { padding: 14px 4px; font-size: 17px; border-top: 1px solid var(--border); }
+  .site-nav-link { padding: 14px var(--sp-1); font-size: var(--fs-nav); border-top: var(--rule) solid var(--border); }
   .site-nav-link::after { display: none; }
-  .site-nav-account { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--border); }
-  .site-nav-account > a, .site-nav-account > button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-size: 15px; font-weight: 600; text-decoration: none; }
-  .site-nav-account > :first-child { border-color: var(--primary); background: var(--primary); color: #fff; }
+  .site-nav-account { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); padding-top: var(--sp-4); border-top: var(--rule) solid var(--border); }
+  .site-nav-account > a, .site-nav-account > button { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--touch); padding: 0 var(--sp-4); border: var(--rule) solid var(--border-strong); background: var(--surface); color: var(--text); font-size: var(--fs-base); font-weight: var(--fw-semibold); text-decoration: none; }
+  .site-nav-account > :first-child { border-color: var(--primary); background: var(--primary); color: var(--text-on-primary); }
 }
 @media (max-width: 1000px) {
   .site-footer-inner, .subpage-inner { width: calc(100% - 48px); }
 }
 @media (max-width: 740px) {
-  .site-header-inner, .site-footer-inner, .subpage-inner { width: calc(100% - 40px); }
+  .site-header-inner, .site-footer-inner, .subpage-inner { width: calc(100% - var(--content-gutter-sm)); }
   .site-header-inner { min-height: 64px; }
-  .brand-name { font-size: 26px; }
+  .brand-name { font-size: var(--fs-figure); }
   .brand-symbol { width: 30px; height: 30px; }
-  .site-footer { margin-top: 64px; }
-  .footer-links a { min-height: 44px; padding: 0 12px; }
+  .site-footer { margin-top: var(--sp-10); }
+  .footer-links a { min-height: var(--touch); padding: 0 var(--sp-3); }
   .footer-body { flex-direction: column; gap: 18px; padding-top: 28px; }
-  .subpage-head > .subpage-inner { padding: 18px 0 24px; }
-  .subpage-title { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 14px; }
-  .subpage-tabs a { min-height: 50px; padding: 0 14px; font-size: 15px; }
+  .subpage-head > .subpage-inner { padding: 18px 0 var(--sp-6); }
+  .subpage-title { flex-direction: column; align-items: flex-start; gap: var(--sp-4); margin-top: 14px; }
+  .subpage-tabs a { min-height: 50px; padding: 0 14px; font-size: var(--fs-base); }
   .subpage-tabs a::after { right: 14px; left: 14px; }
   .subpage-head + main { padding-top: 28px; }
 }

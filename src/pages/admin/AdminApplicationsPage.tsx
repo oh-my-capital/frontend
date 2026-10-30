@@ -13,9 +13,9 @@ import RateInput from "../../components/RateInput";
 import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatDate, formatRate } from "../../lib/format";
-import AdminForbidden from "./parts/AdminForbidden";
+import { ForbiddenPage } from "../../components/ProtectedRoute";
 import ScreeningReasons from "./parts/ScreeningReasons";
-import { APPLICATION_STATUS_OPTIONS, DECISION_LABEL, formatDateTime, isForbidden, METHOD_LABEL, SOURCE_LABEL } from "./parts/adminLabels";
+import { APPLICATION_STATUS_OPTIONS, DECISION_LABEL, formatDateTime, isForbidden, METHOD_LABEL, requestIdOf, SOURCE_LABEL } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 const MIN_REASON = 10;
@@ -40,7 +40,7 @@ export default function AdminApplicationsPage() {
     setParams(copy);
   };
 
-  if (isForbidden(list.error)) return <AdminForbidden error={list.error} />;
+  if (isForbidden(list.error)) return <ForbiddenPage requestId={requestIdOf(list.error)} />;
 
   const columns: Column<AdminApplicationItem>[] = [
     { key: "no", header: "신청번호", rowHeader: true, nowrap: true, render: r => <code className="admin-code">{r.applicationNo}</code> },

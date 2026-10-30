@@ -15,7 +15,7 @@ import Timeline, { type TimelineItem } from "../../components/Timeline";
 import { formatDate } from "../../lib/format";
 import { ASSET_CLASS_LABEL, describeEvent, eventTitle, eventTone, METHOD_LABEL, pct, TX_TYPE_LABEL, won } from "../calculators/parts/labels";
 import ScheduleTable from "../calculators/parts/ScheduleTable";
-import Tabs from "../calculators/parts/Tabs";
+import Tabs from "../../components/Tabs";
 import { useLoad } from "../calculators/parts/useLoad";
 import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
