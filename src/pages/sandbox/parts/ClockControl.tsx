@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { sandboxApi } from "../../../api/sandbox";
 import { errorMessage } from "../../../api/client";
 import type { ClockAdvanceRequest, ClockAdvanceResult } from "../../../api/types";
@@ -24,6 +24,7 @@ export default function ClockControl({ businessDate, nextDueDate, onAdvanced, ex
   const [running, setRunning] = useState<string | null>(null);
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
+  const resultRef = useRef<HTMLParagraphElement>(null);
 
   const run = async (name: string, request: ClockAdvanceRequest) => {
     setRunning(name); setError("");
@@ -35,6 +36,8 @@ export default function ClockControl({ businessDate, nextDueDate, onAdvanced, ex
       setError(errorMessage(err, "시간을 진행하지 못했어요. 잠시 뒤 다시 시도해요."));
     } finally {
       setRunning(null);
+      // 진행 중 버튼이 비활성화되면서 키보드 초점이 문서로 빠지므로, 끝나면 결과 문장으로 초점을 옮긴다.
+      resultRef.current?.focus();
     }
   };
   const busy = running !== null;
@@ -58,7 +61,7 @@ export default function ClockControl({ businessDate, nextDueDate, onAdvanced, ex
           <button type="submit" className="btn btn-secondary" disabled={busy || days < 1 || days > 400}>{running === "days" ? "진행 중…" : "진행"}</button>
         </form>
       </div>
-      <p className="clock-result" role="status" aria-live="polite">{busy ? "날짜마다 일마감을 돌리고 있어요…" : summary}</p>
+      <p className="clock-result" role="status" aria-live="polite" tabIndex={-1} ref={resultRef}>{busy ? "날짜마다 일마감을 돌리고 있어요…" : summary}</p>
       {error && <p className="form-error" role="alert">{error}</p>}
       {!compact && <p className="faint">하루 진행은 오늘 날짜의 일마감(알림 → 자동이체 → 연체 → 건전성 → 상실 → 월마감)을 돌리고 영업일을 하루 넘겨요. "다음 납입일까지"는 납입일 당일 마감까지 포함해요.</p>}
     </section>

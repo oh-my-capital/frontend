@@ -135,7 +135,7 @@ export function screen(req: ScreeningRequest): ScreeningResult {
 
   const emptyLimits = { productCap: null, incomeCap: null, dsrCap: null, ltvCap: null, finalLimit: null, bindingRule: null };
   if (!ageOk || !incomeOk || !scoreOk || !productOk) {
-    push("DECISION", "자격 규칙 미충족", "자격 4개 규칙 모두 통과", "FAIL", "자격 단계에서 하나 이상 미충족이라 거절. 금리·한도는 계산하지 않는다");
+    push("DECISION", "자격 규칙 미충족", "자격 4개 규칙 모두 통과", "FAIL", "자격 단계에서 하나 이상 미충족이라 거절. 금리·한도는 계산하지 않는다", !scoreOk ? "CREDIT_SCORE_LOW" : !ageOk ? "AGE_UNDER_19" : !incomeOk ? "INCOME_MISSING" : "PRODUCT_CONSTRAINT");
     return { decision: "REJECTED", source: "AUTO", creditBand: null, rate: { base: product.baseRate, spread: 0, discount: 0, applied: product.baseRate, capped: false }, limits: emptyLimits, dsr: { existingAnnual: req.existingAnnualDebtService, newAnnual: 0, ratio: 0, limit: DSR_LIMIT }, monthlyPayment: null, offeredAmount: null, reasons, disclosure: DISCLOSURE };
   }
 
@@ -145,16 +145,19 @@ export function screen(req: ScreeningRequest): ScreeningResult {
   const rawRate = Math.round((product.baseRate + spread - discount) * 100) / 100;
   const capped = rawRate > MAX_RATE;
   const applied = capped ? MAX_RATE : rawRate;
-  push("RATE", `밴드 ${band.band}(${req.creditScore}점)${req.autoDebit ? " · 자동이체" : ""}`, `${product.baseRate.toFixed(2)} + ${spread.toFixed(2)} − ${discount.toFixed(2)}`, "INFO", `적용 금리 ${applied.toFixed(2)}%${capped ? " (최고금리 20.00%로 제한)" : ""}`);
+  // 규칙 코드·순서는 실 API(ScreeningEngine)와 같다: RATE-BAND → RATE-APPLIED → LIMIT-* → LIMIT-FINAL → DSR-RATIO → DECISION.
+  push("RATE-BAND", `신용점수 ${req.creditScore}점`, `${band.min}~${band.band === "A" ? 1000 : band.min + 99}점 = 밴드 ${band.band}`, "INFO", `밴드 ${band.band}: ${product.name} 스프레드 +${spread.toFixed(2)}%p, 소득배수 ${band.multiple}배`);
+  push("RATE-APPLIED", `기준금리 ${product.baseRate.toFixed(2)}% + 스프레드 ${spread.toFixed(2)}%p − 우대 ${discount.toFixed(2)}%p`, `상한 ${MAX_RATE.toFixed(2)}%`, "INFO", `적용 금리 연 ${applied.toFixed(2)}%${req.autoDebit ? " · 자동이체 우대 포함" : ""}${capped ? " (최고금리로 제한)" : ""}`);
 
-  if (isAuto) push("LIMIT-LTV", `차량가 ${won(vehicle)} × 0.9`, won(productMax), "INFO", "담보(LTV 90%) 한도");
-  else push("LIMIT-PRODUCT", product.name, won(productMax), "INFO", "상품 최대 한도");
+  if (isAuto) push("LIMIT-LTV", `차량가 ${won(vehicle)}`, `LTV ${(LTV_RATE * 100).toFixed(2)}%`, "INFO", `담보 한도 floor(차량가 × ${(LTV_RATE * 100).toFixed(2)}%) = ${won(productMax)}`);
+  else push("LIMIT-PRODUCT", product.name, `상품 최대 ${won(productMax)}`, "INFO", `상품 최대 한도 ${won(productMax)}`);
   const incomeCap = floorWon(req.annualIncome * band.multiple);
-  push("LIMIT-INCOME", `${fmt.format(req.annualIncome)} × ${band.multiple}`, won(incomeCap), "INFO", `소득배수 한도(밴드 ${band.band})`);
+  push("LIMIT-INCOME", `연소득 ${won(req.annualIncome)}`, `밴드 ${band.band} 소득배수 ${band.multiple}배`, "INFO", `소득배수 한도 ${won(req.annualIncome)} × ${band.multiple} = ${won(incomeCap)}`);
   const annualRoom = req.annualIncome * (DSR_LIMIT / 100) - req.existingAnnualDebtService;
   const monthlyRoom = floorWon(annualRoom / 12);
-  const dsrCap = Math.max(0, floorWon(principalFromPayment(monthlyRoom, applied, req.termMonths, req.repaymentMethod)));
-  push("LIMIT-DSR", `월 여유 ${won(Math.max(0, monthlyRoom))}`, won(dsrCap), "INFO", `DSR ${DSR_LIMIT}% 안에서 월 납입이 가능한 최대 원금`);
+  const dsrCapRaw = Math.max(0, floorWon(principalFromPayment(monthlyRoom, applied, req.termMonths, req.repaymentMethod)));
+  const dsrCap = floorManWon(dsrCapRaw);
+  push("LIMIT-DSR", `허용 연 원리금 ${won(req.annualIncome)} × ${DSR_LIMIT.toFixed(2)}% − 기존 ${won(req.existingAnnualDebtService)} → 월 여유 ${won(Math.max(0, monthlyRoom))}`, `DSR ${DSR_LIMIT.toFixed(2)}% · ${req.termMonths}회 · 연 ${applied.toFixed(2)}% · ${METHOD_LABEL[req.repaymentMethod]}`, "INFO", `월 여유 ${won(Math.max(0, monthlyRoom))} 으로 갚을 수 있는 최대 원금 ${won(dsrCapRaw)} → 만 원 절사 ${won(dsrCap)}`);
 
   const candidates = [
     { code: isAuto ? "LIMIT-LTV" : "LIMIT-PRODUCT", value: productMax },
@@ -163,31 +166,34 @@ export function screen(req: ScreeningRequest): ScreeningResult {
   ];
   const binding = candidates.reduce((min, c) => (c.value < min.value ? c : min));
   const finalLimit = floorManWon(binding.value);
-  const bindingReason = reasons.find(r => r.ruleCode === binding.code);
-  if (bindingReason) bindingReason.message += " — 최종 한도를 정한 규칙(병목)";
-
-  let decision: Decision;
-  let offered: number | null;
-  if (req.requestedAmount <= finalLimit) {
-    decision = "APPROVED"; offered = req.requestedAmount;
-    push("DECISION", `요청 ${won(req.requestedAmount)}`, `최종 한도 ${won(finalLimit)}`, "PASS", "요청 금액이 최종 한도 안이라 승인");
-  } else if (finalLimit >= product.minAmount) {
-    decision = "CONDITIONAL"; offered = finalLimit;
-    push("DECISION", `요청 ${won(req.requestedAmount)}`, `최종 한도 ${won(finalLimit)}`, "FAIL", `요청이 한도를 넘어 ${won(finalLimit)}으로 줄여 조건부 승인`, "LIMIT_REDUCED");
-  } else {
-    decision = "REJECTED"; offered = null;
-    const dsrBottleneck = binding.code === "LIMIT-DSR";
-    push("DECISION", `요청 ${won(req.requestedAmount)}`, `최종 한도 ${won(finalLimit)} < 상품 최소 ${won(product.minAmount)}`, "FAIL", dsrBottleneck ? "DSR 역산 한도가 상품 최소 금액에 못 미쳐 거절" : "최종 한도가 상품 최소 금액에 못 미쳐 거절", dsrBottleneck ? "DSR_EXCEEDED" : "LIMIT_BELOW_MIN");
-  }
+  push("LIMIT-FINAL", `${isAuto ? "담보" : "상품"} ${won(productMax)} · 소득배수 ${won(incomeCap)} · DSR 역산 ${won(dsrCap)}`, `min(${isAuto ? "담보" : "상품"}, 소득배수, DSR 역산) 만 원 절사`, "INFO", `최종 한도 ${won(finalLimit)} (결정 규칙 ${binding.code})`);
 
   // DSR 은 신청 조건(요청 금액) 기준 첫 12회 납입액 합으로 계산한다(§3.3).
   const rows = schedule(req.requestedAmount, req.termMonths, applied, req.asOf, 15, req.repaymentMethod);
   const newAnnual = rows.slice(0, 12).reduce((s, r) => s + r.payment, 0);
   const ratio = Math.round((req.existingAnnualDebtService + newAnnual) / req.annualIncome * 10_000) / 100;
+  push("DSR-RATIO", `요청 ${won(req.requestedAmount)} 월 납입 ${won(rows[0].payment)} → 신규 연 원리금 ${won(newAnnual)} + 기존 ${won(req.existingAnnualDebtService)}`, `연소득 대비 ${DSR_LIMIT.toFixed(2)}% 이하`, "INFO", `요청 조건의 DSR ${ratio.toFixed(2)}% ${ratio <= DSR_LIMIT ? "≤" : ">"} ${DSR_LIMIT.toFixed(2)}%`);
+
+  let decision: Decision;
+  let offered: number | null;
+  const decisionThreshold = "승인: 요청 ≤ 한도 / 조건부: 상품 최소 ≤ 한도 < 요청 / 거절: 한도 < 상품 최소";
+  if (req.requestedAmount <= finalLimit) {
+    decision = "APPROVED"; offered = null;
+    push("DECISION", `요청 ${won(req.requestedAmount)} · 최종 한도 ${won(finalLimit)}`, decisionThreshold, "PASS", `요청금액 ${won(req.requestedAmount)} ≤ 최종 한도 ${won(finalLimit)} → 승인`);
+  } else if (finalLimit >= product.minAmount) {
+    decision = "CONDITIONAL"; offered = finalLimit;
+    push("DECISION", `요청 ${won(req.requestedAmount)} · 최종 한도 ${won(finalLimit)}`, decisionThreshold, "FAIL", `요청금액 ${won(req.requestedAmount)} > 최종 한도 ${won(finalLimit)} → 제안 한도 ${won(finalLimit)}으로 조건부 승인`, "LIMIT_REDUCED");
+  } else {
+    decision = "REJECTED"; offered = null;
+    const dsrBottleneck = binding.code === "LIMIT-DSR";
+    push("DECISION", `요청 ${won(req.requestedAmount)} · 최종 한도 ${won(finalLimit)}`, decisionThreshold, "FAIL", dsrBottleneck ? `DSR 역산 한도 ${won(finalLimit)}이 상품 최소 ${won(product.minAmount)}에 못 미쳐 거절` : `최종 한도 ${won(finalLimit)}이 상품 최소 ${won(product.minAmount)}에 못 미쳐 거절`, dsrBottleneck ? "DSR_EXCEEDED" : "LIMIT_BELOW_MIN");
+  }
+
   return {
     decision, source: "AUTO", creditBand: band.band,
     rate: { base: product.baseRate, spread, discount, applied, capped },
-    limits: { productCap: isAuto ? null : productMax, incomeCap, dsrCap, ltvCap: isAuto ? productMax : null, finalLimit, bindingRule: binding.code },
+    // 실 API 처럼 자동차 할부도 productCap 에 담보 한도를 넣고 ltvCap 을 함께 채운다. dsrCap 은 만 원 절사한 값이다.
+    limits: { productCap: productMax, incomeCap, dsrCap, ltvCap: isAuto ? productMax : null, finalLimit, bindingRule: binding.code },
     dsr: { existingAnnual: req.existingAnnualDebtService, newAnnual, ratio, limit: DSR_LIMIT },
     monthlyPayment: rows[0].payment, offeredAmount: offered, reasons, disclosure: DISCLOSURE,
   };
@@ -353,9 +359,15 @@ function allocate(s: SandboxState, c: ContractState, amount: number, type: strin
   c.outstandingPrincipal -= principal;
   c.totalInterestPaid += interest;
   c.totalPaid += amount;
-  ledger(s, type, -amount, c.contractNo);
+  // 원장 종류는 거래 종류와 이름이 다르다(MANUAL → MANUAL_REPAYMENT).
+  ledger(s, type === "MANUAL" ? "MANUAL_REPAYMENT" : type, -amount, c.contractNo);
   const tx: Transaction = { id: nextId(s), type, businessDate: s.businessDate, totalAmount: amount, fee, overdueInterest, interest, principal, allocations: [...allocations.values()], settlementBalanceAfter: s.settlementBalance };
   c.transactions.push(tx);
+  // 실 API 와 같은 PAYMENT 이벤트: detail 에 거래 종류·배분·회차 목록·잔액.
+  addEvent(s, c, "PAYMENT", amount, {
+    type, overdueInterest, interest, principal, balanceAfter: s.settlementBalance,
+    installments: tx.allocations.map(a => ({ installmentNo: a.installmentNo, interest: a.interest, principal: a.principal, status: c.rows.find(r => r.installmentNo === a.installmentNo)?.status ?? "PAID" })),
+  });
   settleStatus(s, c);
   return tx;
 }
@@ -365,15 +377,18 @@ function settleStatus(s: SandboxState, c: ContractState) {
   if (c.status === "PAID_OFF") return;
   const stillOverdue = c.rows.some(r => r.status === "OVERDUE" || r.status === "PARTIAL") || overdueUnpaid(c) > 0;
   if (c.delinquency && !stillOverdue && c.status !== "DEFAULTED") {
-    c.delinquency = null; c.status = "ACTIVE"; c.overdueDays = 0;
-    if (c.assetClass !== "NORMAL") { addEvent(s, c, "CLASS_CHANGED", null, { from: c.assetClass, to: "NORMAL" }); c.assetClass = "NORMAL"; }
-    addEvent(s, c, "OVERDUE_CLEARED", null, null);
+    const d = c.delinquency;
+    c.delinquency = null; c.status = "ACTIVE";
+    addEvent(s, c, "OVERDUE_CLEARED", d.paid, { startedOn: d.startedOn, days: c.overdueDays, paidOverdueInterest: d.paid });
+    c.overdueDays = 0;
+    if (c.assetClass !== "NORMAL") { addEvent(s, c, "CLASS_CHANGED", null, { from: c.assetClass, to: "NORMAL", overdueDays: 0, provisionRate: PROVISION_RATE.NORMAL }); c.assetClass = "NORMAL"; }
   }
   if (c.outstandingPrincipal <= 0 && !stillOverdue) {
     c.status = "PAID_OFF"; c.closedOn = s.businessDate; c.delinquency = null; c.overdueDays = 0;
     for (const row of c.rows) if (row.status !== "PAID") { row.status = "PAID"; row.paidOn = s.businessDate; }
-    addEvent(s, c, "PAID_OFF", c.totalPaid, { totalInterest: c.totalInterestPaid });
-    notify(s, c, "PAID_OFF", "대출을 모두 갚았어요", `${c.contractNo} 계약이 완제됐어요. 총 납입 ${won(c.totalPaid)}, 총 이자 ${won(c.totalInterestPaid)}이에요.`);
+    const totalFee = c.transactions.reduce((sum, t) => sum + t.fee, 0);
+    addEvent(s, c, "PAID_OFF", c.totalPaid, { totalPaid: c.totalPaid, totalInterest: c.totalInterestPaid, totalFee });
+    notify(s, c, "PAID_OFF", "완제", `대출이 모두 상환되어 계약이 종료되었습니다. 총 납입 ${won(c.totalPaid)}, 총 이자 ${won(c.totalInterestPaid)}.`);
   }
 }
 
@@ -387,8 +402,8 @@ function dailyClose(s: SandboxState, date: string, newEvents: ContractEvent[]): 
       if (row.status === "SCHEDULED" && row.adjustedDueDate === addDays(date, 3)) {
         const need = amountDueNow(c, row.adjustedDueDate);
         const short = need - s.settlementBalance;
-        notify(s, c, "PAYMENT_DUE_SOON", `${row.installmentNo}회차 납입일이 3일 뒤예요`,
-          `${c.contractNo} ${row.installmentNo}회차 ${won(row.payment)}의 납입일은 ${row.adjustedDueDate}이에요. ${c.autoDebit ? `결제계좌 잔액 ${won(s.settlementBalance)}${short > 0 ? `으로는 ${won(short)}이 부족해요. 입금해 두어야 자동이체가 돼요.` : `으로 자동이체가 가능해요.`}` : "자동이체가 없으니 계약 화면에서 직접 상환해요."}`);
+        notify(s, c, "PAYMENT_DUE_SOON", "납입 예정 안내 (D-3)",
+          `${c.contractNo} ${row.installmentNo}회차 ${won(need)}이 ${row.adjustedDueDate}에 ${c.autoDebit ? "자동이체" : "납입"} 예정입니다. ${short > 0 ? "결제계좌 잔액이 부족합니다. 납입일 전까지 입금하지 않으면 연체가 시작됩니다." : "결제계좌 잔액이 충분합니다."}`);
       }
     }
     // 2. 자동이체
@@ -396,11 +411,11 @@ function dailyClose(s: SandboxState, date: string, newEvents: ContractEvent[]): 
     if (dueToday.length > 0 && c.autoDebit) {
       const need = amountDueNow(c, date);
       if (need > 0 && s.settlementBalance >= need) {
-        allocate(s, c, need, "AUTO_DEBIT");
-        for (const row of dueToday) {
-          newEvents.push(addEvent(s, c, "PAYMENT_COMPLETED", row.payment, { installmentNo: row.installmentNo }));
-          notify(s, c, "PAYMENT_COMPLETED", `${row.installmentNo}회차 자동이체가 완료됐어요`, `${c.contractNo} ${row.installmentNo}회차 ${won(row.payment)}이 결제계좌에서 빠져나갔어요. 잔액 ${won(s.settlementBalance)}.`);
-        }
+        const before = c.events.length;
+        const tx = allocate(s, c, need, "AUTO_DEBIT");
+        newEvents.push(...c.events.slice(before));
+        const nos = tx.allocations.map(a => `${a.installmentNo}회차`).join("·");
+        notify(s, c, "PAYMENT_COMPLETED", "자동이체 완료", `${c.contractNo} ${nos} ${won(need)}이 결제계좌에서 자동이체되었습니다.`);
       }
     }
     if (c.status === "PAID_OFF") continue;
@@ -409,10 +424,11 @@ function dailyClose(s: SandboxState, date: string, newEvents: ContractEvent[]): 
     for (const row of newlyOverdue) row.status = "OVERDUE";
     if (newlyOverdue.length > 0 && !c.delinquency) {
       const base = dueRows(c, date).reduce((sum, r) => sum + (r.payment - r.paidInterest - r.paidPrincipal), 0);
-      c.delinquency = { startedOn: addDays(date, 1), segmentFrom: addDays(date, 1), baseAmount: base, settled: 0, accrued: 0, paid: 0, noticeSentOn: null, acceleratedOn: null };
+      const startedOn = addDays(date, 1);
+      c.delinquency = { startedOn, segmentFrom: startedOn, baseAmount: base, settled: 0, accrued: 0, paid: 0, noticeSentOn: null, acceleratedOn: null };
       c.status = "OVERDUE";
-      newEvents.push(addEvent(s, c, "OVERDUE_STARTED", base, { installmentNo: newlyOverdue[0].installmentNo, overdueRate: c.overdueRate }));
-      notify(s, c, "OVERDUE_STARTED", `${newlyOverdue[0].installmentNo}회차가 연체됐어요`, `${c.contractNo} ${newlyOverdue[0].installmentNo}회차 ${won(base)}이 납입되지 않았어요. 내일부터 연체이율 ${c.overdueRate.toFixed(2)}%로 연체이자가 붙어요.`);
+      newEvents.push(addEvent(s, c, "OVERDUE_STARTED", base, { startedOn, overdueRate: c.overdueRate, unpaidInstallments: dueRows(c, date).map(r => r.installmentNo) }));
+      notify(s, c, "OVERDUE_STARTED", "연체 시작", `${c.contractNo} 미납 금액 ${won(base)}에 대해 ${startedOn}부터 연체이율 연 ${c.overdueRate.toFixed(2)}%로 연체이자가 붙습니다. 미납 원리금과 연체이자를 모두 갚으면 정상으로 돌아옵니다.`);
     }
     // 4. 연체 갱신: 대상금액 재산정, 누적 연체이자 = floor(대상 × 연체이율 × 일수/365)
     const d = c.delinquency;
@@ -424,19 +440,20 @@ function dailyClose(s: SandboxState, date: string, newEvents: ContractEvent[]): 
       c.overdueDays = Math.max(0, diffDays(d.startedOn, date) + 1);
       // 5. 건전성
       const klass = assetClassOf(c.overdueDays);
-      if (klass !== c.assetClass) { newEvents.push(addEvent(s, c, "CLASS_CHANGED", null, { from: c.assetClass, to: klass, overdueDays: c.overdueDays })); c.assetClass = klass; }
+      if (klass !== c.assetClass) { newEvents.push(addEvent(s, c, "CLASS_CHANGED", null, { from: c.assetClass, to: klass, overdueDays: c.overdueDays, provisionRate: PROVISION_RATE[klass] })); c.assetClass = klass; }
       // 6. 기한이익상실 통지·상실
       if (c.overdueDays === 45 && !d.noticeSentOn) {
         d.noticeSentOn = date;
-        newEvents.push(addEvent(s, c, "ACCELERATION_NOTICE", amountDueNow(c, date), { lossDate: addDays(date, 15) }));
-        notify(s, c, "ACCELERATION_NOTICE", "기한이익상실 예정 통지예요", `${c.contractNo} 연체 45일이에요. 15일 안에 ${won(amountDueNow(c, date))}을 정리하지 않으면 ${addDays(date, 15)}에 기한이익이 상실돼 잔액 전체를 한 번에 갚아야 해요.`);
+        const expectedDefaultOn = addDays(date, 15);
+        newEvents.push(addEvent(s, c, "ACCELERATION_NOTICE", amountDueNow(c, date), { overdueDays: c.overdueDays, expectedDefaultOn }));
+        notify(s, c, "ACCELERATION_NOTICE", "기한이익상실 예고", `${c.contractNo} 연체 ${c.overdueDays}일째입니다. ${expectedDefaultOn}까지 미납액 ${won(amountDueNow(c, date))}을 정리하지 않으면 기한이익이 상실되어 잔액 전체가 청구됩니다.`);
       }
       if (c.overdueDays === 60 && c.status !== "DEFAULTED") {
         c.status = "DEFAULTED"; d.acceleratedOn = date;
         d.settled += d.accrued; d.accrued = 0; d.segmentFrom = addDays(date, 1); d.baseAmount = c.outstandingPrincipal;
         const claim = amountDueNow(c, date);
-        newEvents.push(addEvent(s, c, "ACCELERATED", claim, { outstandingPrincipal: c.outstandingPrincipal }));
-        notify(s, c, "ACCELERATED", "기한이익이 상실됐어요", `${c.contractNo} 연체 60일로 기한이익이 상실됐어요. 잔액 ${won(c.outstandingPrincipal)}을 포함해 ${won(claim)}을 한 번에 청구해요. 이제부터 잔액 전체에 연체이자가 붙어요.`);
+        newEvents.push(addEvent(s, c, "ACCELERATED", claim, { overdueDays: c.overdueDays, baseAmount: c.outstandingPrincipal, unpaidInterest: unpaidInterestOf(c.rows.filter(r => r.status !== "PAID")), unpaidOverdueInterest: overdueUnpaid(c) }));
+        notify(s, c, "ACCELERATED", "기한이익상실", `${c.contractNo}의 기한이익이 상실되었습니다. 잔여 원금·미납 이자·연체이자 전액 ${won(claim)}이 청구됩니다. 전액 상환으로만 종료됩니다.`);
       }
     }
   }
@@ -488,13 +505,15 @@ function rowsView(c: ContractState): ScheduleRow[] {
   return c.rows.map(({ paidInterest: _i, paidPrincipal: _p, ...row }) => row);
 }
 
-/** 계약의 중도상환 견적. 직전 납입일은 마지막으로 낸 회차의 약정일(없으면 실행일). */
+/** 계약의 중도상환 견적. 직전 납입일은 마지막으로 낸 회차의 약정일(없으면 실행일). 연체 중 전액이면 미납 연체이자를 더한다(§6). */
 function contractQuote(s: SandboxState, c: ContractState, principalAmount: number | null | undefined): PrepaymentQuote {
   const paid = c.rows.filter(r => r.status === "PAID");
   const last = paid[paid.length - 1];
+  const isFull = principalAmount === null || principalAmount === undefined || principalAmount >= c.outstandingPrincipal;
   return quote({
     outstanding: c.outstandingPrincipal, annualRate: c.contractRate, feeRate: c.prepaymentFeeRate, startDate: c.startDate, maturityDate: c.maturityDate,
-    lastDueDate: last ? last.dueDate : c.startDate, asOf: s.businessDate, remaining: c.rows.filter(r => r.status !== "PAID"), method: c.repaymentMethod, principalAmount, overdueInterest: 0,
+    lastDueDate: last ? last.dueDate : c.startDate, asOf: s.businessDate, remaining: c.rows.filter(r => r.status !== "PAID"), method: c.repaymentMethod, principalAmount,
+    overdueInterest: isFull ? overdueUnpaid(c) : 0,
   });
 }
 
@@ -563,7 +582,7 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
       toDateExclusive = addDays(fromDate, days);
     } else if (mode === "NEXT_DUE_DATE") {
       const dues = s.contracts.filter(c => c.status !== "PAID_OFF").map(c => nextDueRow(c)?.adjustedDueDate).filter((d): d is string => !!d && d >= fromDate).sort();
-      if (!dues.length) return fail(409, "CONFLICT", "납입 예정이 있는 계약이 없어 다음 납입일을 정할 수 없어요. 대출을 실행한 뒤 진행해요.");
+      if (!dues.length) return fail(409, "NO_NEXT_DUE_DATE", "다음 납입일을 계산할 계약이 없습니다.");
       toDateExclusive = addDays(dues[0], 1);
     } else return fail(400, "VALIDATION", "진행 모드는 ONE_DAY·NEXT_DUE_DATE·DAYS 중 하나예요.");
     const executions: BatchExecution[] = [];
@@ -587,7 +606,7 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
     });
     const id = nextId(s);
     const app: Application = {
-      id, applicationNo: `AP-${s.businessDate.slice(0, 4)}-${String(id).padStart(6, "0")}`, product, requestedAmount: req.requestedAmount, termMonths: req.termMonths,
+      id, applicationNo: `A-${s.businessDate.replaceAll("-", "")}-${String(id).padStart(6, "0")}`, product, requestedAmount: req.requestedAmount, termMonths: req.termMonths,
       repaymentMethod: req.repaymentMethod, paymentDay: req.paymentDay, autoDebit: req.autoDebit, status: screening.decision, appliedOn: s.businessDate, decidedOn: s.businessDate,
       collateral: req.collateral ? { ...req.collateral } : null, screening, overrides: [], contractId: null,
     };
@@ -600,25 +619,27 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
     if (!app) return fail(404, "NOT_FOUND", "그 신청을 찾지 못했어요. 내 모의 여신에서 신청 목록을 확인해요.");
     if (method === "GET" && !m[2]) return ok(app);
     if (method !== "POST") return null;
+    // 상태 전이 오류 코드는 business-rules §12: accept→NOT_CONDITIONAL, cancel→NOT_CANCELLABLE, execute→NOT_APPROVED.
     if (m[2] === "accept") {
-      if (app.status !== "CONDITIONAL") return fail(409, "CONFLICT", "조건부 승인 상태의 신청만 제안 한도로 수락할 수 있어요.");
+      if (app.status !== "CONDITIONAL") return fail(409, "NOT_CONDITIONAL", `조건부 승인 상태의 신청만 수락할 수 있습니다. 현재 ${app.status}`);
+      // 수락하면 요청 금액을 제안 한도로 덮어쓴다(§12).
+      app.requestedAmount = app.screening.offeredAmount ?? app.requestedAmount;
       app.status = "APPROVED";
       return ok(app);
     }
     if (m[2] === "cancel") {
-      if (app.status === "EXECUTED") return fail(409, "CONFLICT", "이미 실행된 신청은 취소할 수 없어요. 계약에서 중도상환으로 정리해요.");
-      if (app.status === "CANCELLED" || app.status === "REJECTED") return fail(409, "CONFLICT", "이미 끝난 신청이라 취소할 게 없어요.");
+      if (app.status !== "APPROVED" && app.status !== "CONDITIONAL") return fail(409, "NOT_CANCELLABLE", `승인·조건부 승인 상태의 신청만 취소할 수 있습니다. 현재 ${app.status}`);
       app.status = "CANCELLED";
       return ok(app);
     }
     if (m[2] === "execute") {
-      if (app.status !== "APPROVED") return fail(409, "CONFLICT", app.status === "CONDITIONAL" ? "조건부 승인은 제안 한도를 먼저 수락해야 실행할 수 있어요." : "승인 상태의 신청만 실행할 수 있어요.");
-      const amount = app.screening.offeredAmount ?? app.requestedAmount;
+      if (app.status !== "APPROVED") return fail(409, "NOT_APPROVED", `승인된 신청만 실행할 수 있습니다. 현재 ${app.status}`);
+      const amount = app.requestedAmount;
       const rate = app.screening.rate.applied;
       const rows = schedule(amount, app.termMonths, rate, s.businessDate, app.paymentDay, app.repaymentMethod).map(r => ({ ...r, status: "SCHEDULED", paidInterest: 0, paidPrincipal: 0 }));
       const cid = nextId(s);
       const c: ContractState = {
-        id: cid, contractNo: `CT-${s.businessDate.slice(0, 4)}-${String(cid).padStart(6, "0")}`, applicationId: app.id, product: app.product,
+        id: cid, contractNo: `C-${s.businessDate.replaceAll("-", "")}-${String(cid).padStart(6, "0")}`, applicationId: app.id, product: app.product,
         principal: amount, outstandingPrincipal: amount, contractRate: rate, overdueRate: Math.min(Math.round((rate + 3) * 100) / 100, MAX_RATE),
         status: "ACTIVE", assetClass: "NORMAL", overdueDays: 0, termMonths: app.termMonths, repaymentMethod: app.repaymentMethod, paymentDay: app.paymentDay, autoDebit: app.autoDebit,
         prepaymentFeeRate: app.product.prepaymentFeeRate, startDate: s.businessDate, maturityDate: rows[rows.length - 1].dueDate, totalInterestPaid: 0, totalPaid: 0, closedOn: null,
@@ -627,8 +648,8 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
       s.contracts.push(c);
       app.status = "EXECUTED"; app.contractId = c.id;
       ledger(s, "LOAN_DISBURSEMENT", amount, c.contractNo);
-      addEvent(s, c, "EXECUTED", amount, { applicationNo: app.applicationNo, rate });
-      notify(s, c, "LOAN_EXECUTED", "대출이 실행됐어요", `${c.contractNo} 계약이 실행되어 결제계좌에 ${won(amount)}이 입금됐어요. 1회차 납입일은 ${rows[0].adjustedDueDate}이에요.`);
+      // 실행 알림은 없다(business-rules §10). 타임라인 EXECUTED 이벤트의 detail 은 실 API 와 같다.
+      addEvent(s, c, "EXECUTED", amount, { contractNo: c.contractNo, rate, termMonths: c.termMonths, repaymentMethod: c.repaymentMethod, firstDueDate: rows[0].adjustedDueDate });
       return ok(contractView(s, c), 201);
     }
   }
@@ -650,45 +671,46 @@ export function mockLab(method: string, pathname: string, params: URLSearchParam
         if (method !== "POST") return null;
         const { amount } = body as { amount: number };
         const due = amountDueNow(c, s.businessDate);
-        if (c.status === "PAID_OFF") return fail(400, "NOTHING_DUE", "이미 완제된 계약이에요.");
-        if (due <= 0) return fail(400, "NOTHING_DUE", "지금은 갚을 미납분이 없어요. 미리 갚으려면 중도상환 견적을 받아요.");
+        if (c.status === "PAID_OFF") return fail(409, "CONTRACT_CLOSED", "완제된 계약입니다.");
+        if (due <= 0) return fail(400, "NOTHING_DUE", "미납·연체가 없습니다. 선납은 중도상환으로 하세요.");
         if (!(amount >= 1)) return fail(400, "VALIDATION", "상환 금액은 1원 이상이어야 해요.", [{ field: "amount", message: "1원 이상" }]);
-        if (amount > due) return fail(400, "VALIDATION", `지금 갚아야 할 금액은 ${won(due)}이에요. 그보다 큰 금액은 중도상환으로 해요.`, [{ field: "amount", message: `최대 ${won(due)}` }]);
-        if (amount > s.settlementBalance) return fail(409, "INSUFFICIENT_BALANCE", `결제계좌 잔액이 ${won(amount - s.settlementBalance)} 부족해요. 입금 후 다시 시도해요.`);
-        const tx = allocate(s, c, amount, "MANUAL_REPAYMENT");
-        addEvent(s, c, "REPAID", amount, { allocations: tx.allocations.length });
-        return ok(tx, 201);
+        // 미납액보다 크면 거절하지 않고 미납액까지만 차감한다(§12).
+        const charge = Math.min(amount, due);
+        if (charge > s.settlementBalance) return fail(409, "INSUFFICIENT_BALANCE", `결제계좌 잔액이 부족합니다. 잔액 ${won(s.settlementBalance)}, 필요 ${won(charge)}`);
+        return ok(allocate(s, c, charge, "MANUAL"), 201);
       }
       case "prepayment-quote": {
-        if (c.status === "PAID_OFF") return fail(409, "CONFLICT", "이미 완제된 계약이에요.");
-        if (c.status !== "ACTIVE") return fail(409, "OVERDUE_FIRST", `연체 중이에요. 먼저 연체분 ${won(amountDueNow(c, s.businessDate))}을 수동 상환으로 정리한 뒤 중도상환해요.`);
+        if (c.status === "PAID_OFF") return fail(409, "CONTRACT_CLOSED", "완제된 계약입니다.");
         const p = params.get("principalAmount");
+        if (c.status !== "ACTIVE" && p) return fail(409, "OVERDUE_FIRST", "연체 중에는 먼저 미납분을 정리해야 일부 중도상환을 할 수 있습니다.");
         return ok(contractQuote(s, c, p ? Number(p) : null));
       }
       case "prepayments": {
         if (method !== "POST") return null;
-        if (c.status === "PAID_OFF") return fail(409, "CONFLICT", "이미 완제된 계약이에요.");
-        if (c.status !== "ACTIVE") return fail(409, "OVERDUE_FIRST", `연체 중이에요. 먼저 연체분 ${won(amountDueNow(c, s.businessDate))}을 수동 상환으로 정리한 뒤 중도상환해요.`);
+        if (c.status === "PAID_OFF") return fail(409, "CONTRACT_CLOSED", "완제된 계약입니다.");
         const { principalAmount } = (body ?? {}) as { principalAmount?: number | null };
-        if (principalAmount !== null && principalAmount !== undefined && !(principalAmount >= 1)) return fail(400, "VALIDATION", "일부 상환 원금은 1원 이상이어야 해요.", [{ field: "principalAmount", message: "1원 이상" }]);
+        const partial = principalAmount !== null && principalAmount !== undefined;
+        if (c.status !== "ACTIVE" && partial) return fail(409, "OVERDUE_FIRST", "연체 중에는 먼저 미납분을 정리해야 일부 중도상환을 할 수 있습니다.");
+        if (partial && !(principalAmount >= 1)) return fail(400, "VALIDATION", "일부 상환 원금은 1원 이상이어야 해요.", [{ field: "principalAmount", message: "1원 이상" }]);
         const q = contractQuote(s, c, principalAmount);
-        if (q.totalDue > s.settlementBalance) return fail(409, "INSUFFICIENT_BALANCE", `결제계좌 잔액이 ${won(q.totalDue - s.settlementBalance)} 부족해요. 입금 후 다시 시도해요.`);
-        // 경과이자·수수료를 먼저 떼고, 원금은 잔여 회차의 원금에 뒤에서부터가 아니라 "잔액"에서 바로 뺀 뒤 잔여 회차를 재산정한다.
+        if (q.totalDue > s.settlementBalance) return fail(409, "INSUFFICIENT_BALANCE", `결제계좌 잔액이 부족합니다. 잔액 ${won(s.settlementBalance)}, 필요 ${won(q.totalDue)}`);
+        // 경과이자·수수료·연체이자를 먼저 떼고, 원금은 "잔액"에서 바로 뺀 뒤 잔여 회차를 재산정한다. 회차별 배분 행은 만들지 않는다(§12).
         const remaining = c.rows.filter(r => r.status !== "PAID");
         const paidRowsCount = c.rows.length - remaining.length;
         c.outstandingPrincipal -= q.principalAmount;
-        c.totalInterestPaid += q.accruedInterest;
+        c.totalInterestPaid += q.accruedInterest + q.overdueInterest;
         c.totalPaid += q.totalDue;
+        if (c.delinquency) c.delinquency.paid += q.overdueInterest;
         ledger(s, "PREPAYMENT", -q.totalDue, c.contractNo);
-        const tx: Transaction = { id: nextId(s), type: q.isFull ? "PREPAYMENT_FULL" : "PREPAYMENT_PARTIAL", businessDate: s.businessDate, totalAmount: q.totalDue, fee: q.fee, overdueInterest: 0, interest: q.accruedInterest, principal: q.principalAmount, allocations: [], settlementBalanceAfter: s.settlementBalance };
+        const tx: Transaction = { id: nextId(s), type: q.isFull ? "PREPAYMENT_FULL" : "PREPAYMENT_PARTIAL", businessDate: s.businessDate, totalAmount: q.totalDue, fee: q.fee, overdueInterest: q.overdueInterest, interest: q.accruedInterest, principal: q.principalAmount, allocations: [], settlementBalanceAfter: s.settlementBalance };
         c.transactions.push(tx);
         if (q.isFull) {
           for (const row of remaining) { row.status = "PAID"; row.paidOn = s.businessDate; row.paidPrincipal = row.principal; row.paidInterest = row.interest; }
-          addEvent(s, c, "PREPAID", q.totalDue, { full: true, fee: q.fee, accruedInterest: q.accruedInterest });
+          addEvent(s, c, "PREPAYMENT", q.totalDue, { principal: q.principalAmount, accruedInterest: q.accruedInterest, accruedDays: q.accruedDays, fee: q.fee, overdueInterest: q.overdueInterest, full: true });
           settleStatus(s, c);
         } else {
           c.rows = [...c.rows.slice(0, paidRowsCount), ...q.remainingSchedule.map(r => ({ ...r, status: "SCHEDULED", paidInterest: 0, paidPrincipal: 0 }))];
-          addEvent(s, c, "PREPAID", q.totalDue, { full: false, principal: q.principalAmount, fee: q.fee, accruedInterest: q.accruedInterest, newMonthlyPayment: q.newMonthlyPayment });
+          addEvent(s, c, "PREPAYMENT", q.totalDue, { principal: q.principalAmount, accruedInterest: q.accruedInterest, accruedDays: q.accruedDays, fee: q.fee, full: false, remainingInstallments: q.remainingSchedule.length, newMonthlyPayment: q.newMonthlyPayment ?? q.remainingSchedule[0]?.payment ?? null });
         }
         return ok(tx, 201);
       }

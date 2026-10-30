@@ -13,7 +13,7 @@ import StatusChip, { ContractStatusChip, statusLabel } from "../../components/St
 import SubPageHeader from "../../components/SubPageHeader";
 import Timeline, { type TimelineItem } from "../../components/Timeline";
 import { formatDate } from "../../lib/format";
-import { ASSET_CLASS_LABEL, describeEvent, EVENT_LABEL, METHOD_LABEL, pct, TX_TYPE_LABEL, won } from "../calculators/parts/labels";
+import { ASSET_CLASS_LABEL, describeEvent, eventTitle, eventTone, METHOD_LABEL, pct, TX_TYPE_LABEL, won } from "../calculators/parts/labels";
 import ScheduleTable from "../calculators/parts/ScheduleTable";
 import Tabs from "../calculators/parts/Tabs";
 import { useLoad } from "../calculators/parts/useLoad";
@@ -81,7 +81,7 @@ export default function ContractPage() {
           <section className="contract-overdue" role="alert" aria-labelledby="overdue-title">
             <h2 id="overdue-title">{c.status === "DEFAULTED" ? "기한이익상실" : "연체 중"}</h2>
             <p className="contract-overdue-line">
-              <strong>연체 {c.overdueDays}일</strong> · 연체이자 <Money value={c.delinquency.unpaidOverdueInterest} /> · 지금 갚아야 할 금액 <Money value={c.amountDueNow} strong />
+              <strong>{c.overdueDays > 0 ? `연체 ${c.overdueDays}일` : "연체 시작(납입일 미납, 연체이자는 내일부터)"}</strong> · 연체이자 <Money value={c.delinquency.unpaidOverdueInterest} /> · 지금 갚아야 할 금액 <Money value={c.amountDueNow} strong />
             </p>
             <p className="muted">
               연체 시작 {formatDate(c.delinquency.startedOn)} · 연체 대상 <Money value={c.delinquency.baseAmount} /> × 연체이율 {pct(c.overdueRate)} × 일수 ÷ 365(절사)
@@ -98,9 +98,9 @@ export default function ContractPage() {
                 <tr><th scope="row">상태</th><td><ContractStatusChip status={c.status} overdueDays={c.overdueDays} />{c.closedOn && <> · 완제일 {formatDate(c.closedOn)}</>}</td></tr>
                 <tr><th scope="row">잔액(남은 원금)</th><td><Money value={c.outstandingPrincipal} strong /> <span className="faint">원금 {won(c.principal)} 중</span></td></tr>
                 <tr><th scope="row">금리</th><td>약정 {pct(c.contractRate)} · 연체이율 {pct(c.overdueRate)} <span className="faint">(약정 + 3%p, 최고 20%)</span></td></tr>
-                <tr><th scope="row">다음 납입</th><td>{c.nextDueDate ? <>{formatDate(c.nextDueDate)} · <Money value={c.nextPayment} />{daysToDue !== null && <span className="faint"> · {daysToDue - 1}일 뒤</span>}</> : "없음"}</td></tr>
+                <tr><th scope="row">다음 납입</th><td>{c.nextDueDate ? <>{formatDate(c.nextDueDate)} · <Money value={c.nextPayment} />{daysToDue !== null ? <span className="faint"> · {daysToDue - 1}일 뒤</span> : <span className="faint"> · 납입일이 지난 미납 회차. 아래 "지금 갚아야 할 금액"으로 갚아요</span>}</> : "없음"}</td></tr>
                 <tr><th scope="row">납입 진행</th><td>{c.paidInstallments} / {c.totalInstallments}회 · 총 납입 <Money value={c.totalPaid} /> · 그중 이자 <Money value={c.totalInterestPaid} /></td></tr>
-                <tr><th scope="row">연체</th><td>{c.overdueDays > 0 ? <StatusChip label={`연체 ${c.overdueDays}일`} tone="danger" /> : <StatusChip label="연체 없음" tone="good" />}</td></tr>
+                <tr><th scope="row">연체</th><td>{c.overdueDays > 0 ? <StatusChip label={`연체 ${c.overdueDays}일`} tone="danger" /> : isOverdue ? <><StatusChip label="연체 시작" tone="danger" /> <span className="faint">납입일 일마감에 미납 · 연체일수는 연체 시작일부터 1일씩</span></> : <StatusChip label="연체 없음" tone="good" />}</td></tr>
                 <tr><th scope="row">건전성 분류</th><td><StatusChip label={ASSET_CLASS_LABEL[c.assetClass] ?? klass.label} tone={klass.tone} /> <span className="faint">연체일수로 매일 재분류 · 정상 0~29 · 요주의 30~89 · 고정 90~179 · 회수의문 180~364 · 추정손실 365+</span></td></tr>
                 <tr><th scope="row">지금 갚아야 할 금액</th><td><Money value={c.amountDueNow} strong /> <span className="faint">{c.amountDueNow > 0 ? "미납 회차 + 연체이자(기한이익상실이면 잔액 전체)" : "미납이 없어요. 미리 갚으려면 중도상환"}</span></td></tr>
               </tbody>
@@ -148,7 +148,7 @@ export default function ContractPage() {
                 {
                   id: "timeline", label: "타임라인",
                   content: events.error ? <LoadError error={events.error} onRetry={events.reload} /> : !events.data ? <Loading message="타임라인을 불러오고 있어요" /> : (
-                    <Timeline label="계약 이벤트" items={events.data.map<TimelineItem>(e => ({ id: e.id, date: e.businessDate, title: EVENT_LABEL[e.type]?.title ?? e.type, description: describeEvent(e), tone: EVENT_LABEL[e.type]?.tone ?? "neutral" }))} />
+                    <Timeline label="계약 이벤트" items={events.data.map<TimelineItem>(e => ({ id: e.id, date: e.businessDate, title: eventTitle(e), description: describeEvent(e), tone: eventTone(e) }))} />
                   ),
                 },
                 {
@@ -211,7 +211,7 @@ function RepayPanel({ contract: c, balance, onDone }: { contract: Contract; bala
       <h3 id="repay-title">수동 상환</h3>
       {c.amountDueNow <= 0 ? <p className="muted">지금은 갚을 미납분이 없어요. 자동이체가 없는 계약은 납입일 당일(영업일이 납입일일 때)에 여기서 직접 상환해요. 미리 갚으려면 아래 중도상환 견적을 받아요.</p> : (
         <>
-          <p className="muted">지금 갚아야 할 금액 <Money value={c.amountDueNow} strong />. 받은 금액은 연체이자 → 미납 이자 → 미납 원금 순으로, 오래된 회차부터 충당해요.{balance < c.amountDueNow && ` 결제계좌 잔액이 ${won(c.amountDueNow - balance)} 부족하니 먼저 입금해요.`}</p>
+          <p className="muted">지금 갚아야 할 금액 <Money value={c.amountDueNow} strong />{c.status === "DEFAULTED" ? " — 기한이익상실로 잔액 전체 + 미납 이자 + 연체이자를 한 번에 청구해요. 전액을 갚으면 완제돼요." : "."} 받은 금액은 연체이자 → 미납 이자 → 미납 원금 순으로, 오래된 회차부터 충당해요. 이보다 큰 금액을 넣어도 미납액까지만 빠져나가요.{balance < c.amountDueNow && ` 결제계좌 잔액이 ${won(c.amountDueNow - balance)} 부족하니 먼저 입금해요.`}</p>
           <MoneyInput label="상환 금액" value={amount} onChange={setAmount} required error={error || undefined} hint={`최대 ${won(c.amountDueNow)}`} />
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "상환하고 있어요…" : "상환하기"}</button>
@@ -225,8 +225,12 @@ function RepayPanel({ contract: c, balance, onDone }: { contract: Contract; bala
   );
 }
 
-/** 중도상환: 전액/일부 견적(GET) → 확인 → 실행(POST). 연체 중이면 서버가 OVERDUE_FIRST 로 막는다. */
+/**
+ * 중도상환: 전액/일부 견적(GET) → 확인 → 실행(POST).
+ * 연체·기한이익상실 중에는 일부 중도상환만 막힌다(서버 409 OVERDUE_FIRST). 전액은 연체이자를 포함해 견적·실행할 수 있다(business-rules §6).
+ */
 function PrepayPanel({ contract: c, balance, onDone }: { contract: Contract; balance: number; onDone: () => void }) {
+  const inArrears = c.status === "OVERDUE" || c.status === "DEFAULTED";
   const [mode, setMode] = useState<"full" | "partial">("full");
   const [partial, setPartial] = useState<number | null>(null);
   const [quote, setQuote] = useState<PrepaymentQuote | null>(null);
@@ -253,16 +257,16 @@ function PrepayPanel({ contract: c, balance, onDone }: { contract: Contract; bal
   return (
     <section className="panel" aria-labelledby="prepay-title">
       <h3 id="prepay-title">중도상환</h3>
-      <p className="muted">잔액 <Money value={c.outstandingPrincipal} /> · 수수료율 {pct(c.prepaymentFeeRate)} · 수수료 = 갚는 원금 × 수수료율 × 잔존일수 ÷ 대출일수. {c.status !== "ACTIVE" && "연체 중에는 먼저 연체분을 정리해야 해요."}</p>
+      <p className="muted">잔액 <Money value={c.outstandingPrincipal} /> · 수수료율 {pct(c.prepaymentFeeRate)} · 수수료 = 갚는 원금 × 수수료율 × 잔존일수 ÷ 대출일수. {inArrears && "연체 중에는 전액만 가능하고 연체이자가 더해져요. 일부 중도상환은 먼저 연체분을 정리한 뒤에 해요."}</p>
       <form onSubmit={getQuote} noValidate className="prepay-form">
         <fieldset className="prepay-mode">
           <legend className="field-label">범위</legend>
-          <label className="field-check"><input type="radio" name="prepay-mode" checked={mode === "full"} onChange={() => setMode("full")} /><span>전액 — 잔액 전부 + 경과이자 + 수수료</span></label>
-          <label className="field-check"><input type="radio" name="prepay-mode" checked={mode === "partial"} onChange={() => setMode("partial")} /><span>일부 — 지정 원금, 남은 회차 재산정</span></label>
+          <label className="field-check"><input type="radio" name="prepay-mode" checked={mode === "full"} onChange={() => setMode("full")} /><span>전액 — 잔액 전부 + 경과이자 + 수수료{inArrears && " + 연체이자"}</span></label>
+          <label className="field-check"><input type="radio" name="prepay-mode" checked={mode === "partial"} disabled={inArrears} onChange={() => setMode("partial")} /><span>일부 — 지정 원금, 남은 회차 재산정{inArrears && " (연체 정리 뒤에 가능)"}</span></label>
         </fieldset>
         {mode === "partial" && <MoneyInput label="일부 상환 원금" value={partial} onChange={setPartial} required hint={`잔액 ${won(c.outstandingPrincipal)} 미만`} />}
         {error && <p className="form-error" role="alert">{error}</p>}
-        <div className="form-actions"><button type="submit" className="btn btn-secondary" disabled={busy !== null || c.status !== "ACTIVE"}>{busy === "quote" ? "견적을 받고 있어요…" : "견적 받기"}</button></div>
+        <div className="form-actions"><button type="submit" className="btn btn-secondary" disabled={busy !== null || (inArrears && mode === "partial")}>{busy === "quote" ? "견적을 받고 있어요…" : "견적 받기"}</button></div>
       </form>
       {quote && (
         <div className="prepay-quote" aria-live="polite">
@@ -271,6 +275,7 @@ function PrepayPanel({ contract: c, balance, onDone }: { contract: Contract; bal
             <tbody>
               <tr><th scope="row">갚는 원금</th><td className="num"><Money value={quote.principalAmount} /></td></tr>
               <tr><th scope="row">경과이자 {quote.accruedDays}일</th><td className="num"><Money value={quote.accruedInterest} /></td></tr>
+              {quote.overdueInterest > 0 && <tr><th scope="row">연체이자</th><td className="num"><Money value={quote.overdueInterest} /></td></tr>}
               <tr><th scope="row">수수료{quote.feeWaived ? "(3년 경과 면제)" : ` 잔존 ${quote.remainingDays}/${quote.loanDays}일`}</th><td className="num"><Money value={quote.fee} /></td></tr>
               {!quote.isFull && quote.newMonthlyPayment !== null && <tr><th scope="row">재산정 월 납입액</th><td className="num"><Money value={quote.newMonthlyPayment} /></td></tr>}
             </tbody>
