@@ -53,12 +53,11 @@ export default function AdminApplicationsPage() {
   if (isForbidden(list.error)) return <ForbiddenPage requestId={requestIdOf(list.error)} />;
 
   const columns: Column<AdminApplicationItem>[] = [
-    { key: "no", header: "신청번호", rowHeader: true, nowrap: true, render: r => <><code className="admin-code">{r.applicationNo}</code><span className="faint admin-sub">샌드박스 {r.sandboxId}</span></> },
-    { key: "email", header: "신청자", render: r => r.userEmailMasked },
+    { key: "no", header: "신청번호 · 신청일", rowHeader: true, nowrap: true, render: r => <><code className="admin-code">{r.applicationNo}</code><span className="faint admin-sub">샌드박스 {r.sandboxId} · {formatDate(r.appliedOn)}</span></> },
+    { key: "email", header: "신청자", width: "20%", render: r => <span className="admin-email">{r.userEmailMasked}</span> },
     { key: "amount", header: "신청 금액 · 상품", numeric: true, render: r => <><Money value={r.requestedAmount} /><span className="faint admin-sub">{r.productName}</span></> },
     { key: "decision", header: "심사 결정", nowrap: true, render: r => { const { label, tone } = statusLabel(r.decision); return <><StatusChip label={label} tone={tone} /><span className="faint admin-sub">{SOURCE_LABEL[r.source] ?? r.source}</span></>; } },
     { key: "status", header: "현재 상태", nowrap: true, render: r => { const { label, tone } = statusLabel(r.status); return <StatusChip label={label} tone={tone} />; } },
-    { key: "applied", header: "신청일", nowrap: true, render: r => formatDate(r.appliedOn) },
     { key: "open", header: "상세", render: r => (
       <button type="button" className={`btn btn-small ${r.id === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.id === selectedId} onClick={() => update({ id: String(r.id) })}>
         {r.id === selectedId ? "보는 중" : "보기"}

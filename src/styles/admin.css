@@ -37,6 +37,7 @@
 .admin-tabline .is-zero b { color: var(--text-faint); }
 
 /* 표 안 보조 글자·코드 */
+.admin-email { word-break: break-all; }
 .admin-sub { display: block; margin-top: 2px; }
 .admin-code { font-size: var(--fs-caption); padding: 1px 5px; }
 .admin-time { white-space: nowrap; }
