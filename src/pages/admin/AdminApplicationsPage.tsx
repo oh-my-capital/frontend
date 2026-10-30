@@ -43,14 +43,14 @@ export default function AdminApplicationsPage() {
   if (isForbidden(list.error)) return <AdminForbidden error={list.error} />;
 
   const columns: Column<AdminApplicationItem>[] = [
-    { key: "no", header: "신청번호", rowHeader: true, render: r => <code className="admin-code">{r.applicationNo}</code> },
+    { key: "no", header: "신청번호", rowHeader: true, nowrap: true, render: r => <code className="admin-code">{r.applicationNo}</code> },
     { key: "sandbox", header: "샌드박스", numeric: true, render: r => r.sandboxId },
     { key: "email", header: "신청자", render: r => r.userEmailMasked },
     { key: "product", header: "상품", render: r => r.productName },
     { key: "amount", header: "신청 금액", numeric: true, render: r => <Money value={r.requestedAmount} /> },
-    { key: "decision", header: "자동 결정", render: r => { const { label, tone } = statusLabel(r.decision); return <><StatusChip label={label} tone={tone} /><span className="faint admin-sub">{SOURCE_LABEL[r.source] ?? r.source}</span></>; } },
-    { key: "status", header: "현재 상태", render: r => { const { label, tone } = statusLabel(r.status); return <StatusChip label={label} tone={tone} />; } },
-    { key: "applied", header: "신청일", render: r => <span className="admin-time">{formatDate(r.appliedOn)}</span> },
+    { key: "decision", header: "심사 결정", nowrap: true, render: r => { const { label, tone } = statusLabel(r.decision); return <><StatusChip label={label} tone={tone} /><span className="faint admin-sub">{SOURCE_LABEL[r.source] ?? r.source}</span></>; } },
+    { key: "status", header: "현재 상태", nowrap: true, render: r => { const { label, tone } = statusLabel(r.status); return <StatusChip label={label} tone={tone} />; } },
+    { key: "applied", header: "신청일", nowrap: true, render: r => formatDate(r.appliedOn) },
     { key: "open", header: "상세", render: r => (
       <button type="button" className={`btn btn-small ${r.id === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.id === selectedId} onClick={() => update({ id: String(r.id) })}>
         {r.id === selectedId ? "보는 중" : "보기"}
@@ -93,10 +93,11 @@ export default function AdminApplicationsPage() {
               <>
                 <DataTable
                   caption="심사 큐"
-                  captionNote="신청일 최신순. 자동 결정은 규칙 심사 결과, 현재 상태는 운영자 변경·실행·취소를 반영한 값이다."
+                  captionNote="결정일 최신순. 심사 결정은 규칙 심사 또는 운영자 변경의 결과, 현재 상태는 실행·취소까지 반영한 값이다."
                   columns={columns}
                   rows={data.items}
                   rowKey={r => r.id}
+                  selectedKey={selectedId}
                   scroll
                   emptyMessage="이 상태의 신청이 없어요. 상태를 전체로 바꿔 보거나 모의 여신에서 신청을 만들어요."
                 />
@@ -120,7 +121,7 @@ export default function AdminApplicationsPage() {
             {selectedId !== null && detail.error != null && (
               <LoadError
                 error={detail.error}
-                message={detail.error instanceof ApiError && detail.error.status === 404 ? "이 신청의 상세를 불러오지 못했어요. 실 API에는 GET /admin/applications/{id}가 아직 없어요(계약 추가 요청 중)." : undefined}
+                message={detail.error instanceof ApiError && detail.error.status === 404 ? "이 번호의 신청을 찾지 못했어요. 목록에서 다시 골라요." : undefined}
                 onRetry={detail.reload}
               />
             )}
@@ -182,28 +183,24 @@ function ApplicationPanel({ application, onChanged, onClose }: { application: Ap
       <ScreeningReasons reasons={s.reasons} />
       <Disclosure data={s.disclosure} />
 
-      {application.overrides.length > 0 && (
-        <table className="table table-compact admin-overrides">
-          <caption>변경 이력<span className="table-caption-note">screening_overrides에 남은 이전·이후·사유·시각이다.</span></caption>
-          <thead><tr><th scope="col">시각</th><th scope="col">이전 → 이후</th><th scope="col" className="num">금액</th><th scope="col">사유</th></tr></thead>
-          <tbody>
-            {application.overrides.map((o, i) => (
-              <tr key={i}>
-                <td className="admin-time">{formatDateTime(o.createdAt)}</td>
-                <td>{statusLabel(o.beforeDecision).label} → {statusLabel(o.afterDecision).label}</td>
-                <td className="num"><Money value={o.afterAmount} /></td>
-                <td>{o.reason}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {application.overrides.length > 0 && <OverridesTable overrides={application.overrides} />}
 
       {canOverride
         ? <OverrideForm application={application} onChanged={onChanged} />
         : <p className="muted admin-note">{application.status === "EXECUTED" ? "실행이 끝난 신청이라 결정을 바꿀 수 없어요. 계약 쪽에서 처리해요." : "취소된 신청은 결정을 바꿀 수 없어요."}</p>}
     </div>
   );
+}
+
+/** 변경 이력(screening_overrides). 375px 에서 패널이 넓어지지 않도록 DataTable scroll 로 감싼다(1차의 맨 table 은 패널을 476px 까지 밀어냈다). */
+function OverridesTable({ overrides }: { overrides: Application["overrides"] }) {
+  const columns: Column<Application["overrides"][number]>[] = [
+    { key: "at", header: "시각", nowrap: true, render: o => formatDateTime(o.createdAt) },
+    { key: "change", header: "이전 → 이후", nowrap: true, render: o => `${statusLabel(o.beforeDecision).label} → ${statusLabel(o.afterDecision).label}` },
+    { key: "amount", header: "금액", numeric: true, render: o => <Money value={o.afterAmount} /> },
+    { key: "reason", header: "사유", render: o => o.reason },
+  ];
+  return <DataTable caption="변경 이력" captionNote="screening_overrides에 남은 이전·이후·사유·시각이다." columns={columns} rows={overrides} rowKey={(_, i) => i} compact scroll />;
 }
 
 function OverrideForm({ application, onChanged }: { application: Application; onChanged: (app: Application) => void }) {

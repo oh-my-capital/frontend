@@ -6,11 +6,11 @@ import type { BatchExecution } from "../../api/types";
 import DataTable, { type Column } from "../../components/DataTable";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
-import StatusChip from "../../components/StatusChip";
+import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatDate, formatNumber } from "../../lib/format";
 import AdminForbidden from "./parts/AdminForbidden";
-import { BATCH_STATUS, isForbidden, JOB_NAME, todayIso } from "./parts/adminLabels";
+import { isForbidden, JOB_NAME, todayIso } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 const DAILY_CLOSE_STEPS = [
@@ -101,7 +101,7 @@ function DailyCloseForm({ onRan }: { onRan: () => void }) {
       setResult(rows);
       const sandboxes = new Set(rows.map(r => r.sandboxId)).size;
       const failed = rows.filter(r => r.status === "FAILED").length;
-      const monthEnd = rows.filter(r => r.jobName === "MONTH_END_CLOSE").length;
+      const monthEnd = rows.filter(r => r.jobName === "MONTHLY_CLOSE").length;
       setSummary(rows.length === 0
         ? `${formatDate(untilDate)}까지 실행할 일마감이 없어요. 모든 샌드박스가 이미 그 날짜 이상이에요.`
         : `${sandboxes}개 샌드박스에서 ${formatDate(untilDate)}까지 작업 ${rows.length}건을 실행했어요(월마감 ${monthEnd}건). 실패 ${failed}건.`);
@@ -139,8 +139,8 @@ function ExecutionsTable({ caption, rows, compact = false, emptyMessage }: { cap
     { key: "id", header: "ID", numeric: true, render: r => r.id },
     { key: "sandbox", header: "샌드박스", numeric: true, render: r => (r.sandboxId === null ? "전체" : r.sandboxId) },
     { key: "job", header: "작업", rowHeader: true, render: r => <>{JOB_NAME[r.jobName] ?? r.jobName}<span className="faint admin-sub"><code>{r.jobName}</code></span></> },
-    { key: "date", header: "영업일", render: r => <span className="admin-time">{formatDate(r.businessDate)}</span> },
-    { key: "status", header: "상태", render: r => { const chip = BATCH_STATUS[r.status] ?? { label: r.status, tone: "neutral" as const }; return <StatusChip label={chip.label} tone={chip.tone} />; } },
+    { key: "date", header: "영업일", nowrap: true, render: r => formatDate(r.businessDate) },
+    { key: "status", header: "상태", nowrap: true, render: r => { const chip = statusLabel(r.status); return <StatusChip label={chip.label} tone={chip.tone} />; } },
     { key: "count", header: "처리 계약", numeric: true, render: r => `${formatNumber(r.processedContracts)}건` },
     { key: "error", header: "오류", render: r => (r.errorMessage ? <span className="admin-error-text">{r.errorMessage}</span> : <span className="faint">—</span>) },
   ];

@@ -286,7 +286,7 @@ function record(sandboxId: number | null, jobName: string, businessDate: string,
 }
 // 2026-01-31 월마감 → 2월 초 일마감. 샌드박스 4는 2026-02-04에 결제계좌 잔액 조회 오류로 실패했다.
 for (const d of ["2026-01-29", "2026-01-30", "2026-01-31"]) for (const s of [1, 2, 3, 4, 5, 6]) record(s, "DAILY_CLOSE", d, "SUCCESS", s === 3 ? 3 : 2);
-for (const s of [1, 2, 3, 4, 5, 6]) record(s, "MONTH_END_CLOSE", "2026-01-31", "SUCCESS", s === 3 ? 3 : 2);
+for (const s of [1, 2, 3, 4, 5, 6]) record(s, "MONTHLY_CLOSE", "2026-01-31", "SUCCESS", s === 3 ? 3 : 2);
 for (const d of ["2026-02-02", "2026-02-03"]) for (const s of [1, 2, 3, 4, 5, 6]) record(s, "DAILY_CLOSE", d, "SUCCESS", s === 3 ? 3 : 2);
 record(1, "DAILY_CLOSE", "2026-02-04", "SUCCESS", 2); record(2, "DAILY_CLOSE", "2026-02-04", "SUCCESS", 2); record(3, "DAILY_CLOSE", "2026-02-04", "SUCCESS", 3);
 record(4, "DAILY_CLOSE", "2026-02-04", "FAILED", 0, "결제계좌 잔액 조회 중 오류가 나서 이 날짜 처리를 되돌렸다. 다시 실행하면 같은 날짜부터 이어간다.");
@@ -308,7 +308,7 @@ function runDailyClose(untilDate: string): BatchExecution[] {
       date = nextDay(date);
       const processed = sandboxId === 3 ? 3 : 2;
       made.push(record(sandboxId, "DAILY_CLOSE", date, "SUCCESS", processed));
-      if (date.endsWith("-28") && date.startsWith("2026-02")) made.push(record(sandboxId, "MONTH_END_CLOSE", date, "SUCCESS", processed));
+      if (date.endsWith("-28") && date.startsWith("2026-02")) made.push(record(sandboxId, "MONTHLY_CLOSE", date, "SUCCESS", processed));
       sandboxDates.set(sandboxId, date);
     }
   }

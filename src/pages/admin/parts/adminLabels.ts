@@ -1,22 +1,15 @@
 import { ApiError } from "../../../api/client";
 import type { StatusTone } from "../../../components/StatusChip";
-import type { ContentEntityType, ContentRevisionAction, ContentStatus, Decision, ScreeningSource } from "../../../api/types";
+import type { ContentEntityType, ContentRevisionAction, Decision, ScreeningSource } from "../../../api/types";
 
-/** 운영 콘솔에서만 쓰는 라벨. 공통 StatusChip의 LABELS에 없는 코드들이다(통합 요청은 보고에). */
+/**
+ * 운영 콘솔에서만 쓰는 라벨. 콘텐츠 상태(DRAFT·PUBLISHED·RETIRED)와 배치 상태(SUCCESS·FAILED·SKIPPED·RUNNING)는 WP5 후속으로
+ * 공통 StatusChip.statusLabel 에 들어갔으므로 여기서 지웠다. 남은 것은 이력 동작·결정·출처·상태 필터·상환 방식 등 chip 이 아닌 라벨이다.
+ */
 type Chip = { label: string; tone: StatusTone };
 
-export const CONTENT_STATUS: Record<ContentStatus, Chip> = {
-  DRAFT: { label: "초안", tone: "info" },
-  PUBLISHED: { label: "게시", tone: "good" },
-  RETIRED: { label: "내림", tone: "neutral" },
-};
-export const BATCH_STATUS: Record<string, Chip> = {
-  SUCCESS: { label: "성공", tone: "good" },
-  FAILED: { label: "실패", tone: "danger" },
-  SKIPPED: { label: "건너뜀", tone: "neutral" },
-  RUNNING: { label: "실행 중", tone: "info" },
-};
-export const JOB_NAME: Record<string, string> = { DAILY_CLOSE: "일마감", MONTH_END_CLOSE: "월마감" };
+/** batch_executions.job_name(docs/contracts/CapiMATE-DB.dbml): DAILY_CLOSE | MONTHLY_CLOSE. 1차에서 MONTH_END_CLOSE 로 잘못 적었던 것을 실 API 로 확인해 고쳤다. */
+export const JOB_NAME: Record<string, string> = { DAILY_CLOSE: "일마감", MONTHLY_CLOSE: "월마감" };
 export const ENTITY_TYPE: Record<ContentEntityType, string> = { CONCEPT: "개념", QUIZ: "문항", TERM: "용어" };
 export const REVISION_ACTION: Record<ContentRevisionAction, Chip> = {
   DRAFT: { label: "초안 저장", tone: "info" },

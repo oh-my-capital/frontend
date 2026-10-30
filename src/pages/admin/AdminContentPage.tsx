@@ -6,7 +6,7 @@ import type { AdminConceptSummary, AdminTermSummary, ContentValidationReport } f
 import DataTable, { type Column } from "../../components/DataTable";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
-import StatusChip from "../../components/StatusChip";
+import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatNumber } from "../../lib/format";
 import ConceptEditor from "./content/ConceptEditor";
@@ -14,7 +14,7 @@ import RevisionsTable from "./content/RevisionsTable";
 import TermEditor from "./content/TermEditor";
 import ValidationList from "./content/ValidationList";
 import AdminForbidden from "./parts/AdminForbidden";
-import { CONTENT_STATUS, formatDateTime, isForbidden } from "./parts/adminLabels";
+import { formatDateTime, isForbidden } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 type Tab = "concepts" | "terms";
@@ -129,7 +129,7 @@ function ConceptList({ rows, selectedId, onSelect }: { rows: AdminConceptSummary
   const columns: Column<AdminConceptSummary>[] = [
     { key: "order", header: "순서", numeric: true, render: r => r.orderNo },
     { key: "title", header: "제목", rowHeader: true, render: r => <>{r.title}<span className="faint admin-sub"><code className="admin-code">{r.id}</code></span></> },
-    { key: "status", header: "상태", render: r => { const c = CONTENT_STATUS[r.status]; return <><StatusChip label={c.label} tone={c.tone} />{r.hasDraft && r.status === "PUBLISHED" && <span className="faint admin-sub">초안 있음</span>}</>; } },
+    { key: "status", header: "상태", render: r => { const c = statusLabel(r.status); return <><StatusChip label={c.label} tone={c.tone} />{r.hasDraft && r.status === "PUBLISHED" && <span className="faint admin-sub">초안 있음</span>}</>; } },
     { key: "version", header: "버전", numeric: true, render: r => `v${r.contentVersion}` },
     { key: "quiz", header: "문항", numeric: true, render: r => formatNumber(r.quizCount) },
     { key: "published", header: "게시", render: r => <span className="admin-time">{formatDateTime(r.publishedAt)}</span> },
@@ -143,7 +143,7 @@ function TermList({ rows, selectedId, onSelect }: { rows: AdminTermSummary[]; se
   const columns: Column<AdminTermSummary>[] = [
     { key: "term", header: "용어", rowHeader: true, render: r => <>{r.term}<span className="faint admin-sub"><code className="admin-code">{r.slug}</code></span></> },
     { key: "category", header: "분류", render: r => r.category },
-    { key: "status", header: "상태", render: r => { const c = CONTENT_STATUS[r.status]; return <><StatusChip label={c.label} tone={c.tone} />{r.hasDraft && r.status === "PUBLISHED" && <span className="faint admin-sub">초안 있음</span>}</>; } },
+    { key: "status", header: "상태", render: r => { const c = statusLabel(r.status); return <><StatusChip label={c.label} tone={c.tone} />{r.hasDraft && r.status === "PUBLISHED" && <span className="faint admin-sub">초안 있음</span>}</>; } },
     { key: "version", header: "버전", numeric: true, render: r => `v${r.contentVersion}` },
     { key: "updated", header: "수정", render: r => <span className="admin-time">{formatDateTime(r.updatedAt)}</span> },
     { key: "open", header: "편집", render: r => <button type="button" className={`btn btn-small ${r.slug === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.slug === selectedId} onClick={() => onSelect(r.slug)}>{r.slug === selectedId ? "편집 중" : "열기"}</button> },

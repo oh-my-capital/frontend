@@ -7,12 +7,12 @@ export type ActionKind = "save" | "publish" | "retire";
 export const JSON_INVALID = "JSON_INVALID";
 
 /**
- * 422 응답의 검증 문제 목록. 공통 ApiError 는 본문의 problems 를 보존하지 않으므로(WP5 요청 사항), 같은 내용을
- * details(field = "TYPE:id.field") 로도 받아 되살린다. ApiError 가 problems 를 들고 오면 그것을 우선한다.
+ * 422 CONTENT_INVALID 의 검증 문제 목록. 계약(ContentValidationError)대로 ApiError.body.problems 를 먼저 읽고,
+ * 없으면 details(field = "TYPE:id.field") 에서 되살린다(백엔드는 둘 다 채운다).
  */
 export function problemsFromError(err: ApiError): ContentValidationItem[] {
-  const withProblems = err as ApiError & { problems?: ContentValidationItem[] };
-  if (withProblems.problems?.length) return withProblems.problems;
+  const problems = err.body?.problems;
+  if (Array.isArray(problems) && problems.length > 0) return problems as ContentValidationItem[];
   return err.details.map(d => {
     const m = (d.field ?? "").match(/^(CONCEPT|QUIZ|TERM):([^.]+)(?:\.(.+))?$/);
     return { entityType: (m?.[1] ?? "CONCEPT") as ContentValidationItem["entityType"], entityId: m?.[2] ?? "", field: m?.[3] ?? null, message: d.message ?? "" };

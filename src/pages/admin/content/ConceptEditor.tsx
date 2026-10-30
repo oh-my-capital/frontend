@@ -10,8 +10,18 @@ const CALCULATORS: { value: string; label: string }[] = [
   { value: "", label: "없음" }, { value: "schedule", label: "상환 스케줄 계산기" }, { value: "screening", label: "심사 시뮬레이터" }, { value: "prepayment", label: "중도상환 견적" },
 ];
 
+/**
+ * 계약 ConceptDraft 에는 있지만 types.ts 의 ConceptDraft 에 아직 없는 필드(figures · numbers · relatedTermSlugs).
+ * 절의 figure 는 figures[].id 를 가리키므로 이 배열을 빼고 저장하면 서버 검증이 "figures 에 없는 그림 id" 로 422 를 낸다(실 API 연결에서 확인).
+ * 필드별 폼은 건드리지 않고 그대로 들고 다니며, 고치려면 JSON 원문 모드를 쓴다. types.ts 반영은 WP5 에 요청했다.
+ */
+interface ConceptFigure { id: string; title: string; nodes: { id: string; label: string; kind?: string }[]; edges: { from: string; to: string; label?: string }[] }
+interface ContentNumber { label: string; value: string; kind: "statutory" | "assumption"; note?: string | null; sourceUrl?: string | null; checkedOn?: string | null }
+type ConceptDraftBody = ConceptDraft & { figures?: ConceptFigure[]; numbers?: ContentNumber[]; relatedTermSlugs?: string[] };
+
 /** 응답(AdminConcept)에서 저장 본문(ConceptDraft)만 떼어 낸다. 메타(id·status·버전)는 서버가 정한다. */
-function toDraft(c: AdminConcept): ConceptDraft {
+function toDraft(c: AdminConcept): ConceptDraftBody {
+  const extra = c as AdminConcept & Partial<Pick<ConceptDraftBody, "figures" | "numbers" | "relatedTermSlugs">>;
   return {
     orderNo: c.orderNo, title: c.title, summary: c.summary,
     sections: c.sections.map(s => ({ heading: s.heading, body: s.body, figure: s.figure ?? null })),
@@ -19,6 +29,9 @@ function toDraft(c: AdminConcept): ConceptDraft {
     checklist: [...(c.checklist ?? [])],
     linkedCalculator: c.linkedCalculator ?? null,
     sandboxTask: c.sandboxTask ?? null,
+    figures: (extra.figures ?? []).map(f => ({ ...f, nodes: f.nodes.map(n => ({ ...n })), edges: f.edges.map(e => ({ ...e })) })),
+    numbers: (extra.numbers ?? []).map(n => ({ ...n })),
+    relatedTermSlugs: [...(extra.relatedTermSlugs ?? [])],
     sources: c.sources.map(s => ({ ...s })),
     quizzes: c.quizzes.map(q => ({ id: q.id ?? null, question: q.question, options: q.options.map(o => ({ id: o.id ?? null, text: o.text, correct: o.correct, feedback: o.feedback ?? "" })), explanation: q.explanation, nextAction: q.nextAction ?? null })),
   };
@@ -30,22 +43,22 @@ const emptyQuiz = (): QuizDraft => ({ id: null, question: "", options: [0, 1, 2,
  * 저장 본문은 계약의 ConceptDraft 그대로다. 정답은 문항마다 라디오 1개.
  */
 export default function ConceptEditor({ concept, onChanged }: { concept: AdminConcept; onChanged: (view: AdminConcept, kind: ActionKind) => void }) {
-  const [draft, setDraft] = useState<ConceptDraft>(() => toDraft(concept));
+  const [draft, setDraft] = useState<ConceptDraftBody>(() => toDraft(concept));
   const [mode, setMode] = useState<"fields" | "json">("fields");
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   /** 지금 화면의 본문. JSON 모드면 파싱해서 쓴다(틀리면 null). */
-  const currentDraft = (): ConceptDraft | null => {
+  const currentDraft = (): ConceptDraftBody | null => {
     if (mode === "fields") return draft;
-    const parsed = parseJson<ConceptDraft>(jsonText);
+    const parsed = parseJson<ConceptDraftBody>(jsonText);
     if (parsed.error !== null) { setJsonError(parsed.error); return null; }
     setJsonError(null);
     return parsed.value;
   };
   const toggleMode = () => {
     if (mode === "fields") { setJsonText(JSON.stringify(draft, null, 2)); setJsonError(null); setMode("json"); return; }
-    const parsed = parseJson<ConceptDraft>(jsonText);
+    const parsed = parseJson<ConceptDraftBody>(jsonText);
     if (parsed.error !== null) { setJsonError(parsed.error); return; }
     setDraft(parsed.value); setJsonError(null); setMode("fields");
   };
@@ -56,7 +69,7 @@ export default function ConceptEditor({ concept, onChanged }: { concept: AdminCo
     retire: () => adminApi.retireConcept(concept.id),
   }, (view, kind) => { setDraft(toDraft(view)); if (mode === "json") setJsonText(JSON.stringify(toDraft(view), null, 2)); onChanged(view, kind); });
 
-  const patch = (p: Partial<ConceptDraft>) => setDraft(d => ({ ...d, ...p }));
+  const patch = (p: Partial<ConceptDraftBody>) => setDraft(d => ({ ...d, ...p }));
   const setSection = (i: number, p: Partial<ConceptDraftSection>) => patch({ sections: draft.sections.map((s, k) => (k === i ? { ...s, ...p } : s)) });
   const setMis = (i: number, p: Partial<Misconception>) => patch({ misconceptions: (draft.misconceptions ?? []).map((m, k) => (k === i ? { ...m, ...p } : m)) });
   const setSource = (i: number, p: Partial<ContentSource>) => patch({ sources: draft.sources.map((s, k) => (k === i ? { ...s, ...p } : s)) });
@@ -105,6 +118,14 @@ export default function ConceptEditor({ concept, onChanged }: { concept: AdminCo
 
           <Fieldset legend="체크리스트">
             <TextArea label="항목(한 줄에 하나)" required={false} value={(draft.checklist ?? []).join("\n")} onChange={v => patch({ checklist: linesToList(v) })} rows={3} />
+          </Fieldset>
+
+          <Fieldset legend="그림 · 수치 · 관련 용어" hint="필드별 폼에서는 그대로 두고 저장한다. 고치려면 아래 「JSON 원문으로 편집」에서 figures · numbers · relatedTermSlugs 를 바꾼다.">
+            <dl className="def-list admin-def">
+              <dt>그림(figures)</dt><dd>{(draft.figures ?? []).length}개{(draft.figures ?? []).length > 0 && <span className="faint"> · {(draft.figures ?? []).map(f => f.id).join(", ")}</span>}</dd>
+              <dt>수치(numbers)</dt><dd>{(draft.numbers ?? []).length}개</dd>
+              <dt>관련 용어</dt><dd>{(draft.relatedTermSlugs ?? []).length > 0 ? (draft.relatedTermSlugs ?? []).join(", ") : "없음"}</dd>
+            </dl>
           </Fieldset>
 
           <Fieldset legend={`출처 ${draft.sources.length}개`} hint="공식 기관 URL(go.kr·or.kr 등)과 확인일이 필요하다. 게시 검증에서 걸린다." actions={<button type="button" className="btn btn-secondary btn-small" onClick={() => patch({ sources: [...draft.sources, { title: "", url: "", checkedOn: "" }] })}>출처 추가</button>}>
