@@ -7,6 +7,7 @@ import type { Credentials, Error as ApiErrorBody, Session, User } from "../types
 import * as F from "./fixtures";
 import { mockLearn } from "./learn-fixtures";
 import { mockAdmin } from "./admin";
+import { mockLab } from "./lab-fixtures";
 
 export interface MockResult { status: number; body: unknown; requestId: string }
 
@@ -81,61 +82,9 @@ export async function mockFetch(method: string, path: string, body: unknown, tok
   // ── learning · glossary · methodology · me/learning — WP6 영역은 learn-fixtures.ts 가 응답한다(콘텐츠·채점·메모리 진척).
   const learn = mockLearn(method, pathname, params, body, me);
   if (learn) return learn;
-  let m: RegExpMatchArray | null;
-
-  // ── calculators
-  if (key === "POST /calculators/schedule") {
-    const req = body as Parameters<typeof F.scheduleResponse>[0];
-    if (!req || req.principal < 1_000_000 || req.termMonths < 1) return fail(400, "VALIDATION", "원금은 100만 원 이상, 기간은 1회 이상이어야 해요.");
-    return ok(F.scheduleResponse(req));
-  }
-  if (key === "POST /calculators/screening") return ok(F.SCREENING_EXAMPLE_6);
-  if (key === "POST /calculators/prepayment") return ok(F.PREPAYMENT_EXAMPLE_5);
-
-  // ── sandbox
-  if (key === "GET /sandbox/products") return ok(F.PRODUCTS);
-  if (pathname.startsWith("/sandbox")) {
-    const denied = requireLogin(); if (denied) return denied;
-    if (key === "GET /sandbox") return ok(F.SANDBOX);
-    if (key === "PUT /sandbox/profile") return ok(body);
-    if (key === "POST /sandbox/settlement-account/deposits") {
-      const { amount } = body as { amount: number };
-      return ok({ id: 2, businessDate: F.SANDBOX.businessDate, type: "DEPOSIT", amount, balanceAfter: F.SANDBOX.settlementBalance + amount, contractNo: null }, 201);
-    }
-    if (key === "GET /sandbox/settlement-account/ledger") return ok(F.LEDGER);
-    if (key === "POST /sandbox/clock/advance") {
-      const { mode, days } = body as { mode: string; days?: number };
-      const advanced = mode === "ONE_DAY" ? 1 : mode === "DAYS" ? (days ?? 1) : 32;
-      return ok({ fromDate: "2026-01-15", toDate: mode === "NEXT_DUE_DATE" ? "2026-02-17" : "2026-01-16", daysAdvanced: advanced, executions: F.BATCH_EXECUTIONS, newEvents: [], newNotifications: 0, sandbox: F.SANDBOX });
-    }
-    if (key === "GET /sandbox/applications") return ok([F.APPLICATION]);
-    if (key === "POST /sandbox/applications") return ok(F.APPLICATION, 201);
-    m = pathname.match(/^\/sandbox\/applications\/(\d+)(\/(accept|cancel|execute))?$/);
-    if (m) {
-      if (m[1] !== "1") return fail(404, "NOT_FOUND", "그 신청을 찾지 못했어요.");
-      if (m[3] === "execute") return ok(F.CONTRACT, 201);
-      if (m[3] === "accept") return fail(409, "CONFLICT", "조건부 승인 건만 수락할 수 있어요.");
-      if (m[3] === "cancel") return fail(409, "CONFLICT", "이미 실행된 신청은 취소할 수 없어요.");
-      return ok(F.APPLICATION);
-    }
-    if (key === "GET /sandbox/contracts") return ok([F.CONTRACT_SUMMARY]);
-    m = pathname.match(/^\/sandbox\/contracts\/(\d+)(?:\/([a-z-]+))?$/);
-    if (m) {
-      if (m[1] !== "1") return fail(404, "NOT_FOUND", "그 계약을 찾지 못했어요.");
-      switch (m[2]) {
-        case undefined: return ok(F.CONTRACT);
-        case "schedules": return ok(F.CONTRACT_SCHEDULE);
-        case "transactions": return ok(F.TRANSACTIONS);
-        case "events": return ok(F.EVENTS);
-        case "provisions": return ok(F.PROVISIONS);
-        case "repayments": return fail(400, "NOTHING_DUE", "지금은 갚을 미납분이 없어요. 다음 납입일까지 시간을 진행해요.");
-        case "prepayment-quote": return ok({ ...F.PREPAYMENT_EXAMPLE_5, asOf: F.SANDBOX.businessDate, outstandingPrincipal: 10_000_000, principalAmount: 10_000_000 });
-        case "prepayments": return fail(409, "INSUFFICIENT_BALANCE", "결제계좌 잔액이 부족해요. 입금 후 다시 시도해요.");
-      }
-    }
-    if (key === "GET /sandbox/notifications") return ok(params.get("unreadOnly") === "true" ? F.NOTIFICATIONS.filter(n => !n.read) : F.NOTIFICATIONS);
-    if (key === "POST /sandbox/notifications/read") return ok(undefined, 204);
-  }
+  // ── calculators · sandbox — WP7 영역은 lab-fixtures.ts 의 규칙 엔진이 응답한다(골든 값·메모리 상태·일마감).
+  const lab = mockLab(method, pathname, params, body, me, ok, fail);
+  if (lab) return lab;
 
   // ── admin — 운영 콘솔 응답은 mock/admin.ts(WP8)가 맡는다. 권한 확인만 여기서 한다.
   if (pathname.startsWith("/admin")) {

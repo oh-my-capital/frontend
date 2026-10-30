@@ -1,0 +1,120 @@
+/*
+ * 계산기 3종(S-06~S-08, WP7)과 WP7 공용 부품(회차표·근거 표·금리/한도 구성·탭·추이 그림).
+ * 토큰·기반 규칙은 tokens.css·base.css(WP5)를 그대로 쓴다. border-radius 0, 1px 실선, 전환 0.15s, 색은 토큰만.
+ */
+
+/* 정의 목록을 <div><dt/><dd/></div> 묶음으로 쓸 때(learn.css 와 같은 규칙; 중복 선언이어도 결과는 같다). */
+.calc .def-list > div, .sandbox .def-list > div { display: contents; }
+
+/* ── 폼 ─────────────────────────────────────────────────────────────────── */
+.calc-main { min-width: 0; display: grid; gap: 28px; }
+.calc-form { display: grid; gap: 18px; }
+.calc-form > h2 { font-size: 22px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
+.calc-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; align-items: start; }
+.calc-fields .field-check { grid-column: 1 / -1; }
+.calc-fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 12px; }
+.calc-fieldset > legend { padding: 0; margin-bottom: 4px; color: var(--accent); font-size: var(--fs-small); font-weight: 700; letter-spacing: .02em; }
+.calc-form .form-actions { padding-top: 6px; border-top: 1px solid var(--border); }
+.calc-form .form-actions .faint { margin-left: auto; }
+
+/* ── 결과 ───────────────────────────────────────────────────────────────── */
+.calc-results { min-width: 0; }
+.calc-stack { gap: 24px; }
+.calc-compare th[scope='row'] { white-space: nowrap; }
+.calc-compare .money-strong { font-size: 17px; }
+.calc-method-note { margin: 0 0 12px; color: var(--text-muted); font-size: 15px; line-height: 1.65; }
+.calc-howto { font-size: var(--fs-small); }
+.calc-howto dd { line-height: 1.6; }
+.calc-links { display: grid; gap: 6px; padding-left: 18px; font-size: 15px; }
+.calc-links a { display: inline-block; min-height: 24px; font-weight: 600; }
+.calc-steps { display: grid; gap: 8px; padding-left: 20px; font-size: 15px; line-height: 1.6; }
+.calc-steps li::marker { color: var(--accent); font-weight: 700; }
+.calc-quote th[scope='row'] { white-space: nowrap; }
+.calc-quote td:nth-child(2) { color: var(--text-muted); font-size: var(--fs-small); line-height: 1.55; }
+.calc-partial { padding: 14px 16px; border: 1px solid var(--border); border-left: 3px solid var(--primary); background: var(--surface-soft); font-size: 15px; }
+
+/* ── 탭(회차표 방식·계약 상세) ──────────────────────────────────────────── */
+.lab-tabs-wrap { min-width: 0; }
+.lab-tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid var(--text); }
+.lab-tabs button { position: relative; min-height: 48px; padding: 0 20px; border: 0; background: transparent; color: var(--text-muted); font-size: var(--fs-body); font-weight: 600; transition: color .15s; }
+.lab-tabs button:hover { color: var(--text); }
+.lab-tabs button.is-active { color: var(--primary); font-weight: 700; }
+.lab-tabs button.is-active::after { content: ''; position: absolute; right: 0; bottom: -2px; left: 0; height: 3px; background: var(--primary); }
+.lab-tabs button:focus-visible { outline-offset: -3px; }
+.lab-tabpanel { padding-top: 18px; }
+
+/* ── 회차표: 원금/이자 비중 막대, 이연, 모바일 4열 + 펼침 ─────────────────── */
+.sched-table th[scope='row'] { font-weight: 600; }
+.sched-date time { white-space: nowrap; }
+.sched-deferred { display: block; color: var(--warn); font-size: var(--fs-caption); font-weight: 600; white-space: nowrap; }
+.sched-bar { position: relative; display: inline-block; vertical-align: middle; width: 88px; height: 10px; margin-right: 8px; border: 1px solid var(--border-strong); background: var(--accent-tint); }
+.sched-bar > i { display: block; height: 100%; background: var(--primary); }
+.sched-share { color: var(--text-muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.sched-table tr.is-recalculated > * { background: var(--primary-tint); }
+.sched-table tr.is-overdue > * { background: var(--danger-bg); }
+.sched-toggle-col { display: none; width: 1px; padding: 0; }
+.sched-toggle { min-height: 44px; padding: 0 10px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--primary); font-size: var(--fs-caption); font-weight: 700; }
+.sched-expand { display: none; }
+.sched-expand > td { padding: 8px 10px 14px; background: var(--surface-soft); }
+.sched-expand-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: var(--fs-small); }
+.sched-expand-list > div { display: contents; }
+.sched-expand-list dt { color: var(--text-muted); font-weight: 600; }
+.sched-expand-list dd .sched-bar { margin-left: 6px; }
+
+/* ── 결정 요약·금리/한도 구성·근거 표 ──────────────────────────────────── */
+.decision { padding: 22px 24px; border: 1px solid var(--border-strong); border-left: 4px solid var(--primary); background: var(--surface); }
+.decision-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.decision-head h2 { font-size: 22px; }
+.decision-sentence { margin-top: 10px; font-size: var(--fs-lead); line-height: 1.6; font-weight: 600; }
+.decision-sentence:focus-visible { outline-offset: 4px; }
+.decision-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.decision-figures > div { display: grid; gap: 2px; }
+.decision-figures dt { color: var(--text-muted); font-size: var(--fs-caption); font-weight: 600; }
+.decision-figures dd { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.decision-figures dd .money { text-align: left; }
+.breakdown th[scope='row'] { white-space: nowrap; }
+.breakdown td:nth-child(2) { color: var(--text-muted); font-size: var(--fs-small); line-height: 1.55; }
+.breakdown tr.is-binding > * { background: var(--warn-bg); }
+.breakdown .is-strong { font-size: 17px; font-weight: 700; }
+.breakdown-none { padding: 14px 16px; border: 1px dashed var(--border-strong); background: var(--surface-soft); font-size: 15px; }
+.reason-rule { display: block; font-weight: 600; white-space: nowrap; }
+.reason-code { display: inline-block; margin-top: 2px; font-size: 12px; padding: 0 5px; white-space: nowrap; }
+.reason-reason { display: block; margin-top: 2px; color: var(--danger); font-size: var(--fs-caption); font-weight: 600; }
+
+/* ── 추이 그림(인라인 SVG) ───────────────────────────────────────────────── */
+.lab-chart { border: 1px solid var(--border); background: var(--surface); }
+.lab-chart figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-soft); font-size: var(--fs-small); }
+.lab-chart figcaption strong { color: var(--text); font-weight: 700; }
+.lab-chart figcaption span { color: var(--text-muted); font-size: var(--fs-caption); }
+.lab-chart svg { width: 100%; height: auto; padding: 8px 8px 0; }
+.lab-chart > p { padding: 8px 16px 12px; }
+.lab-chart .chart-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 4; }
+.lab-chart .chart-axis { stroke: var(--border-strong); stroke-width: 1; }
+.lab-chart .chart-reference { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.lab-chart .chart-line { fill: none; stroke: var(--primary); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.lab-chart .chart-dot { fill: var(--surface); stroke: var(--primary); stroke-width: 1.5; }
+.lab-chart .chart-dot-accent { fill: var(--accent-tint); stroke: var(--accent); }
+.lab-chart .chart-label { fill: var(--text-muted); font-size: 12px; font-family: inherit; }
+.lab-chart .chart-value { fill: var(--accent); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1000px) {
+  .calc .page-grid > aside { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calc .page-grid > aside > table { grid-column: 1 / -1; }
+}
+@media (max-width: 740px) {
+  .calc .page-grid > aside { grid-template-columns: 1fr; }
+  .calc-fields { grid-template-columns: 1fr; }
+  .calc-form .form-actions .faint { margin-left: 0; flex-basis: 100%; }
+  .decision { padding: 16px; }
+  .decision-figures { grid-template-columns: 1fr; }
+  .lab-tabs button { flex: 1; padding: 0 10px; font-size: 15px; }
+  /* 회차표: 회차·납입일·납입액·잔액 4열, 상세는 "자세히"로 펼친다(ui-guidelines §5). */
+  .sched-detail { display: none; }
+  .sched-toggle-col { display: table-cell; padding: 6px 6px 6px 0; }
+  .sched-expand[hidden] { display: none; }
+  .sched-expand:not([hidden]) { display: table-row; }
+  .sched-table th, .sched-table td { padding: 8px 6px; font-size: var(--fs-caption); }
+  .sched-table th:first-child, .sched-table td:first-child { padding-left: 10px; }
+  .sched-deferred { white-space: normal; }
+  .reason-rule { white-space: normal; }
+}
