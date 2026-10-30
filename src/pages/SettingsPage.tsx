@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { startTransition, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { ApiError, errorMessage } from "../api/client";
@@ -106,9 +106,13 @@ function WithdrawForm() {
     setError(null);
     try {
       await authApi.deleteAccount();
-      // 서버 세션은 탈퇴와 함께 사라졌다. 보호 화면에서 바로 로그아웃하면 로그인 화면으로 밀려나므로 홈으로 먼저 옮긴다.
-      navigate("/", { replace: true, state: { notice: "탈퇴했어요. 샌드박스와 학습 기록을 모두 지웠어요." } });
-      clearSession();
+      // 서버 세션은 탈퇴와 함께 사라졌다. 라우터의 주소 변경은 startTransition 으로 미뤄지는데 clearSession 의 user 갱신이
+      // 그보다 먼저 반영되면 아직 /settings 인 ProtectedRoute 가 /login 으로 보내 홈 안내가 사라진다.
+      // 둘을 같은 transition 에 묶어 "홈 + 로그아웃" 이 한 번에 반영되게 한다.
+      startTransition(() => {
+        navigate("/", { replace: true, state: { notice: "탈퇴했어요. 샌드박스와 학습 기록을 모두 지웠어요." } });
+        clearSession();
+      });
     } catch (err) {
       setError(err instanceof ApiError && err.status === 403 ? "관리자 계정은 탈퇴할 수 없어요. 다른 운영자에게 요청해요." : errorMessage(err, "탈퇴하지 못했어요. 잠시 뒤 다시 시도해요."));
       setBusy(false);
