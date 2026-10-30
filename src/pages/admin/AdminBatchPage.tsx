@@ -9,8 +9,8 @@ import Loading from "../../components/Loading";
 import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { formatDate, formatNumber } from "../../lib/format";
-import AdminForbidden from "./parts/AdminForbidden";
-import { isForbidden, JOB_NAME, todayIso } from "./parts/adminLabels";
+import { ForbiddenPage } from "../../components/ProtectedRoute";
+import { isForbidden, JOB_NAME, requestIdOf, todayIso } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 const DAILY_CLOSE_STEPS = [
@@ -30,7 +30,7 @@ export default function AdminBatchPage() {
   const [historyVersion, setHistoryVersion] = useState(0);
   const history = useLoad(() => adminApi.listExecutions({ sandboxId: sandboxFilter ? Number(sandboxFilter) : undefined }), [sandboxFilter, historyVersion]);
 
-  if (isForbidden(history.error)) return <AdminForbidden error={history.error} />;
+  if (isForbidden(history.error)) return <ForbiddenPage requestId={requestIdOf(history.error)} />;
 
   return (
     <>

@@ -1,0 +1,77 @@
+/*
+ * 그림 공통(ui-guidelines §7). 차트 라이브러리를 쓰지 않고 인라인 SVG로 직접 그린다(ADR-015).
+ * 규칙: 선 1.5px, 색은 tokens.css 의 --series-* 와 상태 색만, 글자는 SVG <text> + CSS 크기,
+ *       모든 그림은 <figure> + 머리글(figcaption) + 한 문장 요약(.chart-summary) + 값 표(details)를 갖춘다.
+ *       색만으로 뜻을 전하지 않는다 — 범례와 요약 문장이 같은 정보를 글로 말한다.
+ */
+
+.chart { border: var(--rule) solid var(--border); background: var(--surface); }
+.chart > figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: var(--rule) solid var(--border); background: var(--surface-soft); font-size: var(--fs-small); }
+.chart > figcaption strong { color: var(--text); font-weight: var(--fw-bold); }
+.chart > figcaption span { color: var(--text-muted); font-size: var(--fs-caption); }
+.chart svg { width: 100%; height: auto; padding: var(--sp-2) var(--sp-2) 0; }
+.chart-summary { padding: var(--sp-2) var(--sp-4) var(--sp-3); color: var(--text-faint); font-size: var(--fs-caption); line-height: 1.55; }
+.chart-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
+.chart-row > * { min-width: 0; }
+
+/* 범례: 색 조각 + 한국어 라벨 + (있으면) 값 */
+.chart-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); padding: 10px var(--sp-4); border-top: var(--rule) solid var(--border); font-size: var(--fs-caption); }
+.chart-legend > span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.chart-legend i { width: 10px; height: 10px; flex-shrink: 0; }
+.chart-legend b { color: var(--text); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+
+/* 값 표: 그림과 같은 숫자를 표로도 준다(NFR-10 접근성). 기본은 접어 둔다. */
+.chart-data { border-top: var(--rule) solid var(--border); }
+.chart-data > summary { display: flex; align-items: center; min-height: var(--touch); padding: 0 var(--sp-4); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); cursor: pointer; list-style: none; }
+.chart-data > summary::-webkit-details-marker { display: none; }
+.chart-data > summary::after { content: '값 표 열기'; margin-left: auto; color: var(--primary); }
+.chart-data[open] > summary::after { content: '값 표 닫기'; }
+.chart-data .table { border: 0; border-top: var(--rule) solid var(--border); }
+
+/* SVG 조각 */
+.chart-grid { stroke: var(--grid-line); stroke-width: 1; stroke-dasharray: 2 4; }
+.chart-axis { stroke: var(--border-strong); stroke-width: 1; }
+.chart-reference { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.chart-line { fill: none; stroke: var(--primary); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.chart-line-muted { fill: none; stroke: var(--series-balance); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.chart-area { fill: var(--primary-tint); stroke: none; }
+.chart-dot { fill: var(--surface); stroke: var(--primary); stroke-width: 1.5; }
+.chart-dot-accent { fill: var(--accent-tint); stroke: var(--accent); }
+.chart-label { fill: var(--text-muted); font-size: var(--fs-micro); font-family: inherit; }
+.chart-label-accent { fill: var(--accent); font-weight: var(--fw-bold); }
+.chart-value { fill: var(--accent); font-size: var(--fs-caption); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; font-family: inherit; }
+.chart-bar-principal { fill: var(--series-principal); }
+.chart-bar-interest { fill: var(--series-interest); }
+.chart-bar-fee { fill: var(--series-fee); }
+.chart-bar-overdue { fill: var(--series-overdue); }
+.chart-bar-muted { fill: var(--surface-sunken); }
+
+/* 가로 막대 비교(한도 결정 요소 등): 막대 + 라벨 + 병목 강조 */
+.ladder { display: grid; gap: 10px; padding: var(--sp-4) var(--sp-4) var(--sp-5); }
+.ladder-row { display: grid; grid-template-columns: minmax(96px, 150px) minmax(0, 1fr) minmax(104px, max-content); gap: var(--sp-3); align-items: center; }
+.ladder-row > .name { color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); line-height: 1.4; }
+.ladder-track { position: relative; height: 22px; background: var(--surface-sunken); }
+.ladder-track > i { display: block; height: 100%; background: var(--primary-tint); border-right: var(--rule-heavy) solid var(--primary); }
+.ladder-row > .value { color: var(--text); font-size: var(--fs-caption); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; text-align: right; }
+.ladder-row.is-binding > .name { color: var(--warn); }
+.ladder-row.is-binding .ladder-track > i { background: var(--warn-bg); border-right-color: var(--warn); }
+.ladder-row.is-final > .name { color: var(--text); font-weight: var(--fw-bold); }
+.ladder-row.is-final .ladder-track > i { background: var(--primary); border-right-color: var(--primary-strong); }
+.ladder-row.is-final > .value { color: var(--primary); }
+.ladder-note { padding: 0 var(--sp-4) var(--sp-4); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.55; }
+
+/* 구성 막대: 한 줄짜리 100% 스택. 건전성 분포·납입액 구성에 쓴다. */
+.mixbar { display: flex; width: 100%; height: 28px; border: var(--rule) solid var(--border); background: var(--surface-sunken); overflow: hidden; }
+.mixbar > span { display: block; height: 100%; min-width: 2px; }
+.mixbar-wrap { padding: var(--sp-4); }
+.mixbar-scale { display: flex; justify-content: space-between; margin-top: 6px; color: var(--text-faint); font-size: var(--fs-micro); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1000px) {
+  .chart-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 740px) {
+  .ladder-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .ladder-row > .name { grid-column: 1; }
+  .ladder-row > .value { grid-column: 2; }
+  .ladder-track { grid-column: 1 / -1; }
+}

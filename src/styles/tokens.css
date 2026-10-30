@@ -1,25 +1,118 @@
 /*
- * 디자인 토큰. docs/design/ui-guidelines.md §3을 그대로 옮긴 것이며 값은 이 문서에서만 바꾼다.
+ * 디자인 토큰 v2. docs/design/ui-guidelines.md §3을 그대로 옮긴 것이며 값은 이 문서에서만 바꾼다.
  * FinMATE(오렌지·초록)와 종이색·텍스트·테두리 계열을 공유하고, CapiMATE는 남색·황토를 포인트로 쓴다.
  * 상태 색은 배경 tint + 텍스트 라벨 조합으로만 쓴다. 넓은 면적에 채도 높은 색을 칠하지 않는다.
+ *
+ * v2에서 더한 것: 표면 단계, 상태 테두리, 글자 크기 사다리, 자간·굵기, 간격 눈금, 선·모션, 그림 계열.
+ * CSS 안에 색·크기·간격 리터럴을 새로 적지 않는다. 필요하면 여기에 토큰을 만든다.
  */
 :root {
+  /* ── 면 ── */
   --bg: #f7f6f1;            /* 종이 */
   --surface: #ffffff;
-  --surface-soft: #f1efe8;
+  --surface-soft: #f1efe8;  /* 표 머리·보조 패널 */
+  --surface-sunken: #ebe8df; /* 막대 트랙·빈 구간 */
+
+  /* ── 글자 ── */
   --text: #1e2a33;          /* 짙은 청회색 */
   --text-muted: #55616b;
   --text-faint: #8a939b;
+  --text-on-primary: #ffffff;
+
+  /* ── 선 ── */
   --border: #ddd7c9;
+  --border-soft: #ebe6da;   /* 보조 구분선(머리 아래 줄 등) */
   --border-strong: #c3bba8;
-  --primary: #1f4e79;       /* 남색: 버튼·링크·활성 */
+  --border-hover: #a79d87;
+  --rule: 1px;              /* 기본 실선 두께 */
+  --rule-heavy: 2px;        /* 구역 제목 밑줄 */
+  --rule-accent: 3px;       /* 활성 탭·강조 왼쪽 선 */
+  --radius: 0;              /* 각진 모서리. 늘리지 않는다 */
+
+  /* ── 남색(주) ── */
+  --primary: #1f4e79;       /* 버튼·링크·활성 */
   --primary-strong: #163a5b;
   --primary-tint: #e6edf5;
-  --accent: #b8792a;        /* 황토: 포인트·강조 숫자 */
+  --primary-line: #c9d7e6;
+
+  /* ── 황토(포인트) ── */
+  --accent: #b8792a;        /* 포인트·강조 숫자 */
+  --accent-strong: #8f5c1c;
   --accent-tint: #f6ecdc;
-  --good: #2f6b4f;  --good-bg: #e6f0ea;      /* 정상·완제 */
-  --warn: #8a6a1a;  --warn-bg: #f7efd8;      /* 요주의·납입 예정 */
-  --danger: #a93a2c; --danger-bg: #f8e6e2;   /* 연체·상실 */
-  --fs-caption: 13px; --fs-small: 14px; --fs-body: 16px; --fs-lead: 18px;
+  --accent-line: #e4d6a8;
+
+  /* ── 상태: 배경 tint + 테두리 + 텍스트 ── */
+  --good: #2f6b4f;   --good-bg: #e6f0ea;   --good-line: #bfd6c8;   /* 정상·완제 */
+  --warn: #8a6a1a;   --warn-bg: #f7efd8;   --warn-line: #e4d6a8;   /* 요주의·납입 예정 */
+  --danger: #a93a2c; --danger-bg: #f8e6e2; --danger-line: #e7bfb6; /* 연체·상실 */
+
+  /* ── 건전성 5단계(운영 콘솔·계약 상세에서 같은 순서로 쓴다) ── */
+  --ac-normal: #2f6b4f;      /* 정상 */
+  --ac-precaution: #7d8b3c;  /* 요주의 */
+  --ac-substandard: #b8792a; /* 고정 */
+  --ac-doubtful: #a9612c;    /* 회수의문 */
+  --ac-loss: #8c3326;        /* 추정손실 */
+
+  /* ── 그림 계열: 원금·이자·수수료·연체이자 순 ── */
+  --series-principal: #1f4e79;
+  --series-interest: #b8792a;
+  --series-fee: #7d8b3c;
+  --series-overdue: #a93a2c;
+  --series-balance: #55616b;
+  --grid-line: #e3dfd2;
+
+  /* ── 글자 크기 사다리 ── */
+  --fs-micro: 12px;    /* 그림 축 라벨 */
+  --fs-caption: 13px;  /* 표 머리·보조 설명 */
+  --fs-small: 14px;    /* 라벨·작은 버튼 */
+  --fs-base: 15px;     /* 표 본문·버튼·정의 목록 */
+  --fs-body: 16px;     /* 본문 */
+  --fs-nav: 17px;      /* 메뉴·강조 본문 */
+  --fs-lead: 18px;     /* 머리말 */
+  --fs-h4: 17px;
+  --fs-h3: 20px;
+  --fs-h2: 22px;
+  --fs-h2-lg: 25px;
+  --fs-figure: 26px;   /* 지표 숫자 */
+  --fs-h1: clamp(28px, 2.6vw, 32px);
+  --fs-display: clamp(32px, 3.6vw, 44px); /* 홈 배너 제목 */
+
+  /* ── 자간·굵기·줄간격 ── */
+  --lh-tight: 1.3;
+  --lh-snug: 1.45;
+  --lh-body: 1.6;
+  --lh-loose: 1.7;
+  --ls-tight: -.01em;
+  --ls-wide: .02em;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-heavy: 800;
+
+  /* ── 간격 눈금(4px 기준) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 64px;
+  --sp-11: 80px;
+  --sp-12: 96px;
+
+  /* ── 크기 ── */
+  --touch: 44px;            /* 최소 터치 높이 */
+  --control-h: 48px;        /* 입력·접힘 머리 */
   --header-height: 114px;
+  --content-w: 1200px;
+  --content-gutter: 64px;
+  --content-gutter-sm: 40px;
+  --aside-w: 320px;
+
+  /* ── 모션 ── */
+  --t-fast: .15s;
+  --t-base: .18s;
 }

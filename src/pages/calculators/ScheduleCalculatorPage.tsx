@@ -14,7 +14,7 @@ import { formatDate } from "../../lib/format";
 import { DateField, NumberField, SelectField } from "./parts/fields";
 import { METHOD_DESCRIPTION, METHOD_LABEL, METHODS, PAYMENT_DAY_OPTIONS } from "./parts/labels";
 import ScheduleTable from "./parts/ScheduleTable";
-import Tabs from "./parts/Tabs";
+import Tabs from "../../components/Tabs";
 
 /** 기본값은 계산 예시 1(10,000,000 · 12회 · 12.00% · 2026-01-15 · 15일). 입력은 URL 쿼리로 공유한다. */
 const DEFAULTS: ScheduleRequest = { principal: 10_000_000, termMonths: 12, annualRate: 12, startDate: "2026-01-15", paymentDay: 15 };

@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/brand.css";
+import "./styles/charts.css";
 import "./styles/home.css";
 import "./styles/account.css";
 import "./styles/learn.css";

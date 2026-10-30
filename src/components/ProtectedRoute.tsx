@@ -29,8 +29,11 @@ export default function ProtectedRoute({ children, adminOnly = false, forbidden 
   return <>{children}</>;
 }
 
-/** 403 화면: 운영자 전용 주소를 USER 역할로 열었을 때. 어떤 주소인지 보여 주고 다음 행동(다시 로그인·홈)을 준다. */
-export function ForbiddenPage({ pathname }: { pathname?: string }) {
+/**
+ * 403 화면: 운영자 전용 주소를 USER 역할로 열었을 때, 또는 세션이 바뀌어 API 가 403 을 돌려줄 때.
+ * 어떤 주소인지 보여 주고 다음 행동(다시 로그인·홈)을 준다.
+ */
+export function ForbiddenPage({ pathname, requestId }: { pathname?: string; requestId?: string }) {
   useEffect(() => { setDocumentTitle("운영자만 볼 수 있는 화면"); }, []);
   return (
     <main className="page-main">
@@ -45,6 +48,7 @@ export function ForbiddenPage({ pathname }: { pathname?: string }) {
           <Link className="btn btn-primary" to="/login" state={{ from: pathname }}>다시 로그인</Link>
           <Link className="btn btn-secondary" to="/">홈으로</Link>
         </div>
+        {requestId && <p className="faint">요청 ID {requestId}</p>}
       </div>
     </main>
   );
