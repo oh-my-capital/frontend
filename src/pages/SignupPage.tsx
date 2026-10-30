@@ -69,6 +69,7 @@ export default function SignupPage() {
           <div><dt>비밀번호</dt><dd>12자 이상. 다른 서비스에서 쓰는 비밀번호는 피해요.</dd></div>
           <div><dt>탈퇴</dt><dd>계정 설정에서 언제든 탈퇴할 수 있어요. 샌드박스와 학습 기록은 모두 지워져요.</dd></div>
         </dl>
+        <img className="account-art" src="/images/capital-sandbox.webp" width={1200} height={800} alt="자동차 옆 상담 창구에서 상담원이 계약서 봉투를 건네는 일러스트" />
       </section>
       <form className="account-form" onSubmit={submit} aria-busy={busy} noValidate>
         <h2>가입</h2>

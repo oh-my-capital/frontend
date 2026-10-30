@@ -10,12 +10,6 @@ import StatusChip from "../components/StatusChip";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatNumber } from "../lib/format";
 
-/**
- * 메인 이미지는 사람이 제공한다(public/images/README.md). 파일을 넣었으면 아래를 "/images/capital-desk.webp" 로 바꾼다.
- * null 이면 배너 오른쪽에 "오늘의 계산 예시" 표를 둔다.
- */
-const HOME_IMAGE: { src: string; alt: string } | null = null;
-
 /** 계산 예시 1(docs/domain/calculation-examples.md)의 첫 3회차. 골든 값이라 손으로 옮긴다. */
 const EXAMPLE_1_FIRST_ROWS = [
   { installmentNo: 1, principal: 788_488, interest: 100_000, payment: 888_488, balanceAfter: 9_211_512 },
@@ -43,9 +37,9 @@ export default function HomePage() {
 
 // 배너 문구는 실제 기능만 설명한다. 이용자 수·만족도 같은 수치와 마케팅 어휘를 넣지 않는다.
 const SLIDES = [
-  { tag: "입문 과정", title: ["여신전문금융업이 무엇인지부터", "중도상환 수수료까지 12개 개념으로"], description: "캐피탈과 은행의 차이, 금리의 구성, 한도의 규칙, 연체와 기한이익상실, 건전성 분류를 순서대로 읽고 개념마다 확인 문제를 풀어요. 출처와 확인일을 함께 적어요.", to: "/course", action: "입문 과정 목차 보기" },
-  { tag: "계산기", title: ["상환 방식 세 가지의 월 납입액을", "한 표에서 비교해요"], description: "원금·기간·금리를 넣으면 원리금균등·원금균등·만기일시의 회차표와 총이자를 같이 보여 줘요. 심사 시뮬레이터는 금리와 한도가 어느 규칙에서 정해졌는지 근거를 표로 보여 줘요.", to: "/calculators/schedule", action: "상환 스케줄 계산기 열기" },
-  { tag: "모의 여신", title: ["가상 고객으로 대출을 신청하고", "시간을 넘겨 연체까지 겪어 봐요"], description: "프로필을 만들고 신청하면 규칙 심사가 바로 결정을 내려요. 실행 뒤에는 가상 시계를 하루씩, 다음 납입일까지 넘기며 자동이체·연체이자·충당금이 어떻게 처리되는지 봐요. 실명·실계좌는 쓰지 않아요.", to: "/sandbox", action: "내 모의 여신 열기" },
+  { tag: "입문 과정", title: ["여신전문금융업이 무엇인지부터", "중도상환 수수료까지 12개 개념으로"], description: "캐피탈과 은행의 차이, 금리의 구성, 한도의 규칙, 연체와 기한이익상실, 건전성 분류를 순서대로 읽고 개념마다 확인 문제를 풀어요. 출처와 확인일을 함께 적어요.", to: "/course", action: "입문 과정 목차 보기", image: { src: "/images/capital-desk.webp", alt: "남색 장부 모양 건물 앞 계단에서 장부를 읽고 막대그래프를 보며 이야기하는 사람들의 일러스트" } },
+  { tag: "계산기", title: ["상환 방식 세 가지의 월 납입액을", "한 표에서 비교해요"], description: "원금·기간·금리를 넣으면 원리금균등·원금균등·만기일시의 회차표와 총이자를 같이 보여 줘요. 심사 시뮬레이터는 금리와 한도가 어느 규칙에서 정해졌는지 근거를 표로 보여 줘요.", to: "/calculators/schedule", action: "상환 스케줄 계산기 열기", image: { src: "/images/capital-calculator.webp", alt: "커다란 계산기 옆에서 원금은 늘고 이자는 줄어드는 회차별 막대그래프를 가리키고, 길게 출력된 회차표를 확인하는 사람들의 일러스트" } },
+  { tag: "모의 여신", title: ["가상 고객으로 대출을 신청하고", "시간을 넘겨 연체까지 겪어 봐요"], description: "프로필을 만들고 신청하면 규칙 심사가 바로 결정을 내려요. 실행 뒤에는 가상 시계를 하루씩, 다음 납입일까지 넘기며 자동이체·연체이자·충당금이 어떻게 처리되는지 봐요. 실명·실계좌는 쓰지 않아요.", to: "/sandbox", action: "내 모의 여신 열기", image: { src: "/images/capital-sandbox.webp", alt: "자동차 옆 상담 창구에서 상담원이 계약서 봉투를 건네고, 뒤로 시계와 넘어가는 달력이 보이는 일러스트" } },
 ];
 const SLIDE_INTERVAL_MS = 7000;
 
@@ -91,15 +85,18 @@ function Banner() {
             <Link className="btn btn-primary home-banner-action" to={slide.to}>{slide.action} <Icon name="next" size={15} /></Link>
           </div>
         </div>
+        {/* 슬라이드 그림을 한 칸에 겹쳐 두고 현재 것만 보인다. 미리 받아 두므로 넘길 때 깜박이지 않는다. */}
         <div className="home-banner-art">
-          {HOME_IMAGE ? <img src={HOME_IMAGE.src} alt={HOME_IMAGE.alt} width={1536} height={1024} fetchPriority="high" /> : <TodayExample />}
+          {SLIDES.map((item, i) => (
+            <img key={item.image.src} className={i === index ? "is-active" : undefined} src={item.image.src} alt={i === index ? item.image.alt : ""} aria-hidden={i === index ? undefined : true} width={1200} height={800} fetchPriority={i === 0 ? "high" : "low"} />
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/** 이미지가 없을 때의 오른쪽 열: 계산 예시 1(골든 값)의 첫 3회차. 가짜 수치가 아니라 문서의 실제 계산 결과다. */
+/** 계산기 표 아래의 계산 예시 1(골든 값) 첫 3회차. 가짜 수치가 아니라 문서의 실제 계산 결과다. */
 function TodayExample() {
   return (
     <div className="home-example">
@@ -202,6 +199,7 @@ function CalculatorTable() {
           ))}
         </tbody>
       </table>
+      <TodayExample />
     </section>
   );
 }
