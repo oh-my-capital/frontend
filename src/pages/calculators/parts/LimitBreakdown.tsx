@@ -17,7 +17,7 @@ export default function LimitBreakdown({ result, requestedAmount }: { result: Sc
       ? { code: "LIMIT-LTV", label: "담보(LTV 90%)", basis: "차량가 × 0.9, 원 미만 절사", value: limits.ltvCap }
       : { code: "LIMIT-PRODUCT", label: "상품 최대", basis: "상품이 정한 최대 금액", value: limits.productCap },
     { code: "LIMIT-INCOME", label: "소득배수", basis: `연소득 × 밴드 ${result.creditBand ?? "—"} 배수`, value: limits.incomeCap },
-    { code: "LIMIT-DSR", label: "DSR 역산", basis: `허용 연 원리금 = 연소득 × ${dsr.limit}% − 기존 ${won(dsr.existingAnnual)} → 월 여유로 역산한 최대 원금`, value: limits.dsrCap },
+    { code: "LIMIT-DSR", label: "DSR 역산", basis: `허용 연 원리금 = 연소득 × ${dsr.limit}% − 기존 ${won(dsr.existingAnnual)} → 월 여유로 역산한 최대 원금, 만 원 절사`, value: limits.dsrCap },
   ];
   return (
     <table className="table table-compact breakdown">
