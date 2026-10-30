@@ -15,7 +15,11 @@ interface AuthContextValue {
   login: (credentials: Credentials) => Promise<User>;
   signup: (credentials: Credentials) => Promise<User>;
   logout: () => Promise<void>;
-  /** 탈퇴처럼 서버 세션이 이미 사라진 뒤 로컬만 정리할 때. */
+  /**
+   * 탈퇴처럼 서버 세션이 이미 사라진 뒤 로컬만 정리할 때.
+   * 보호 화면 안에서 주소 이동과 함께 부를 때는 둘을 같은 startTransition 에 묶는다(라우터의 주소 변경은 transition 이라
+   * user 갱신이 먼저 반영되면 ProtectedRoute 가 /login 으로 보낸다 — SettingsPage WithdrawForm 참고).
+   */
   clearSession: () => void;
 }
 

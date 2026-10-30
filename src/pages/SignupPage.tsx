@@ -6,7 +6,12 @@ import { safeReturnPath } from "../lib/navigation";
 
 const MIN_PASSWORD = 12;
 
-/** 가입(S-31): 12자 비밀번호 안내, 교육용 고지 동의 체크. 가입 성공 시 바로 로그인된다(응답이 Session). */
+/**
+ * 가입(S-31): 12자 비밀번호 안내, 교육용 고지 동의 체크. 가입 성공 시 바로 로그인된다(응답이 Session).
+ * 이미 로그인된 상태로 열면 돌아갈 주소로 보낸다. 단, 이 화면에서 방금 가입한 경우는 예외다 — 라우터의 주소 변경은
+ * startTransition(낮은 우선순위)이고 AuthContext 의 user 갱신은 일반 우선순위라, 가입 직후 isAuthenticated 가 먼저
+ * 반영되면서 state 없는 <Navigate> 가 안내 문구를 실은 navigate(state) 를 덮어썼다. 그래서 가입 뒤에는 navigate 한 번만 한다.
+ */
 export default function SignupPage() {
   const { signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -19,8 +24,10 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  /** 이 화면에서 가입 요청을 보냈으면 true. 아래 <Navigate> 대신 submit 의 navigate(state) 한 번으로만 이동한다. */
+  const [signedUp, setSignedUp] = useState(false);
 
-  if (isAuthenticated) return <Navigate to={next} replace />;
+  if (isAuthenticated && !signedUp) return <Navigate to={next} replace />;
 
   const validate = () => {
     const errors: Record<string, string> = {};
@@ -39,9 +46,11 @@ export default function SignupPage() {
     if (Object.keys(errors).length) return;
     setBusy(true);
     try {
+      setSignedUp(true);
       await signup({ email: email.trim(), password });
       navigate(next, { replace: true, state: { notice: "가입했어요. 가상 고객 프로필을 만들면 첫 대출을 신청할 수 있어요." } });
     } catch (err) {
+      setSignedUp(false);
       if (err instanceof ApiError && err.status === 409) setError("이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써요.");
       else setError(errorMessage(err, "가입하지 못했어요. 입력을 확인하고 다시 시도해요."));
     } finally {
