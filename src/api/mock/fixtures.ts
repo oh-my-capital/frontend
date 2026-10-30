@@ -55,6 +55,7 @@ export function conceptDetail(summary: ConceptSummary): Concept {
   const index = CONCEPTS.findIndex(c => c.id === summary.id);
   return {
     ...summary,
+    totalCount: CONCEPTS.length,
     linkedCalculator: (summary.linkedCalculator as Concept["linkedCalculator"]) ?? null,
     sections: [
       { heading: "정의", body: `${summary.title}에 대한 설명 본문이다. 실제 콘텐츠는 data 저장소 content/concepts/${summary.id}.json에서 적재한다.`, figure: summary.orderNo === 3 ? "auto-installment-flow" : null },
@@ -89,9 +90,9 @@ export const TERMS: TermSummary[] = [
   { slug: "credit", term: "여신", english: "credit, lending", category: "업무", definition: "돈을 빌려주는 업무 전체. 수신(예금 받기)의 반대다." },
   { slug: "credit-finance-company", term: "여신전문금융회사", english: "credit finance company", category: "업무", definition: "수신 없이 회사채·차입으로 자금을 조달해 여신만 하는 회사. 카드·캐피탈이 여기에 든다." },
   { slug: "installment-finance", term: "할부금융", english: "installment finance", category: "업무", definition: "물건 구매 대금을 캐피탈이 판매자에게 지급하고 고객이 나눠 갚는 구조다." },
-  { slug: "contract-rate", term: "약정이율", english: "contract rate", category: "금리·한도", definition: "계약서에 적힌 연 이자율이다." },
-  { slug: "dsr", term: "DSR", english: "debt service ratio", category: "금리·한도", definition: "연 소득 대비 모든 대출의 연 원리금 상환액 비율이다." },
-  { slug: "ltv", term: "LTV", english: "loan to value", category: "금리·한도", definition: "담보 가치 대비 대출 비율이다." },
+  { slug: "contract-rate", term: "약정이율", english: "contract rate", category: "금리", definition: "계약서에 적힌 연 이자율이다." },
+  { slug: "dsr", term: "DSR", english: "debt service ratio", category: "금리", definition: "연 소득 대비 모든 대출의 연 원리금 상환액 비율이다." },
+  { slug: "ltv", term: "LTV", english: "loan to value", category: "금리", definition: "담보 가치 대비 대출 비율이다." },
   { slug: "equal-payment", term: "원리금균등", english: "equal payment", category: "상환", definition: "매월 같은 금액(원금+이자)을 낸다. 초기에는 이자 비중이 크다." },
   { slug: "equal-principal", term: "원금균등", english: "equal principal", category: "상환", definition: "매월 같은 원금에 줄어드는 이자를 더해 낸다." },
   { slug: "bullet", term: "만기일시", english: "bullet", category: "상환", definition: "매월 이자만 내고 만기에 원금을 전부 갚는다." },

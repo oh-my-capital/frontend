@@ -1,4 +1,4 @@
-import type { ApplicationStatus, AssetClass, ContractStatus, Decision } from "../api/types";
+import type { ApplicationStatus, AssetClass, ContentStatus, ContractStatus, Decision } from "../api/types";
 
 export type StatusTone = "neutral" | "info" | "good" | "warn" | "danger";
 
@@ -10,7 +10,7 @@ export default function StatusChip({ label, tone = "neutral", detail }: { label:
   return <span className={`status status-${tone}`}>{label}{detail && <span className="status-detail">{detail}</span>}</span>;
 }
 
-type KnownStatus = ContractStatus | ApplicationStatus | Decision | AssetClass | string;
+type KnownStatus = ContractStatus | ApplicationStatus | Decision | AssetClass | ContentStatus | string;
 
 const LABELS: Record<string, { label: string; tone: StatusTone }> = {
   ACTIVE: { label: "정상", tone: "good" },
@@ -31,6 +31,15 @@ const LABELS: Record<string, { label: string; tone: StatusTone }> = {
   PASS: { label: "통과", tone: "good" },
   FAIL: { label: "미충족", tone: "danger" },
   INFO: { label: "참고", tone: "info" },
+  // 콘텐츠 상태(ContentStatus) — 운영 콘솔의 adminLabels.ts 와 같은 라벨
+  DRAFT: { label: "초안", tone: "info" },
+  PUBLISHED: { label: "게시", tone: "good" },
+  RETIRED: { label: "내림", tone: "neutral" },
+  // 배치 실행 상태(BatchExecution.status)
+  SUCCESS: { label: "성공", tone: "good" },
+  FAILED: { label: "실패", tone: "danger" },
+  SKIPPED: { label: "건너뜀", tone: "neutral" },
+  RUNNING: { label: "실행 중", tone: "info" },
 };
 
 export function statusLabel(code: KnownStatus): { label: string; tone: StatusTone } {
