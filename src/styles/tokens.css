@@ -1,0 +1,25 @@
+/*
+ * 디자인 토큰. docs/design/ui-guidelines.md §3을 그대로 옮긴 것이며 값은 이 문서에서만 바꾼다.
+ * FinMATE(오렌지·초록)와 종이색·텍스트·테두리 계열을 공유하고, CapiMATE는 남색·황토를 포인트로 쓴다.
+ * 상태 색은 배경 tint + 텍스트 라벨 조합으로만 쓴다. 넓은 면적에 채도 높은 색을 칠하지 않는다.
+ */
+:root {
+  --bg: #f7f6f1;            /* 종이 */
+  --surface: #ffffff;
+  --surface-soft: #f1efe8;
+  --text: #1e2a33;          /* 짙은 청회색 */
+  --text-muted: #55616b;
+  --text-faint: #8a939b;
+  --border: #ddd7c9;
+  --border-strong: #c3bba8;
+  --primary: #1f4e79;       /* 남색: 버튼·링크·활성 */
+  --primary-strong: #163a5b;
+  --primary-tint: #e6edf5;
+  --accent: #b8792a;        /* 황토: 포인트·강조 숫자 */
+  --accent-tint: #f6ecdc;
+  --good: #2f6b4f;  --good-bg: #e6f0ea;      /* 정상·완제 */
+  --warn: #8a6a1a;  --warn-bg: #f7efd8;      /* 요주의·납입 예정 */
+  --danger: #a93a2c; --danger-bg: #f8e6e2;   /* 연체·상실 */
+  --fs-caption: 13px; --fs-small: 14px; --fs-body: 16px; --fs-lead: 18px;
+  --header-height: 114px;
+}

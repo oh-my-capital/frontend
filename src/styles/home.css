@@ -1,0 +1,122 @@
+/*
+ * 홈(S-01): 안내 배너(2열: 글 + 이미지 또는 계산 예시 표) → 통합 검색 → 계산기 바로가기 표 → 학습 목차 12 → (로그인) 내 샌드박스 현황 표.
+ * 카드 반복 없이 표·번호 목록으로 구성한다(ui-guidelines §2·§5).
+ */
+.home-notice { width: min(100% - 64px, 1200px); margin: 16px auto 0; padding: 12px 16px; border: 1px solid #bfd6c8; background: var(--good-bg); color: var(--good); font-size: var(--fs-small); }
+.home-main { width: min(100% - 64px, 1200px); margin: 0 auto; padding-bottom: 24px; }
+
+/* 배너 */
+.home-banner { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--surface-soft); }
+.home-banner-inner { width: min(100% - 64px, 1200px); min-height: 420px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); align-items: center; gap: 48px; padding: 44px 0 76px; }
+.home-banner-copy { min-width: 0; }
+.home-slide { min-height: 236px; }
+.home-slide-tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; background: var(--primary); color: #fff; font-size: var(--fs-caption); font-weight: 700; }
+.home-slide h2 { margin: 18px 0 16px; color: var(--text); font-size: clamp(32px, 3.6vw, 44px); font-weight: 800; line-height: 1.28; letter-spacing: -.01em; }
+.home-slide p { max-width: 540px; color: var(--text-muted); font-size: 17px; line-height: 1.7; }
+.home-banner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
+.home-pager { display: inline-flex; align-items: center; gap: 2px; height: 48px; padding: 0 2px 0 16px; border: 1px solid var(--border); background: var(--surface); }
+.home-pager > span { display: inline-flex; align-items: center; gap: 8px; margin-right: 6px; color: var(--text-faint); font-size: var(--fs-small); font-weight: 600; font-variant-numeric: tabular-nums; }
+.home-pager strong { color: var(--text); }
+.home-pager i { width: 1px; height: 12px; background: var(--border-strong); }
+.home-pager button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; color: var(--text); }
+.home-pager button:hover { background: var(--surface-soft); }
+.home-banner-action { gap: 6px; padding: 0 18px; }
+.home-banner-art { min-width: 0; display: flex; justify-content: center; }
+.home-banner-art img { width: 100%; max-width: 520px; height: auto; }
+/* 이미지가 없을 때 오른쪽 열: 오늘의 계산 예시 */
+.home-example { width: 100%; border: 1px solid var(--border); background: var(--surface); }
+.home-example-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 18px 12px; border-bottom: 1px solid var(--border); }
+.home-example-head h3 { font-size: 17px; }
+.home-example-head span { color: var(--text-faint); font-size: var(--fs-caption); }
+.home-example dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 0; border-bottom: 1px solid var(--border); }
+.home-example dl > div { padding: 12px 18px; border-right: 1px solid var(--border); }
+.home-example dl > div:last-child { border-right: 0; }
+.home-example dt { color: var(--text-muted); font-size: var(--fs-caption); font-weight: 600; }
+.home-example dd { margin-top: 2px; color: var(--text); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.home-example dd .money-unit { font-size: var(--fs-caption); }
+.home-example .table { border: 0; }
+.home-example .table caption { border: 0; border-bottom: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-weight: 600; }
+.home-example-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-caption); }
+.home-example-foot a { font-weight: 700; }
+
+/* 통합 검색: 배너 아래에 걸친다. */
+.home-search { position: relative; z-index: 2; max-width: 880px; margin: -38px auto 0; }
+.home-search form { display: flex; align-items: center; height: 72px; padding: 0 8px 0 24px; border: 2px solid var(--primary); background: var(--surface); }
+.home-search form:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
+.home-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--text); font-size: 18px; outline: none; }
+.home-search input::placeholder { color: var(--text-faint); }
+.home-search input::-webkit-search-cancel-button { display: none; }
+.home-search button { display: grid; place-items: center; flex-shrink: 0; width: 56px; height: 56px; border: 0; background: var(--primary); color: #fff; transition: background-color .15s; }
+.home-search button:hover { background: var(--primary-strong); }
+.home-search-suggest { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; }
+.home-search-suggest > span { margin-right: 4px; color: var(--text-muted); font-size: var(--fs-small); font-weight: 700; }
+.home-search-suggest > a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-small); font-weight: 500; text-decoration: none; }
+.home-search-suggest > a:hover { border-color: var(--primary); color: var(--primary); }
+
+/* 구역 */
+.home-section { margin-top: 72px; }
+.home-section .section-head h2 em { color: var(--primary); font-style: normal; }
+
+/* 계산기 바로가기 표: 카드가 아니라 링크 묶음 표. */
+.home-calc-table tbody th a { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-size: var(--fs-body); font-weight: 700; }
+.home-calc-table tbody th a:hover { color: var(--primary); }
+.home-calc-table td.go { text-align: right; white-space: nowrap; }
+.home-calc-table td.go a { font-weight: 600; }
+
+/* 학습 목차: 2열 번호 목록. 진척은 텍스트 라벨. */
+.home-course-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; align-items: start; }
+.home-course-side { display: grid; gap: 14px; padding: 22px; border: 1px solid var(--border); background: var(--surface); }
+.home-course-side p { color: var(--text-muted); font-size: 15px; line-height: 1.7; }
+.home-course-side .progress { font-size: 15px; }
+.home-course-side .progress strong { font-size: 26px; font-variant-numeric: tabular-nums; color: var(--text); }
+.home-course-side .progress-bar { height: 6px; margin-top: 8px; background: var(--border); }
+.home-course-side .progress-bar > i { display: block; height: 100%; background: var(--primary); }
+.home-course-list { margin: 0; padding: 0; list-style: none; counter-reset: concept; border-top: 2px solid var(--text); columns: 2; column-gap: 32px; }
+.home-course-list li { break-inside: avoid; border-bottom: 1px solid var(--border); }
+.home-course-list a { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; min-height: 64px; padding: 14px 4px; color: var(--text); text-decoration: none; }
+.home-course-list a:hover strong { color: var(--primary); }
+.home-course-list .no { color: var(--accent); font-size: var(--fs-small); font-weight: 800; font-variant-numeric: tabular-nums; }
+.home-course-list strong { font-size: var(--fs-body); font-weight: 700; line-height: 1.45; }
+.home-course-list .summary { grid-column: 2; color: var(--text-muted); font-size: var(--fs-small); line-height: 1.6; }
+.home-course-list .meta { grid-column: 3; grid-row: 1; justify-self: end; color: var(--text-faint); font-size: var(--fs-caption); white-space: nowrap; }
+.home-course-list .meta .status { margin-left: 6px; }
+
+/* 내 샌드박스 현황 */
+.home-sandbox .table th[scope='row'] { width: 32%; color: var(--text-muted); font-weight: 600; }
+.home-sandbox-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+
+@media (max-width: 1000px) {
+  .home-notice, .home-main, .home-banner-inner { width: calc(100% - 48px); }
+  .home-banner-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 28px; min-height: 380px; }
+  .home-course-grid { grid-template-columns: 1fr; gap: 20px; }
+  .home-course-list { columns: 1; }
+}
+@media (max-width: 740px) {
+  .home-notice, .home-main, .home-banner-inner { width: calc(100% - 40px); }
+  .home-banner-inner { grid-template-columns: 1fr; gap: 24px; padding: 28px 0 64px; min-height: 0; }
+  .home-slide { min-height: 0; }
+  .home-slide h2 { margin: 14px 0 12px; font-size: clamp(27px, 7.4vw, 34px); }
+  .home-slide p { font-size: var(--fs-body); }
+  .home-banner-controls { margin-top: 22px; }
+  .home-banner-art img { max-width: 360px; }
+  .home-example dl { grid-template-columns: 1fr; }
+  .home-example dl > div { border-right: 0; border-bottom: 1px solid var(--border); }
+  .home-example dl > div:last-child { border-bottom: 0; }
+  .home-example .table th, .home-example .table td { padding: 8px 10px; font-size: var(--fs-caption); }
+  .home-search { margin-top: -30px; }
+  .home-search form { height: 60px; padding-left: 16px; }
+  .home-search input { font-size: var(--fs-body); }
+  .home-search button { width: 46px; height: 46px; }
+  .home-search-suggest { justify-content: flex-start; }
+  .home-section { margin-top: 52px; }
+  .home-calc-table td.go { display: none; }
+  .home-calc-table th:nth-child(3), .home-calc-table td:nth-child(3) { display: none; }
+  .home-course-list a { grid-template-columns: 32px minmax(0, 1fr); }
+  .home-course-list .meta { grid-column: 2; grid-row: auto; justify-self: start; white-space: normal; }
+  .home-sandbox .table th[scope='row'] { width: 44%; }
+}
+@media (max-width: 420px) {
+  .home-banner-controls { flex-direction: column; align-items: stretch; }
+  .home-pager { justify-content: space-between; }
+  .home-banner-action { justify-content: center; }
+}
