@@ -112,7 +112,7 @@ export default function TermPage() {
             <div className="panel">
               <h3>같은 분류 더 보기</h3>
               <p className="muted">같은 단계의 용어를 이어서 읽으면 흐름이 끊기지 않아요.</p>
-              <Link className="btn btn-secondary btn-small" to={`/glossary?category=${encodeURIComponent(t.category)}`} style={{ marginTop: 12 }}>{t.category} 용어 전체 <Icon name="next" size={15} /></Link>
+              <Link className="btn btn-secondary btn-small term-panel-action" to={`/glossary?category=${encodeURIComponent(t.category)}`}>{t.category} 용어 전체 <Icon name="next" size={15} /></Link>
             </div>
           </aside>
         </div>

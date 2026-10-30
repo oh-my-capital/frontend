@@ -4,6 +4,7 @@ import type { ConceptSummary, MyLearning } from "../../api/types";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
+import ProgressBar from "../../components/ProgressBar";
 import StatusChip from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { useAuth } from "../../context/AuthContext";
@@ -100,18 +101,17 @@ function ProgressPanel({ learning, concepts, isAuthenticated }: { learning: MyLe
       <div className="panel">
         <h3>진척 기록</h3>
         <p className="muted">로그인하면 확인 문제 점수와 완료 표시가 이 목차와 내 학습 화면에 남아요. 로그인 없이도 모든 개념을 읽고 문제를 풀 수 있어요.</p>
-        <Link className="btn btn-secondary btn-small" to="/login" style={{ marginTop: 14 }}>로그인하고 진척 기록하기</Link>
+        <Link className="btn btn-secondary btn-small learn-panel-action" to="/login">로그인하고 진척 기록하기</Link>
       </div>
     );
   }
   if (!learning) return <Loading message="진척을 불러오고 있어요" minHeight={160} />;
   const next = learning.nextConceptId ? concepts?.find(c => c.id === learning.nextConceptId) : null;
-  const ratio = learning.totalCount ? (learning.completedCount / learning.totalCount) * 100 : 0;
   return (
     <div className="panel learn-progress">
       <h3>내 진척</h3>
-      <div className="learn-progress-count"><strong>{learning.completedCount}</strong><span className="muted"> / {learning.totalCount} 완료</span></div>
-      <div className="progress-bar" role="img" aria-label={`${learning.totalCount}개 중 ${learning.completedCount}개 완료`}><i style={{ width: `${ratio}%` }} /></div>
+      <p className="progress-meta"><span className="muted">완료한 개념</span><strong>{learning.completedCount} / {learning.totalCount}</strong></p>
+      <ProgressBar value={learning.completedCount} total={learning.totalCount} label={`${learning.totalCount}개 중 ${learning.completedCount}개 완료`} />
       {next ? (
         <p className="muted">다음으로 권하는 개념은 <Link to={`/learn/${next.id}`}>{next.orderNo}. {next.title}</Link>이에요.</p>
       ) : (
