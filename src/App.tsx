@@ -25,6 +25,9 @@ import ContractPage from "./pages/sandbox/ContractPage";
 import NotificationsPage from "./pages/sandbox/NotificationsPage";
 import ProfilePage from "./pages/sandbox/ProfilePage";
 import SandboxPage from "./pages/sandbox/SandboxPage";
+// WP17 — 대환대출 비교·DSR 계산기
+import DsrCalculatorPage from "./pages/calculators/DsrCalculatorPage";
+import RefinanceCalculatorPage from "./pages/calculators/RefinanceCalculatorPage";
 // WP8 — 운영
 import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
@@ -57,6 +60,9 @@ export default function App() {
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />
           <Route path="/calculators/screening" element={<ScreeningCalculatorPage />} />
           <Route path="/calculators/prepayment" element={<PrepaymentCalculatorPage />} />
+          {/* WP17 — 대환대출 비교·DSR 계산기 */}
+          <Route path="/calculators/refinance" element={<RefinanceCalculatorPage />} />
+          <Route path="/calculators/dsr" element={<DsrCalculatorPage />} />
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
