@@ -30,6 +30,9 @@ import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP20 — 학습 미션
+import MissionPage from "./pages/missions/MissionPage";
+import MissionsPage from "./pages/missions/MissionsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -52,6 +55,9 @@ export default function App() {
           <Route path="/glossary/:slug" element={<TermPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/me/learning" element={<ProtectedRoute><MyLearningPage /></ProtectedRoute>} />
+          {/* WP20 — 학습 미션(목록·상세 공개, 진행 저장은 로그인) */}
+          <Route path="/missions" element={<MissionsPage />} />
+          <Route path="/missions/:id" element={<MissionPage />} />
 
           <Route path="/calculators" element={<Navigate to="/calculators/schedule" replace />} />
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />
