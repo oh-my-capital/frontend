@@ -54,6 +54,10 @@ import ProductDetailPage from "./pages/products/ProductDetailPage";
 import ProductsPage from "./pages/products/ProductsPage";
 // WP26 — 시나리오 프리셋·초기화
 import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
+// WP22 — 리스크 지표·연체 관리·운영 이력
+import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
+import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
+import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -111,6 +115,10 @@ export default function App() {
           <Route path="/admin/portfolio" element={<ProtectedRoute adminOnly><AdminPortfolioPage /></ProtectedRoute>} />
           <Route path="/admin/content" element={<ProtectedRoute adminOnly><AdminContentPage /></ProtectedRoute>} />
           <Route path="/admin/batch" element={<ProtectedRoute adminOnly><AdminBatchPage /></ProtectedRoute>} />
+          {/* WP22 — 리스크 지표·연체 관리·운영 이력 */}
+          <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/admin/collections" element={<ProtectedRoute adminOnly><AdminCollectionsPage /></ProtectedRoute>} />
+          <Route path="/admin/audit" element={<ProtectedRoute adminOnly><AdminAuditPage /></ProtectedRoute>} />
 
           {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
           <Route path="/support" element={<SupportHomePage />} />
