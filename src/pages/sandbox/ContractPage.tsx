@@ -21,6 +21,7 @@ import Tabs from "../../components/Tabs";
 import { useLoad } from "../calculators/parts/useLoad";
 import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
+import RightsPanel from "./rights/RightsPanel"; // WP19 — 청약철회·금리인하요구
 
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 
@@ -232,6 +233,7 @@ export default function ContractPage() {
             )}
             {c.status !== "PAID_OFF" && <RepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
             {c.status !== "PAID_OFF" && <PrepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
+            <RightsPanel contract={c} sandbox={s} onDone={reloadAll} />
             <DepositForm balance={s.settlementBalance} suggested={c.amountDueNow > s.settlementBalance ? c.amountDueNow - s.settlementBalance : null} onDeposited={reloadAll} />
           </aside>
         </div>

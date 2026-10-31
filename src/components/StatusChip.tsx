@@ -17,6 +17,7 @@ const LABELS: Record<string, { label: string; tone: StatusTone }> = {
   OVERDUE: { label: "연체", tone: "danger" },
   DEFAULTED: { label: "기한이익상실", tone: "danger" },
   PAID_OFF: { label: "완제", tone: "neutral" },
+  WITHDRAWN: { label: "청약 철회", tone: "neutral" }, // WP19
   APPLIED: { label: "접수", tone: "info" },
   APPROVED: { label: "승인", tone: "good" },
   CONDITIONAL: { label: "조건부 승인", tone: "warn" },
