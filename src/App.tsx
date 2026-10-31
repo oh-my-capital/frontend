@@ -30,6 +30,13 @@ import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP25 — 고객센터·금융소비자 권리 안내
+import FaqPage from "./pages/support/FaqPage";
+import GuidePage from "./pages/support/GuidePage";
+import NoticePage from "./pages/support/NoticePage";
+import NoticesPage from "./pages/support/NoticesPage";
+import RightsPage from "./pages/support/RightsPage";
+import SupportHomePage from "./pages/support/SupportHomePage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -70,6 +77,14 @@ export default function App() {
           <Route path="/admin/portfolio" element={<ProtectedRoute adminOnly><AdminPortfolioPage /></ProtectedRoute>} />
           <Route path="/admin/content" element={<ProtectedRoute adminOnly><AdminContentPage /></ProtectedRoute>} />
           <Route path="/admin/batch" element={<ProtectedRoute adminOnly><AdminBatchPage /></ProtectedRoute>} />
+
+          {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
+          <Route path="/support" element={<SupportHomePage />} />
+          <Route path="/support/faq" element={<FaqPage />} />
+          <Route path="/support/notices" element={<NoticesPage />} />
+          <Route path="/support/notices/:id" element={<NoticePage />} />
+          <Route path="/support/rights" element={<RightsPage />} />
+          <Route path="/support/guide" element={<GuidePage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
