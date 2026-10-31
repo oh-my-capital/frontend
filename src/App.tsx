@@ -30,6 +30,9 @@ import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP23 — 상품 안내·대표 예시
+import ProductDetailPage from "./pages/products/ProductDetailPage";
+import ProductsPage from "./pages/products/ProductsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -52,6 +55,10 @@ export default function App() {
           <Route path="/glossary/:slug" element={<TermPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/me/learning" element={<ProtectedRoute><MyLearningPage /></ProtectedRoute>} />
+
+          {/* WP23 — 상품 안내·대표 예시 */}
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:code" element={<ProductDetailPage />} />
 
           <Route path="/calculators" element={<Navigate to="/calculators/schedule" replace />} />
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />

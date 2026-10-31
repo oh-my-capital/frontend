@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { sandboxApi } from "../../api/sandbox";
 import type { ApplicationRequest, Product, RepaymentMethod, Sandbox } from "../../api/types";
@@ -28,7 +28,10 @@ export default function ApplyPage() {
   const summary = useLoad<Sandbox>(signal => sandboxApi.summary(signal), []);
   const products = useLoad<Product[]>(signal => sandboxApi.products(signal), []);
   const [step, setStep] = useState(0);
-  const [productCode, setProductCode] = useState("CREDIT_LOAN");
+  // WP23: 상품 안내의 "모의 신청"(?product=CODE)이면 그 상품을 미리 고른다. 목록에 없는 코드면 기본 상품.
+  const [searchParams] = useSearchParams();
+  const [pickedCode, setProductCode] = useState(searchParams.get("product") ?? "CREDIT_LOAN");
+  const productCode = products.data && !products.data.some(p => p.code === pickedCode) ? "CREDIT_LOAN" : pickedCode;
   const [amount, setAmount] = useState<number | null>(10_000_000);
   const [termMonths, setTermMonths] = useState(12);
   const [method, setMethod] = useState<RepaymentMethod>("EQUAL_PAYMENT");
@@ -57,8 +60,10 @@ export default function ApplyPage() {
     if (amount === null || amount <= 0) next.amount = "신청 금액을 넣어요.";
     else if (product && amount < product.minAmount) next.amount = `${product.name}은 ${formatNumber(product.minAmount)}원부터 신청할 수 있어요.`;
     else if (product?.maxAmount && amount > product.maxAmount) next.amount = `${product.name}은 ${formatNumber(product.maxAmount)}원까지 신청할 수 있어요.`;
-    if (product?.requiresCollateral && (vehicleValue === null || vehicleValue <= 0)) next.vehicleValue = "자동차 할부는 차량가(감정가)가 있어야 해요.";
-    if (product?.requiresCollateral && amount !== null && vehicleValue !== null && amount > Math.floor(vehicleValue * 0.9)) next.amount = `차량가의 90%인 ${formatNumber(Math.floor(vehicleValue * 0.9))}원까지만 신청할 수 있어요.`;
+    // WP23: 담보 한도는 상품별 LTV(자동차 할부 90%, 중고차 할부 70%)로 계산한다.
+    const ltv = product?.ltvRate ?? 0;
+    if (product?.requiresCollateral && (vehicleValue === null || vehicleValue <= 0)) next.vehicleValue = "담보 상품은 차량가(감정가)가 있어야 해요.";
+    if (product?.requiresCollateral && amount !== null && vehicleValue !== null && amount > Math.floor((vehicleValue * ltv) / 100)) next.amount = `차량가의 ${ltv}%인 ${formatNumber(Math.floor((vehicleValue * ltv) / 100))}원까지만 신청할 수 있어요.`;
     if (purpose.length > 100) next.purpose = "용도는 100자까지예요.";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -103,17 +108,17 @@ export default function ApplyPage() {
               {step === 0 && (
                 <fieldset className="apply-step" aria-describedby="apply-step1-hint">
                   <legend>1단계 · 상품 선택</legend>
-                  <p id="apply-step1-hint" className="muted">두 상품 모두 교육용 가정값이에요. 자동차 할부는 차량가의 90%까지, 원리금균등만 가능해요.</p>
+                  <p id="apply-step1-hint" className="muted">모든 상품이 교육용 가정값이에요. 담보 상품은 차량가 × LTV까지만, 원리금균등만 가능해요. 상품별 조건과 대표 예시는 <Link to="/products">상품 안내</Link>에서 볼 수 있어요.</p>
                   <div className="table-scroll">
                     <table className="table apply-products">
-                      <caption>상품 2개<span className="table-caption-note">선택 칸의 라디오를 고르면 아래 조건 입력이 그 상품이 허용하는 기간·상환 방식으로 맞춰진다.</span></caption>
+                      <caption>상품 {products.data.length}개<span className="table-caption-note">선택 칸의 라디오를 고르면 아래 조건 입력이 그 상품이 허용하는 기간·상환 방식으로 맞춰진다.</span></caption>
                       <thead><tr><th scope="col">선택</th><th scope="col">상품</th><th scope="col">금액 범위</th><th scope="col">기간</th><th scope="col" className="num">기준금리</th><th scope="col">상환 방식</th><th scope="col" className="num">중도상환수수료</th></tr></thead>
                       <tbody>
                         {products.data.map(p => (
                           <tr key={p.code} className={p.code === productCode ? "is-selected" : undefined}>
                             <td className="apply-pick"><label className="apply-pick-label"><input type="radio" name="product" id={`product-${p.code}`} value={p.code} checked={p.code === productCode} onChange={() => chooseProduct(p.code)} aria-label={`${p.name} 고르기`} /></label></td>
                             <th scope="row"><label htmlFor={`product-${p.code}`}>{p.name}</label><span className="admin-sub faint">{p.description}</span></th>
-                            <td>{formatNumber(p.minAmount)}원 ~ {p.maxAmount ? `${formatNumber(p.maxAmount)}원` : "차량가 90%"}</td>
+                            <td>{formatNumber(p.minAmount)}원 ~ {p.maxAmount ? `${formatNumber(p.maxAmount)}원` : `차량가 ${p.ltvRate ?? 0}%`}</td>
                             <td>{p.allowedTerms.join("·")}회</td>
                             <td className="num">{pct(p.baseRate)}</td>
                             <td>{p.allowedMethods.map(m => METHOD_LABEL[m]).join(" · ")}</td>
@@ -131,13 +136,13 @@ export default function ApplyPage() {
                 <fieldset className="apply-step">
                   <legend>2단계 · 조건 입력 — {product.name}</legend>
                   <div className="calc-fields">
-                    <MoneyInput label="신청 금액" value={amount} onChange={setAmount} required error={errors.amount} hint={`${formatNumber(product.minAmount)}원 ~ ${product.maxAmount ? `${formatNumber(product.maxAmount)}원` : "차량가 90%"}`} />
+                    <MoneyInput label="신청 금액" value={amount} onChange={setAmount} required error={errors.amount} hint={`${formatNumber(product.minAmount)}원 ~ ${product.maxAmount ? `${formatNumber(product.maxAmount)}원` : `차량가 ${product.ltvRate ?? 0}%`}`} />
                     <SelectField label="기간" value={termMonths} options={product.allowedTerms.map(t => ({ value: t, label: `${t}회` }))} onChange={setTermMonths} />
                     <SelectField label="상환 방식" value={method} options={product.allowedMethods.map(m => ({ value: m, label: METHOD_LABEL[m] }))} onChange={setMethod} />
                     <SelectField label="납입일" value={paymentDay} options={PAYMENT_DAY_OPTIONS} onChange={setPaymentDay} hint="1회차는 실행일 다음 달의 이 날. 토·일이면 다음 월요일" />
                     {product.requiresCollateral && (
                       <>
-                        <MoneyInput label="차량가(감정가)" value={vehicleValue} onChange={setVehicleValue} required error={errors.vehicleValue} hint="한도 = 차량가 × 90%" />
+                        <MoneyInput label="차량가(감정가)" value={vehicleValue} onChange={setVehicleValue} required error={errors.vehicleValue} hint={`한도 = 차량가 × ${product.ltvRate ?? 0}%`} />
                         <div className="field">
                           <label className="field-label" htmlFor="apply-vehicle">차량 설명<span className="optional">(선택)</span></label>
                           <input id="apply-vehicle" className="field-input" type="text" maxLength={100} value={vehicleDesc} onChange={event => setVehicleDesc(event.target.value)} />
