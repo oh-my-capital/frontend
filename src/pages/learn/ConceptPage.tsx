@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { learningApi } from "../../api/learning";
 import type { Concept, ConceptSummary, MyLearning, MyLearningConcept, QuizResult } from "../../api/types";
 import ConceptDiagram from "../../components/ConceptDiagram";
+import FigureFlow from "../../components/FigureFlow";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -12,7 +13,7 @@ import SubPageHeader from "../../components/SubPageHeader";
 import { useAuth } from "../../context/AuthContext";
 import { formatDate } from "../../lib/format";
 import { learnDiagramFor } from "./diagrams";
-import { calculatorLink } from "./links";
+import { calculatorLink, COURSE_TOTAL } from "./links";
 import QuizPanel from "./QuizPanel";
 import { useLoad } from "./useLoad";
 
@@ -32,7 +33,7 @@ export default function ConceptPage() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const fromServer = isAuthenticated ? learning.data?.concepts.find(c => c.conceptId === conceptId) ?? null : null;
   const mine = isAuthenticated ? (graded?.conceptId === conceptId ? graded : fromServer) : null;
-  const totalConcepts = concepts.data?.length ?? 12;
+  const totalConcepts = concepts.data?.length ?? COURSE_TOTAL;
   const quizCount = concepts.data?.find(c => c.id === conceptId)?.quizCount;
 
   useEffect(() => { if (concept.data) setDocumentTitle(`${concept.data.orderNo}. ${concept.data.title}`); }, [concept.data]);
@@ -86,11 +87,14 @@ export default function ConceptPage() {
           <article className="concept-body">
             {data.sections.map((section, index) => {
               const spec = learnDiagramFor(section.figure);
+              // 손으로 배치한 그림이 없으면 콘텐츠의 노드·엣지를 단계 흐름으로 그린다(그림 id 가 콘텐츠에만 있는 경우).
+              const flow = !spec && section.figure ? data.figures?.find(f => f.id === section.figure) : undefined;
               return (
                 <section key={section.heading} id={`section-${index + 1}`} className="concept-section">
                   <h2>{section.heading}</h2>
                   <p>{section.body}</p>
                   {spec && <ConceptDiagram spec={spec} />}
+                  {flow && <FigureFlow figure={flow} />}
                 </section>
               );
             })}
@@ -131,7 +135,8 @@ export default function ConceptPage() {
               <section id="practice" className="concept-section concept-practice">
                 <h2>직접 확인하기</h2>
                 <dl className="def-list">
-                  {calc && <div><dt>연결 계산기</dt><dd><Link to={calc.to}><Icon name="calculator" size={16} />{calc.label}</Link> — 본문의 숫자를 같은 조건으로 넣어 결과 표를 읽는다.</dd></div>}
+                  {calc && calc.kind === "calculator" && <div><dt>연결 계산기</dt><dd><Link to={calc.to}><Icon name="calculator" size={16} />{calc.label}</Link> — 본문의 숫자를 같은 조건으로 넣어 결과 표를 읽는다.</dd></div>}
+                  {calc && calc.kind === "screen" && <div><dt>연결 화면</dt><dd><Link to={calc.to}><Icon name="info" size={16} />{calc.label}</Link> — 근거 조문과 확인일을 읽고, 샌드박스에서 해 볼 수 있는 권리로 넘어간다.</dd></div>}
                   {data.sandboxTask && <div><dt>샌드박스 과업</dt><dd>{data.sandboxTask} <Link to="/sandbox"><Icon name="bank" size={16} />내 모의 여신 열기</Link></dd></div>}
                 </dl>
               </section>
@@ -173,7 +178,7 @@ export default function ConceptPage() {
               <h3>이 개념에서</h3>
               <dl className="def-list">
                 <div><dt>확인 문제</dt><dd>{quizCount !== undefined ? `${quizCount}문항 · ` : ""}80점 이상 완료</dd></div>
-                <div><dt>연결 계산기</dt><dd>{calc ? <Link to={calc.to}>{calc.label}</Link> : "없음"}</dd></div>
+                <div><dt>{calc?.kind === "screen" ? "연결 화면" : "연결 계산기"}</dt><dd>{calc ? <Link to={calc.to}>{calc.label}</Link> : "없음"}</dd></div>
                 <div><dt>샌드박스 과업</dt><dd>{data.sandboxTask ? <Link to="/sandbox">있음 · 내 모의 여신</Link> : "없음"}</dd></div>
                 <div><dt>내 기록</dt><dd>{!isAuthenticated ? <Link to="/login">로그인하면 점수가 남아요</Link> : mine?.bestScore !== null && mine?.bestScore !== undefined ? `최고 ${mine.bestScore}점 · 마지막 시도 ${formatDate(mine.lastAttemptedAt)}` : "아직 풀지 않았어요"}</dd></div>
               </dl>

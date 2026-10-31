@@ -5,23 +5,26 @@ import { ApiError, errorMessage, IS_MOCK } from "../../api/client";
 import type { AdminApplicationItem, AdminOverrideRequest, Application, Decision } from "../../api/types";
 import DataTable, { type Column } from "../../components/DataTable";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
 import Money from "../../components/Money";
 import MoneyInput from "../../components/MoneyInput";
+import ProgressBar from "../../components/ProgressBar";
 import RateInput from "../../components/RateInput";
 import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
-import { formatDate, formatRate } from "../../lib/format";
+import { FilterGroup } from "../../components/Tabs";
+import { formatDate, formatNumber, formatRate } from "../../lib/format";
 import { ForbiddenPage } from "../../components/ProtectedRoute";
-import ScreeningReasons from "./parts/ScreeningReasons";
+import ScreeningReasons from "../calculators/parts/ScreeningReasons";
 import { APPLICATION_STATUS_OPTIONS, DECISION_LABEL, formatDateTime, isForbidden, METHOD_LABEL, requestIdOf, SOURCE_LABEL } from "./parts/adminLabels";
 import { useLoad } from "./parts/useLoad";
 
 const MIN_REASON = 10;
 
 /**
- * 심사 큐(S-20, FR-23): 상태 필터 · 페이지 표 → 행 선택 시 우측 패널(신청 요약 · 근거 표 · 변경 이력 · 결정 변경 폼).
+ * 심사 큐(S-20, FR-23): 상태별 건수 거르개 · 페이지 표 → 행 선택 시 우측 패널(신청 요약 · 근거 표 · 변경 이력 · 결정 변경 폼).
  * 질의는 주소(?status=&page=&id=)에 둬서 새로 고침·뒤로 가기에도 같은 화면이 나온다.
  */
 export default function AdminApplicationsPage() {
@@ -33,6 +36,13 @@ export default function AdminApplicationsPage() {
 
   const list = useLoad(() => adminApi.listApplications({ status: status || undefined, page }), [status, page, listVersion]);
   const detail = useLoad(() => adminApi.getApplication(selectedId!), [selectedId], selectedId !== null);
+  const counts = useLoad(async () => {
+    const pairs = await Promise.all(APPLICATION_STATUS_OPTIONS.map(async option => {
+      const found = await adminApi.listApplications({ status: option.value || undefined, size: 1 });
+      return [option.value, found.totalItems] as const;
+    }));
+    return Object.fromEntries(pairs) as Record<string, number>;
+  }, [listVersion]);
 
   const update = (next: Record<string, string | null>) => {
     const copy = new URLSearchParams(params);
@@ -43,14 +53,11 @@ export default function AdminApplicationsPage() {
   if (isForbidden(list.error)) return <ForbiddenPage requestId={requestIdOf(list.error)} />;
 
   const columns: Column<AdminApplicationItem>[] = [
-    { key: "no", header: "신청번호", rowHeader: true, nowrap: true, render: r => <code className="admin-code">{r.applicationNo}</code> },
-    { key: "sandbox", header: "샌드박스", numeric: true, render: r => r.sandboxId },
-    { key: "email", header: "신청자", render: r => r.userEmailMasked },
-    { key: "product", header: "상품", render: r => r.productName },
-    { key: "amount", header: "신청 금액", numeric: true, render: r => <Money value={r.requestedAmount} /> },
+    { key: "no", header: "신청번호 · 신청일", rowHeader: true, nowrap: true, render: r => <><code className="admin-code">{r.applicationNo}</code><span className="faint admin-sub">샌드박스 {r.sandboxId} · {formatDate(r.appliedOn)}</span></> },
+    { key: "email", header: "신청자", width: "20%", render: r => <span className="admin-email">{r.userEmailMasked}</span> },
+    { key: "amount", header: "신청 금액 · 상품", numeric: true, render: r => <><Money value={r.requestedAmount} /><span className="faint admin-sub">{r.productName}</span></> },
     { key: "decision", header: "심사 결정", nowrap: true, render: r => { const { label, tone } = statusLabel(r.decision); return <><StatusChip label={label} tone={tone} /><span className="faint admin-sub">{SOURCE_LABEL[r.source] ?? r.source}</span></>; } },
     { key: "status", header: "현재 상태", nowrap: true, render: r => { const { label, tone } = statusLabel(r.status); return <StatusChip label={label} tone={tone} />; } },
-    { key: "applied", header: "신청일", nowrap: true, render: r => formatDate(r.appliedOn) },
     { key: "open", header: "상세", render: r => (
       <button type="button" className={`btn btn-small ${r.id === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.id === selectedId} onClick={() => update({ id: String(r.id) })}>
         {r.id === selectedId ? "보는 중" : "보기"}
@@ -71,25 +78,41 @@ export default function AdminApplicationsPage() {
         meta={IS_MOCK ? "mock 모드 · 고정 응답이며 새로 고침하면 변경이 사라져요" : undefined}
       />
       <main className="page-main admin-main">
-        <div className="admin-grid">
+        <div className={selectedId === null ? "admin-grid" : "admin-grid admin-grid-detail"}>
           <section aria-labelledby="queue-title">
-            <h2 id="queue-title" className="sr-only">신청 목록</h2>
-            <form className="admin-filter" role="search" aria-label="심사 큐 필터" onSubmit={(e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const fd = new FormData(e.currentTarget); update({ status: String(fd.get("status") ?? ""), page: null }); }}>
-              <div className="field">
-                <label className="field-label" htmlFor="queue-status">상태</label>
-                <select id="queue-status" name="status" className="field-select" defaultValue={status} key={status}>
-                  {APPLICATION_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+            <div className="section-head">
+              <div>
+                <h2 id="queue-title">신청 목록</h2>
+                <p>상태를 누르면 그 상태의 신청만 본다. 상태 옆 숫자는 전체 샌드박스를 합친 건수이다.</p>
               </div>
-              <button type="submit" className="btn btn-secondary">걸러 보기</button>
-              <p className="admin-count" aria-live="polite">
-                {data ? <>{statusLabelText} <strong>{data.totalItems}</strong>건 · {data.page + 1}/{data.totalPages}쪽</> : "불러오는 중"}
-              </p>
-            </form>
+            </div>
+            <div className="admin-tabline">
+              <FilterGroup label="상태 거르개">
+                {APPLICATION_STATUS_OPTIONS.map(option => {
+                  const count = counts.data?.[option.value];
+                  const classes = [option.value === status && "is-active", count === 0 && "is-zero"].filter(Boolean).join(" ");
+                  return (
+                    <button key={option.value || "all"} type="button" aria-pressed={option.value === status} className={classes || undefined} onClick={() => update({ status: option.value || null, page: null, id: null })}>
+                      {option.label}<b>{count === undefined ? "–" : formatNumber(count)}</b>
+                    </button>
+                  );
+                })}
+              </FilterGroup>
+            </div>
+            <p className="admin-count" aria-live="polite">
+              {data ? <>{statusLabelText} <strong>{formatNumber(data.totalItems)}</strong>건 · {data.page + 1}/{data.totalPages}쪽을 보고 있어요.</> : "불러오는 중"}
+            </p>
 
             {list.loading && !data && <Loading message="신청을 불러오고 있어요" minHeight={240} />}
             {list.error != null && <LoadError error={list.error} onRetry={list.reload} />}
-            {data && (
+            {data && data.items.length === 0 && (
+              <EmptyState
+                title={`${statusLabelText} 상태의 신청이 없어요`}
+                description="다른 상태를 눌러 보거나, 모의 여신에서 새 신청을 만들면 여기에 바로 올라와요."
+                action={{ to: "/admin/applications", label: "전체 신청 보기" }}
+              />
+            )}
+            {data && data.items.length > 0 && (
               <>
                 <DataTable
                   caption="심사 큐"
@@ -99,7 +122,7 @@ export default function AdminApplicationsPage() {
                   rowKey={r => r.id}
                   selectedKey={selectedId}
                   scroll
-                  emptyMessage="이 상태의 신청이 없어요. 상태를 전체로 바꿔 보거나 모의 여신에서 신청을 만들어요."
+                  compact
                 />
                 <nav className="admin-pager" aria-label="쪽 이동">
                   <button type="button" className="btn btn-secondary btn-small" disabled={data.page <= 0} onClick={() => update({ page: String(data.page - 1) })}>이전 쪽</button>
@@ -112,10 +135,13 @@ export default function AdminApplicationsPage() {
 
           <aside aria-label="신청 상세">
             {selectedId === null && (
-              <div className="panel panel-soft">
-                <h3>신청을 고르면 여기에 상세가 나와요</h3>
-                <p className="muted" style={{ marginTop: 8, fontSize: 15 }}>표의 "보기"를 누르면 신청 조건, 규칙별 심사 근거, 이전 변경 이력과 결정 변경 폼이 열려요.</p>
-              </div>
+              <EmptyState
+                title="아직 고른 신청이 없어요"
+                description="표의 “보기”를 누르면 신청 조건, 규칙별 심사 근거, 이전 변경 이력과 결정 변경 폼이 여기에 열려요."
+                action={data && data.items.length > 0
+                  ? { to: `/admin/applications?${new URLSearchParams({ ...(status ? { status } : {}), ...(page ? { page: String(page) } : {}), id: String(data.items[0].id) })}`, label: `맨 위 신청(${data.items[0].applicationNo}) 열기` }
+                  : undefined}
+              />
             )}
             {selectedId !== null && detail.loading && !detail.data && <Loading message="신청 상세를 불러오고 있어요" minHeight={240} />}
             {selectedId !== null && detail.error != null && (
@@ -151,6 +177,7 @@ function ApplicationPanel({ application, onChanged, onClose }: { application: Ap
   const s = application.screening;
   const current = statusLabel(application.status);
   const canOverride = application.status !== "EXECUTED" && application.status !== "CANCELLED";
+  const won = new Intl.NumberFormat("ko-KR");
 
   return (
     <div className="panel admin-detail">
@@ -171,15 +198,16 @@ function ApplicationPanel({ application, onChanged, onClose }: { application: Ap
         <dt>상품</dt><dd>{application.product.name}</dd>
         <dt>신청 금액</dt><dd><Money value={application.requestedAmount} /></dd>
         <dt>조건</dt><dd>{application.termMonths}회 · {METHOD_LABEL[application.repaymentMethod] ?? application.repaymentMethod} · 납입일 {application.paymentDay}일 · 자동이체 {application.autoDebit ? "신청" : "미신청"}</dd>
-        <dt>적용 금리</dt><dd>{formatRate(s.rate.applied)} <span className="faint">(기준 {formatRate(s.rate.base)} + 스프레드 {formatRate(s.rate.spread)} − 우대 {formatRate(s.rate.discount)}{s.rate.capped ? " · 상한 적용" : ""})</span></dd>
-        <dt>최종 한도</dt><dd>{s.limits.finalLimit !== null ? <><Money value={s.limits.finalLimit} /> <span className="faint">({s.limits.bindingRule})</span></> : "—"}</dd>
-        <dt>제안 금액</dt><dd><Money value={s.offeredAmount} /></dd>
-        <dt>월 납입액</dt><dd><Money value={s.monthlyPayment} /></dd>
-        <dt>DSR</dt><dd>{s.dsr.ratio.toFixed(2)}% <span className="faint">(한도 {s.dsr.limit}% · 기존 {new Intl.NumberFormat("ko-KR").format(s.dsr.existingAnnual)}원 + 신규 {new Intl.NumberFormat("ko-KR").format(s.dsr.newAnnual)}원)</span></dd>
+        {s.rate && <><dt>적용 금리</dt><dd>{formatRate(s.rate.applied)} <span className="faint">(기준 {formatRate(s.rate.base)} + 스프레드 {formatRate(s.rate.spread)} − 우대 {formatRate(s.rate.discount)}{s.rate.capped ? " · 상한 적용" : ""})</span></dd></>}
+        {s.limits && <><dt>최종 한도</dt><dd>{s.limits.finalLimit !== null ? <><Money value={s.limits.finalLimit} /> <span className="faint">({s.limits.bindingRule})</span></> : "—"}</dd></>}
+        {s.offeredAmount !== null && <><dt>제안 금액</dt><dd><Money value={s.offeredAmount} /></dd></>}
+        {s.monthlyPayment !== null && <><dt>월 납입액</dt><dd><Money value={s.monthlyPayment} /></dd></>}
+        {s.dsr && <><dt>DSR</dt><dd>{s.dsr.ratio.toFixed(2)}% <span className="faint">(한도 {s.dsr.limit}% · 기존 {won.format(s.dsr.existingAnnual)}원 + 신규 {won.format(s.dsr.newAnnual)}원)</span></dd></>}
         <dt>신청일 · 결정일</dt><dd>{formatDate(application.appliedOn)} · {formatDate(application.decidedOn)}</dd>
         {application.contractId !== null && <><dt>계약</dt><dd>계약 ID {application.contractId}</dd></>}
       </dl>
 
+      {!s.rate && <p className="muted admin-note">자격 단계에서 걸려 금리·한도·DSR을 계산하지 않았어요. 아래 근거 표에서 어떤 자격 규칙이 막았는지 확인해요.</p>}
       <ScreeningReasons reasons={s.reasons} />
       <Disclosure data={s.disclosure} />
 
@@ -212,11 +240,12 @@ function OverrideForm({ application, onChanged }: { application: Application; on
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const reasonLength = reason.trim().length;
+  const enough = reasonLength >= MIN_REASON;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDone(null);
-    if (reasonLength < MIN_REASON) return setError(`변경 사유를 ${MIN_REASON}자 이상 적어요. 지금 ${reasonLength}자예요.`);
+    if (!enough) return setError(`변경 사유를 ${MIN_REASON}자 이상 적어요. 지금 ${reasonLength}자예요.`);
     if (decision === "CONDITIONAL" && amount === null) return setError("조건부 승인은 제안 한도를 적어요.");
     if (decision !== "REJECTED" && amount !== null && amount > application.requestedAmount) return setError("승인 금액은 요청 금액을 넘을 수 없어요.");
     const body: AdminOverrideRequest = { decision, reason: reason.trim() };
@@ -240,7 +269,7 @@ function OverrideForm({ application, onChanged }: { application: Application; on
   return (
     <form className="admin-form" onSubmit={submit} aria-busy={busy} noValidate>
       <h3>결정 변경</h3>
-      <p className="muted" style={{ fontSize: 15 }}>자동 심사 결과를 운영자가 바꿔요. 사유는 {MIN_REASON}자 이상이며 이전·이후 결정과 함께 기록돼요.</p>
+      <p className="admin-hint">자동 심사 결과를 운영자가 바꿔요. 사유는 {MIN_REASON}자 이상이며 이전·이후 결정과 함께 기록돼요.</p>
       <div className="field">
         <label className="field-label" htmlFor="ov-decision">결정</label>
         <select id="ov-decision" className="field-select" value={decision} onChange={e => setDecision(e.target.value as Decision)}>
@@ -258,12 +287,16 @@ function OverrideForm({ application, onChanged }: { application: Application; on
       <div className="field">
         <label className="field-label" htmlFor="ov-reason">변경 사유</label>
         <textarea id="ov-reason" className="field-textarea" rows={3} value={reason} onChange={e => setReason(e.target.value)} aria-describedby="ov-reason-hint" required minLength={MIN_REASON} />
-        <p id="ov-reason-hint" className="field-hint">{MIN_REASON}자 이상. 지금 {reasonLength}자. 예: "소득 증빙 추가 확인 후 한도 상향".</p>
+        <div className={`admin-counter${enough ? " is-ok" : ""}`}>
+          <ProgressBar value={Math.min(reasonLength, MIN_REASON)} total={MIN_REASON} label={`사유 ${MIN_REASON}자 중 ${reasonLength}자 입력`} tone={enough ? "good" : "primary"} />
+          <span aria-live="polite">{enough ? `${reasonLength}자 · 보낼 수 있어요` : `${reasonLength} / ${MIN_REASON}자 · ${MIN_REASON - reasonLength}자 더 필요해요`}</span>
+        </div>
+        <p id="ov-reason-hint" className="field-hint">예: “소득 증빙 추가 확인 후 한도 상향”. 사유는 변경 이력에 그대로 남아요.</p>
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       {done && <p className="form-done" role="status" aria-live="polite">{done}</p>}
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={busy || reasonLength < MIN_REASON}>{busy ? "바꾸고 있어요…" : "결정 바꾸기"}</button>
+        <button type="submit" className="btn btn-primary" disabled={busy || !enough}>{busy ? "바꾸고 있어요…" : "결정 바꾸기"}</button>
       </div>
     </form>
   );

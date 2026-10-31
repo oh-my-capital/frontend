@@ -59,7 +59,7 @@ export function Fieldset({ legend, hint, children, actions }: { legend: string; 
       <legend>{legend}</legend>
       {hint && <p className="field-hint admin-fieldset-hint">{hint}</p>}
       <div className="admin-fieldset-body">{children}</div>
-      {actions && <div className="btn-row" style={{ marginTop: 12 }}>{actions}</div>}
+      {actions && <div className="btn-row">{actions}</div>}
     </fieldset>
   );
 }

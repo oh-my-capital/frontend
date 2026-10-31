@@ -1,0 +1,58 @@
+/* 학습 미션(S-200 목록·S-201 상세, WP20). 토큰 조합만 쓴다(ui-guidelines §2·§3). 공용 조각(.table·.panel·.figure-row·.tabs·.progress-bar)은 base.css 그대로. */
+
+.missions-figures { margin-bottom: var(--sp-7); }
+.missions-grid > div { min-width: 0; }
+
+/* 비로그인 안내: 한 줄 문장 + 로그인 링크 */
+.missions-login-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-5); padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--primary-line); border-left: var(--rule-accent) solid var(--primary); background: var(--primary-tint); color: var(--text); font-size: var(--fs-base); }
+.missions-login-note svg { color: var(--primary); flex-shrink: 0; }
+.missions-login-note span { flex: 1 1 auto; min-width: 0; }
+.missions-login-note a { display: inline-flex; align-items: center; min-height: var(--touch); font-weight: var(--fw-bold); }
+
+.missions .tabs { margin-bottom: var(--sp-4); }
+
+/* 목록 표: 미션 이름 아래에 학습 목표를 작은 글자로 */
+.missions-table th[scope='row'] a { font-weight: var(--fw-bold); }
+.missions-goal { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+.missions-concepts { font-size: var(--fs-small); }
+.missions-concepts a { display: block; line-height: var(--lh-snug); }
+.missions-concepts a + a { margin-top: var(--sp-1); }
+.missions-table tr.is-done th[scope='row'] a { color: var(--text-muted); }
+.missions-table td .status { white-space: nowrap; }
+.missions-mobile-meta { display: none; }
+
+.missions-aside-note { margin-top: var(--sp-2); }
+.missions-aside-action { width: 100%; margin-top: var(--sp-4); justify-content: space-between; text-align: left; }
+.missions-steps { display: grid; gap: var(--sp-2); margin-bottom: var(--sp-3); padding-left: var(--sp-5); color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
+
+/* 상세: 머리 줄의 미션 번호, 힌트·조건 */
+.mission-no { margin-right: var(--sp-3); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mission-body { display: grid; gap: var(--sp-8); }
+.mission-hints { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-4); padding-left: var(--sp-6); font-size: var(--fs-body); line-height: var(--lh-body); }
+.mission-hints li::marker { color: var(--accent); font-weight: var(--fw-bold); }
+.mission-conditions th[scope='row'] { font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+.mission-conditions td { white-space: nowrap; }
+.mission-conditions tr.is-met th[scope='row'] { color: var(--text); }
+.mission-group { display: inline-block; margin-left: var(--sp-2); color: var(--text-faint); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.mission-children { display: grid; gap: var(--sp-2); margin-top: var(--sp-2); padding-left: var(--sp-4); border-left: var(--rule) solid var(--border); list-style: none; font-weight: var(--fw-medium); }
+.mission-children li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-3); color: var(--text-muted); font-size: var(--fs-small); }
+.mission-result { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); }
+.mission-check { margin-top: var(--sp-4); }
+.mission-live { min-height: var(--sp-6); margin-top: var(--sp-2); color: var(--text); font-size: var(--fs-base); font-weight: var(--fw-semibold); }
+
+.mission-action { width: 100%; margin-top: var(--sp-3); justify-content: space-between; }
+.mission-concepts { display: grid; gap: var(--sp-2); padding: 0; list-style: none; }
+.mission-concepts .btn { width: 100%; justify-content: flex-start; text-align: left; }
+
+.mission-pager { justify-content: space-between; }
+.mission-pager a { max-width: 100%; }
+
+@media (max-width: 740px) {
+  .missions-figures { margin-bottom: var(--sp-5); }
+  /* 좁은 화면: 난이도·연결 개념 열을 접고 미션 칸 아래 한 줄로 요약한다(연결 개념은 상세 화면에 있다) */
+  .missions-table .missions-col-wide { display: none; }
+  .missions-mobile-meta { display: block; margin-top: var(--sp-1); color: var(--text-faint); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+  .mission-conditions td { white-space: normal; }
+  .mission-pager { flex-direction: column; align-items: flex-start; }
+  .mission-pager > span:empty { display: none; }
+}

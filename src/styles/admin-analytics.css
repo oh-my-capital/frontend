@@ -1,0 +1,80 @@
+/*
+ * 운영 분석(S-220 리스크 지표 · S-221 연체 관리 · S-222 운영 이력, WP22). admin.css·charts.css·base.css 위에 이 화면들에만 있는 규칙을 더한다.
+ * 색·글자·간격은 tokens.css 토큰과 그 조합(color-mix)만 쓴다. 히트맵 농도는 0~5 여섯 단계 클래스로 나눠 인라인 색을 쓰지 않는다.
+ */
+
+/* ---------- 롤레이트 히트맵 ---------- */
+.rr-after { margin-top: var(--sp-9); }
+.rr-controls { margin-bottom: 0; }
+/* 칸 안 화면 낭독용 글자(.sr-only, position:absolute)가 스크롤 상자 밖 페이지 폭을 늘리지 않도록 상자를 기준 위치로 삼는다. */
+.rr-scroll, .vintage-data { position: relative; }
+.rr-controls .tabs { align-self: flex-end; }
+.rr-table th, .rr-table td { vertical-align: middle; }
+.rr-corner { color: var(--text-muted); font-size: var(--fs-caption); white-space: nowrap; }
+.rr-cell { min-width: 84px; border-left: var(--rule) solid var(--border-soft); }
+.rr-ratio { display: block; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.rr-sub { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.rr-sub .money-unit { font-size: var(--fs-micro); }
+
+/* 방향 계열: 개선·완제 = 초록, 유지 = 남색, 악화 = 붉은색. 농도 = 비율 단계. */
+.rr-better, .rr-paid { --rr-hue: var(--good); }
+.rr-same { --rr-hue: var(--primary); }
+.rr-worse { --rr-hue: var(--danger); }
+.rr-heat-0 { background: var(--surface); }
+.rr-heat-1 { background: color-mix(in srgb, var(--rr-hue) 6%, var(--surface)); }
+.rr-heat-2 { background: color-mix(in srgb, var(--rr-hue) 12%, var(--surface)); }
+.rr-heat-3 { background: color-mix(in srgb, var(--rr-hue) 20%, var(--surface)); }
+.rr-heat-4 { background: color-mix(in srgb, var(--rr-hue) 30%, var(--surface)); }
+.rr-heat-5 { background: color-mix(in srgb, var(--rr-hue) 42%, var(--surface)); }
+.rr-heat-5 .rr-sub { color: var(--text); }
+.rr-heat-0 .rr-ratio { color: var(--text-faint); font-weight: var(--fw-medium); }
+
+.rr-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: var(--fs-caption); }
+.rr-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.rr-swatch { display: inline-block; width: var(--sp-3); height: var(--sp-3); border: var(--rule) solid var(--border-strong); }
+
+/* ---------- 빈티지 선 ---------- */
+.vintage-line { fill: none; stroke: var(--vintage-color); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.vintage-dot { fill: var(--vintage-color); stroke: var(--vintage-color); stroke-width: 1.5; }
+.vintage-dot-hollow { fill: var(--surface); }
+.vintage-s0 { --vintage-color: var(--series-principal); }
+.vintage-s1 { --vintage-color: var(--series-interest); }
+.vintage-s2 { --vintage-color: var(--series-fee); }
+.vintage-s3 { --vintage-color: var(--series-overdue); }
+.vintage-s4 { --vintage-color: var(--series-balance); }
+.vintage-s5 { --vintage-color: var(--ac-doubtful); }
+.vintage-data { border: 0; }
+
+/* ---------- 퍼널 ---------- */
+.funnel-label { fill: var(--text); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.funnel-value { fill: var(--text); }
+.funnel-bar { fill: var(--primary); }
+.funnel-applied { fill: var(--series-balance); }
+.funnel-decided { fill: var(--primary-strong); }
+.funnel-approved_any { fill: var(--primary); }
+.funnel-executed { fill: var(--accent); }
+.funnel-paid_off { fill: var(--good); }
+.funnel-share { display: block; height: 100%; }
+.funnel-share-approved { background: var(--good); }
+.funnel-share-conditional { background: var(--warn); }
+.funnel-share-rejected { background: var(--danger); }
+
+/* ---------- 연체 관리 ---------- */
+.collection-boundary { margin-bottom: var(--sp-6); }
+.collection-breakdown { font-variant-numeric: tabular-nums; }
+.collection-note-count { color: var(--primary); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.collection-breakdown .money-unit { font-size: var(--fs-micro); }
+.collection-filter { margin-bottom: var(--sp-4); }
+.collection-notes-title { margin-bottom: var(--sp-3); font-size: var(--fs-lead); }
+.collection-notes { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border: var(--rule) solid var(--border); }
+.collection-notes li { display: grid; gap: var(--sp-1); padding: var(--sp-3) var(--sp-4); border-bottom: var(--rule) solid var(--border-soft); background: var(--surface); }
+.collection-notes li:last-child { border-bottom: 0; }
+.collection-notes p { font-size: var(--fs-base); line-height: var(--lh-body); white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ---------- 운영 이력 ---------- */
+.audit-summary { display: block; min-width: 240px; line-height: var(--lh-snug); }
+
+@media (max-width: 740px) {
+  .rr-cell { min-width: 72px; }
+  .audit-summary { min-width: 200px; }
+}

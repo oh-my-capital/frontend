@@ -19,26 +19,28 @@ export const METHOD_DESCRIPTION: Record<RepaymentMethod, string> = {
 export const METHODS: RepaymentMethod[] = ["EQUAL_PAYMENT", "EQUAL_PRINCIPAL", "BULLET"];
 export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = { EMPLOYEE: "근로소득자", SELF_EMPLOYED: "자영업자", FREELANCER: "프리랜서", NONE: "소득 활동 없음" };
 export const RULE_LABEL: Record<string, string> = {
-  "ELIG-AGE": "자격 · 연령", "ELIG-INCOME": "자격 · 소득", "ELIG-SCORE": "자격 · 신용점수", "ELIG-PRODUCT": "자격 · 상품 범위",
+  "ELIG-AGE": "자격 · 연령", "ELIG-INCOME": "자격 · 소득", "ELIG-SCORE": "자격 · 신용점수", "ELIG-PRODUCT": "자격 · 상품 범위", "ELIG-EMPLOYMENT": "자격 · 고용형태",
   "RATE-BAND": "금리 · 신용 밴드", "RATE-APPLIED": "금리 · 적용 금리",
   "LIMIT-PRODUCT": "한도 · 상품 최대", "LIMIT-LTV": "한도 · 담보(LTV)", "LIMIT-INCOME": "한도 · 소득배수", "LIMIT-DSR": "한도 · DSR 역산", "LIMIT-FINAL": "한도 · 최종 한도",
   "DSR-RATIO": "DSR 비율", DECISION: "결정",
 };
 export const REASON_CODE_LABEL: Record<string, string> = {
   AGE_UNDER_19: "만 19세 미만", INCOME_MISSING: "소득 없음", CREDIT_SCORE_LOW: "신용점수 미달", PRODUCT_CONSTRAINT: "상품 범위 밖",
-  LIMIT_REDUCED: "한도 축소", DSR_EXCEEDED: "DSR 초과", LIMIT_BELOW_MIN: "한도가 상품 최소 미만",
+  LIMIT_REDUCED: "한도 축소", DSR_EXCEEDED: "DSR 초과", LIMIT_BELOW_MIN: "한도가 상품 최소 미만", EMPLOYMENT_NOT_ELIGIBLE: "고용형태 조건 미충족",
 };
 export const ROW_STATUS_LABEL: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "danger" }> = {
   SCHEDULED: { label: "예정", tone: "neutral" }, PAID: { label: "납입", tone: "good" }, OVERDUE: { label: "미납", tone: "danger" }, PARTIAL: { label: "일부 납입", tone: "warn" },
 };
 /** 거래 종류(Transaction.type). */
-export const TX_TYPE_LABEL: Record<string, string> = { AUTO_DEBIT: "자동이체", MANUAL: "수동 상환", PREPAYMENT_FULL: "전액 중도상환", PREPAYMENT_PARTIAL: "일부 중도상환" };
+export const TX_TYPE_LABEL: Record<string, string> = { AUTO_DEBIT: "자동이체", MANUAL: "수동 상환", PREPAYMENT_FULL: "전액 중도상환", PREPAYMENT_PARTIAL: "일부 중도상환", WITHDRAWAL: "청약철회 반환" };
 /** 결제계좌 원장 종류(LedgerEntry.type). */
-export const LEDGER_TYPE_LABEL: Record<string, string> = { DEPOSIT: "입금", LOAN_DISBURSEMENT: "대출 실행 입금", AUTO_DEBIT: "자동이체 출금", MANUAL_REPAYMENT: "수동 상환 출금", PREPAYMENT: "중도상환 출금" };
+export const LEDGER_TYPE_LABEL: Record<string, string> = { DEPOSIT: "입금", LOAN_DISBURSEMENT: "대출 실행 입금", AUTO_DEBIT: "자동이체 출금", MANUAL_REPAYMENT: "수동 상환 출금", PREPAYMENT: "중도상환 출금", WITHDRAWAL: "청약철회 반환 출금" };
 export const NOTIFICATION_TYPE_LABEL: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "danger" }> = {
   PAYMENT_DUE_SOON: { label: "납입 예정", tone: "warn" }, PAYMENT_COMPLETED: { label: "납입 완료", tone: "good" },
   OVERDUE_STARTED: { label: "연체", tone: "danger" }, ACCELERATION_NOTICE: { label: "상실 예정", tone: "danger" }, ACCELERATED: { label: "기한이익상실", tone: "danger" }, PAID_OFF: { label: "완제", tone: "neutral" },
 };
+/** 금리인하요구 거절 사유(WP19 rate_cut_requests.reason_code). */
+export const RATE_CUT_REASON_LABEL: Record<string, string> = { NOT_ELIGIBLE: "자격 미충족", NO_IMPROVEMENT: "금리 개선 없음", BELOW_MIN_REDUCTION: "인하 폭 부족" };
 export const ASSET_CLASS_LABEL: Record<string, string> = { NORMAL: "정상", PRECAUTIONARY: "요주의", SUBSTANDARD: "고정", DOUBTFUL: "회수의문", ESTIMATED_LOSS: "추정손실" };
 
 export const PAYMENT_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: `매월 ${i + 1}일` }));
@@ -62,7 +64,7 @@ export function todayIso(): string {
 
 /** 결정 문장: "요청 3,000만 원은 한도 4,793만 원 안이어서 승인이에요" 꼴. */
 export function decisionSentence(result: ScreeningResult, requestedAmount: number, productMin: number | null): string {
-  const limit = result.limits.finalLimit;
+  const limit = result.limits?.finalLimit ?? null;
   if (result.decision === "APPROVED") return `요청 ${won(requestedAmount)}은 최종 한도 ${won(limit ?? requestedAmount)} 안이어서 승인이에요.`;
   if (result.decision === "CONDITIONAL") return `요청 ${won(requestedAmount)}이 최종 한도 ${won(limit ?? 0)}을 넘어서, 한도만큼인 ${won(result.offeredAmount ?? limit ?? 0)}으로 줄여 조건부 승인이에요.`;
   const failed = result.reasons.filter(r => r.ruleCode.startsWith("ELIG") && r.outcome === "FAIL");
@@ -104,6 +106,11 @@ export function eventTitle(e: ContractEvent): string {
     case "ACCELERATION_NOTICE": return "기한이익상실 예정 통지";
     case "ACCELERATED": return "기한이익상실";
     case "PAID_OFF": return "완제";
+    case "DEFERMENT_APPLIED": return "원금 상환 유예 적용"; // WP18
+    case "MATURITY_EXTENDED": return "만기 연장 적용"; // WP18
+    case "WITHDRAWN": return "청약철회"; // WP19
+    case "RATE_CUT_ACCEPTED": return "금리인하요구 수락"; // WP19
+    case "RATE_CUT_REJECTED": return "금리인하요구 거절"; // WP19
     default: return e.type;
   }
 }
@@ -132,6 +139,11 @@ export function describeEvent(e: ContractEvent): string {
     case "ACCELERATION_NOTICE": return `기한이익상실 예정 통지 · 연체 ${typeof d.overdueDays === "number" ? d.overdueDays : 45}일, ${String(d.expectedDefaultOn ?? "")}까지 ${amount}을 정리하지 않으면 상실`;
     case "ACCELERATED": return `기한이익상실, 전액 ${amount} 청구${typeof d.baseAmount === "number" ? `(잔액 ${won(d.baseAmount)}` : ""}${typeof d.unpaidInterest === "number" ? ` + 미납 이자 ${won(d.unpaidInterest)}` : ""}${typeof d.unpaidOverdueInterest === "number" ? ` + 연체이자 ${won(d.unpaidOverdueInterest)}` : ""}${typeof d.baseAmount === "number" ? ")" : ""}`;
     case "PAID_OFF": return `완제(총 납입 ${amount}${typeof d.totalInterest === "number" ? `, 총 이자 ${won(d.totalInterest)}` : ""})`;
+    case "DEFERMENT_APPLIED": return `원금 상환 유예 ${String(d.months ?? "")}개월 · ${typeof d.interestOnlyPayment === "number" ? `${String(d.interestOnlyInstallments ?? "")}회 이자만 ${won(d.interestOnlyPayment)} · ` : ""}이후 월 ${won(Number(d.monthlyPaymentAfter ?? 0))}(전 ${won(Number(d.monthlyPaymentBefore ?? 0))}) · 만기 ${String(d.maturityDateAfter ?? "")} 그대로`; // WP18
+    case "MATURITY_EXTENDED": return `만기 연장 ${String(d.months ?? "")}개월 · 만기 ${String(d.maturityDateBefore ?? "")} → ${String(d.maturityDateAfter ?? "")} · 월 ${won(Number(d.monthlyPaymentBefore ?? 0))} → ${won(Number(d.monthlyPaymentAfter ?? 0))}`; // WP18
+    case "WITHDRAWN": return `청약철회 · 반환 ${amount}${typeof d.principal === "number" ? `(원금 ${won(d.principal)}` : ""}${typeof d.netInterest === "number" ? ` · 순 이자 ${won(d.netInterest)}` : ""}${typeof d.principal === "number" ? ")" : ""} · 중도상환수수료 없음${typeof d.elapsedDays === "number" ? ` · 실행 후 ${d.elapsedDays}일째` : ""}`; // WP19
+    case "RATE_CUT_ACCEPTED": return `금리인하요구 수락 · 연 ${typeof d.previousRate === "number" ? pct(d.previousRate) : "—"} → ${typeof d.recomputedRate === "number" ? pct(d.recomputedRate) : "—"}${typeof d.newPayment === "number" ? ` · 월 ${won(Number(d.previousPayment ?? 0))} → ${won(d.newPayment)}` : ""}`; // WP19
+    case "RATE_CUT_REJECTED": return `금리인하요구 거절${d.reasonCode ? `(${RATE_CUT_REASON_LABEL[String(d.reasonCode)] ?? String(d.reasonCode)})` : ""}${typeof d.previousRate === "number" ? ` · 현재 연 ${pct(d.previousRate)} 유지` : ""}`; // WP19
     default: return e.type;
   }
 }

@@ -32,9 +32,16 @@ export function ChartShell({ title, note, legend, summary, data, children }: {
   );
 }
 
-/** 축 눈금 3개(0·중간·최대)를 만든다. 최대가 0이면 1로 올려 0으로 나누지 않는다. */
+/**
+ * 축 눈금 3개(0·중간·최대)를 만든다. 최댓값보다 조금 높은 "읽기 좋은" 수로 올린다 —
+ * 그냥 max × 1.12 를 쓰면 축에 99.5만·49.8만 같은 값이 찍혀 눈금 구실을 못 한다.
+ * 1·2·2.5·5·10 × 10ⁿ 중 최댓값을 처음 넘는 값을 고른다.
+ */
 export function axisTicks(max: number): { top: number; ticks: number[] } {
-  const top = max <= 0 ? 1 : max * 1.12;
+  if (max <= 0) return { top: 1, ticks: [0, 0.5, 1] };
+  const magnitude = 10 ** Math.floor(Math.log10(max));
+  const step = [1, 2, 2.5, 5, 10].find(m => max <= magnitude * m) ?? 10;
+  const top = magnitude * step;
   return { top, ticks: [0, top / 2, top] };
 }
 

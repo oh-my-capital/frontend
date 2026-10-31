@@ -24,7 +24,8 @@ export default function AmortizationChart({ rows, title, methodLabel, principalT
 
   const maxPayment = Math.max(...rows.map(r => r.payment));
   const { top, ticks } = axisTicks(maxPayment);
-  const balanceTop = Math.max(principalTotal, ...rows.map(r => r.balance)) || 1;
+  const balanceAxis = axisTicks(Math.max(principalTotal, ...rows.map(r => r.balance)));
+  const balanceTop = balanceAxis.top;
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const slot = innerW / rows.length;
@@ -65,7 +66,7 @@ export default function AmortizationChart({ rows, title, methodLabel, principalT
             <text className="chart-label" x={PAD.left - 8} y={y(t) + 4} textAnchor="end">{shortMoney(t)}</text>
           </g>
         ))}
-        {[0, balanceTop / 2, balanceTop].map(t => (
+        {balanceAxis.ticks.map(t => (
           <text key={`b${t}`} className="chart-label" x={W - PAD.right + 8} y={yBalance(t) + 4} textAnchor="start">{shortMoney(t)}</text>
         ))}
         <line className="chart-axis" x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} />

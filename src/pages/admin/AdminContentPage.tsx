@@ -4,10 +4,12 @@ import { adminApi } from "../../api/admin";
 import { errorMessage, IS_MOCK } from "../../api/client";
 import type { AdminConceptSummary, AdminTermSummary, ContentValidationReport } from "../../api/types";
 import DataTable, { type Column } from "../../components/DataTable";
+import EmptyState from "../../components/EmptyState";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
 import StatusChip, { statusLabel } from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
+import Tabs from "../../components/Tabs";
 import { formatNumber } from "../../lib/format";
 import ConceptEditor from "./content/ConceptEditor";
 import RevisionsTable from "./content/RevisionsTable";
@@ -47,6 +49,9 @@ export default function AdminContentPage() {
   const listError = tab === "concepts" ? concepts.error : terms.error;
   if (isForbidden(listError)) return <ForbiddenPage requestId={requestIdOf(listError)} />;
 
+  const firstId = tab === "concepts" ? concepts.data?.[0]?.id : terms.data?.[0]?.slug;
+  const openLabel = tab === "concepts" ? "첫 개념 편집 열기" : "첫 용어 편집 열기";
+
   return (
     <>
       <SubPageHeader
@@ -59,32 +64,51 @@ export default function AdminContentPage() {
       <main className="page-main admin-main">
         <div className="admin-grid">
           <div className="stack admin-stack">
-            <div className="admin-tabs" role="tablist" aria-label="콘텐츠 종류">
-              <button type="button" role="tab" aria-selected={tab === "concepts"} className={tab === "concepts" ? "is-active" : undefined} onClick={() => update({ tab: null, id: null })}>개념{concepts.data && ` ${concepts.data.length}`}</button>
-              <button type="button" role="tab" aria-selected={tab === "terms"} className={tab === "terms" ? "is-active" : undefined} onClick={() => update({ tab: "terms", id: null })}>용어{terms.data && ` ${terms.data.length}`}</button>
+            <div className="admin-tabline">
+              <Tabs
+                label="콘텐츠 종류"
+                current={tab}
+                onChange={id => update({ tab: id === "terms" ? "terms" : null, id: null })}
+                items={[
+                  {
+                    id: "concepts",
+                    label: <>개념{concepts.data && <b>{formatNumber(concepts.data.length)}</b>}</>,
+                    content: (
+                      <>
+                        {concepts.loading && !concepts.data && <Loading message="개념 목록을 불러오고 있어요" minHeight={240} />}
+                        {concepts.error != null && <LoadError error={concepts.error} onRetry={concepts.reload} />}
+                        {concepts.data && concepts.data.length === 0 && (
+                          <EmptyState title="개념이 하나도 없어요" description="콘텐츠 시드가 올라가면 여기에 목차 순서대로 보여요." action={{ to: "/course", label: "학습자 화면에서 목차 확인하기" }} />
+                        )}
+                        {concepts.data && concepts.data.length > 0 && <ConceptList rows={concepts.data} selectedId={selectedId} onSelect={id => update({ id })} />}
+                      </>
+                    ),
+                  },
+                  {
+                    id: "terms",
+                    label: <>용어{terms.data && <b>{formatNumber(terms.data.length)}</b>}</>,
+                    content: (
+                      <>
+                        {terms.loading && !terms.data && <Loading message="용어 목록을 불러오고 있어요" minHeight={240} />}
+                        {terms.error != null && <LoadError error={terms.error} onRetry={terms.reload} />}
+                        {terms.data && terms.data.length === 0 && (
+                          <EmptyState title="용어가 하나도 없어요" description="콘텐츠 시드가 올라가면 가나다순으로 보여요." action={{ to: "/glossary", label: "용어 사전 확인하기" }} />
+                        )}
+                        {terms.data && terms.data.length > 0 && <TermList rows={terms.data} selectedId={selectedId} onSelect={slug => update({ id: slug })} />}
+                      </>
+                    ),
+                  },
+                ]}
+              />
             </div>
-
-            {tab === "concepts" && (
-              <section role="tabpanel" aria-label="개념 목록">
-                {concepts.loading && !concepts.data && <Loading message="개념 목록을 불러오고 있어요" minHeight={240} />}
-                {concepts.error != null && <LoadError error={concepts.error} onRetry={concepts.reload} />}
-                {concepts.data && <ConceptList rows={concepts.data} selectedId={selectedId} onSelect={id => update({ id })} />}
-              </section>
-            )}
-            {tab === "terms" && (
-              <section role="tabpanel" aria-label="용어 목록">
-                {terms.loading && !terms.data && <Loading message="용어 목록을 불러오고 있어요" minHeight={240} />}
-                {terms.error != null && <LoadError error={terms.error} onRetry={terms.reload} />}
-                {terms.data && <TermList rows={terms.data} selectedId={selectedId} onSelect={slug => update({ id: slug })} />}
-              </section>
-            )}
 
             <div ref={editorRef} className="admin-editor-slot">
               {!selectedId && (
-                <div className="panel panel-soft">
-                  <h3>항목을 고르면 여기에 편집 폼이 열려요</h3>
-                  <p className="muted" style={{ marginTop: 8, fontSize: 15 }}>초안이 있으면 초안을, 없으면 게시본을 불러와요. 저장은 초안에만 쓰이고 게시본은 게시할 때 바뀌어요.</p>
-                </div>
+                <EmptyState
+                  title="아직 고른 항목이 없어요"
+                  description="목록에서 “열기”를 누르면 편집 폼이 여기에 열려요. 초안이 있으면 초안을, 없으면 게시본을 불러와요."
+                  action={firstId ? { to: `/admin/content?${new URLSearchParams({ ...(tab === "terms" ? { tab } : {}), id: firstId })}`, label: openLabel } : undefined}
+                />
               )}
               {selectedId && tab === "concepts" && (
                 <>
@@ -112,7 +136,7 @@ export default function AdminContentPage() {
               {revisions.data && (
                 <RevisionsTable rows={revisions.data} caption={selectedId ? `이력 · ${selectedId}` : "최근 이력"} captionNote={selectedId ? "이 항목의 초안 저장·게시·내림 기록이다." : "전체 콘텐츠의 최근 30건. 항목을 고르면 그 항목만 본다."} />
               )}
-              {selectedId && <p className="faint" style={{ marginTop: 8 }}><button type="button" className="admin-linklike" onClick={() => update({ id: null })}>전체 이력 보기</button></p>}
+              {selectedId && <p className="faint admin-aside-note"><button type="button" className="admin-linklike" onClick={() => update({ id: null })}>전체 이력 보기</button></p>}
             </section>
           </aside>
         </div>
@@ -132,11 +156,10 @@ function ConceptList({ rows, selectedId, onSelect }: { rows: AdminConceptSummary
     { key: "status", header: "상태", render: r => { const c = statusLabel(r.status); return <><StatusChip label={c.label} tone={c.tone} />{r.hasDraft && r.status === "PUBLISHED" && <span className="faint admin-sub">초안 있음</span>}</>; } },
     { key: "version", header: "버전", numeric: true, render: r => `v${r.contentVersion}` },
     { key: "quiz", header: "문항", numeric: true, render: r => formatNumber(r.quizCount) },
-    { key: "published", header: "게시", render: r => <span className="admin-time">{formatDateTime(r.publishedAt)}</span> },
-    { key: "updated", header: "수정", render: r => <span className="admin-time">{formatDateTime(r.updatedAt)}</span> },
+    { key: "time", header: "수정 · 게시", render: r => <><span className="admin-time">{formatDateTime(r.updatedAt)}</span><span className="faint admin-sub admin-time">게시 {formatDateTime(r.publishedAt)}</span></> },
     { key: "open", header: "편집", render: r => <button type="button" className={`btn btn-small ${r.id === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.id === selectedId} onClick={() => onSelect(r.id)}>{r.id === selectedId ? "편집 중" : "열기"}</button> },
   ];
-  return <DataTable caption="개념 목록" captionNote="초안·게시·내림을 모두 포함한다. 버전은 게시본 기준이고 초안은 게시할 때 +1 된다." columns={columns} rows={rows} rowKey={r => r.id} scroll />;
+  return <DataTable caption="개념 목록" captionNote="초안·게시·내림을 모두 포함한다. 버전은 게시본 기준이고 초안은 게시할 때 +1 된다." columns={columns} rows={rows} rowKey={r => r.id} selectedKey={selectedId} scroll compact />;
 }
 
 function TermList({ rows, selectedId, onSelect }: { rows: AdminTermSummary[]; selectedId: string | null; onSelect: (slug: string) => void }) {
@@ -148,7 +171,7 @@ function TermList({ rows, selectedId, onSelect }: { rows: AdminTermSummary[]; se
     { key: "updated", header: "수정", render: r => <span className="admin-time">{formatDateTime(r.updatedAt)}</span> },
     { key: "open", header: "편집", render: r => <button type="button" className={`btn btn-small ${r.slug === selectedId ? "btn-primary" : "btn-secondary"}`} aria-pressed={r.slug === selectedId} onClick={() => onSelect(r.slug)}>{r.slug === selectedId ? "편집 중" : "열기"}</button> },
   ];
-  return <DataTable caption="용어 목록" captionNote="가나다순. 내린 용어는 사전에서 숨겨지지만 여기서는 보인다." columns={columns} rows={rows} rowKey={r => r.slug} scroll />;
+  return <DataTable caption="용어 목록" captionNote="가나다순. 내린 용어는 사전에서 숨겨지지만 여기서는 보인다." columns={columns} rows={rows} rowKey={r => r.slug} selectedKey={selectedId} scroll compact />;
 }
 
 function ValidatePanel() {
@@ -163,18 +186,20 @@ function ValidatePanel() {
   };
   return (
     <div className="panel">
-      <h3>트리 전체 검증</h3>
-      <p className="muted" style={{ marginTop: 8, fontSize: 15 }}>저장 없이 개념·문항·용어 전체(초안이 있으면 초안)를 검증해요. 게시 직전에 같은 검증이 다시 돌아요.</p>
-      <div className="btn-row" style={{ marginTop: 14 }}>
+      <div className="panel-head">
+        <h3>트리 전체 검증</h3>
+        <p>저장 없이 개념·문항·용어 전체(초안이 있으면 초안)를 검증한다. 게시 직전에 같은 검증이 다시 돈다.</p>
+      </div>
+      <div className="btn-row">
         <button type="button" className="btn btn-primary btn-small" disabled={busy} onClick={run}>{busy ? "검증하고 있어요…" : "지금 검증"}</button>
       </div>
-      {error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
+      {error && <p className="form-error admin-aside-note" role="alert">{error}</p>}
       {report && (
-        <div style={{ marginTop: 14 }} aria-live="polite">
+        <div className="admin-validate-result" aria-live="polite">
           <p className={report.valid ? "form-done" : "form-error"}>
             {report.valid ? "문제가 없어요. 게시할 수 있어요." : `문제 ${report.problems.length}건이 있어요. 아래 항목을 고친 뒤 다시 검증해요.`}
           </p>
-          <dl className="def-list admin-def" style={{ marginTop: 10 }}>
+          <dl className="def-list admin-def">
             <dt>검증 시각</dt><dd>{formatDateTime(report.checkedAt)}</dd>
             <dt>대상</dt><dd>개념 {report.conceptCount} · 문항 {report.quizCount} · 용어 {report.termCount}</dd>
           </dl>

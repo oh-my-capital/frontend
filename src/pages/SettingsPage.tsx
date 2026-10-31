@@ -23,8 +23,8 @@ export default function SettingsPage() {
           <aside>
             <div className="panel panel-soft">
               <h3>내 샌드박스와 학습</h3>
-              <p className="muted" style={{ marginTop: 8, fontSize: 15 }}>계정과 함께 보관되는 것은 가상 고객 프로필, 신청·계약·거래, 가상 시계, 확인 문제 기록이에요.</p>
-              <div className="btn-row" style={{ marginTop: 14 }}>
+              <p className="muted">계정과 함께 보관되는 것은 가상 고객 프로필, 신청·계약·거래, 가상 시계, 확인 문제 기록이에요.</p>
+              <div className="btn-row">
                 <Link className="btn btn-secondary btn-small" to="/sandbox">내 샌드박스</Link>
                 <Link className="btn btn-secondary btn-small" to="/me/learning">내 학습</Link>
               </div>

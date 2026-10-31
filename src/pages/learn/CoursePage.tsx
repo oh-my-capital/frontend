@@ -4,14 +4,15 @@ import type { ConceptSummary, MyLearning } from "../../api/types";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
+import ProgressBar from "../../components/ProgressBar";
 import StatusChip from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { useAuth } from "../../context/AuthContext";
-import { calculatorLink, COURSE_PARTS } from "./links";
+import { calculatorLink, COURSE_PARTS, COURSE_TOTAL, SANDBOX_TASK_CONCEPTS } from "./links";
 import { useLoad } from "./useLoad";
 
 /**
- * 입문 과정 목차(S-02). 12개념 번호 목록(제목·요약·문제 수·연결 계산기·완료 표시)과 권장 순서 설명.
+ * 입문 과정 목차(S-02). 개념 번호 목록(1단계 12 + WP24 13~16)(제목·요약·문제 수·연결 계산기·완료 표시)과 권장 순서 설명.
  * 로그인 시 /me/learning 으로 완료·최고점을 표시한다. 어느 개념이든 처음부터 열려 있다(ADR-006).
  */
 export default function CoursePage() {
@@ -26,7 +27,7 @@ export default function CoursePage() {
         section="learn"
         current="/course"
         title="입문 과정 목차"
-        description="여신의 구조(1~4) → 금리·한도·심사(5~8) → 연체·건전성·중도상환(9~12) 순서로 읽으면 대출 한 건의 생애를 처음부터 끝까지 따라가게 돼요. 권장 순서는 1에서 12지만 어느 개념이든 바로 열 수 있고, 개념마다 확인 문제와 연결된 계산기나 샌드박스 과업이 있어요."
+        description={`${COURSE_PARTS.map(part => `${part.label}(${part.from}~${part.to})`).join(" → ")} 순서로 읽으면 대출 한 건의 생애와 그 뒤의 채권 관리·권리까지 따라가게 돼요. 권장 순서는 1에서 ${COURSE_TOTAL}이지만 어느 개념이든 바로 열 수 있고, 개념마다 확인 문제와 연결된 계산기·안내 화면이나 샌드박스 과업이 있어요.`}
         meta={concepts.data ? `개념 ${concepts.data.length}개 · 확인 문제 ${concepts.data.reduce((sum, c) => sum + c.quizCount, 0)}문항 · 출처와 확인일은 개념마다 적혀 있어요` : undefined}
       />
       <main className="page-main">
@@ -55,8 +56,8 @@ export default function CoursePage() {
                             <p>{concept.summary}</p>
                             <p className="course-meta">
                               <span>확인 문제 {concept.quizCount}문항</span>
-                              {calc && <Link to={calc.to}><Icon name="calculator" size={16} />{calc.label}</Link>}
-                              {!calc && concept.orderNo >= 9 && concept.orderNo <= 11 && <Link to="/sandbox"><Icon name="bank" size={16} />샌드박스 과업</Link>}
+                              {calc && <Link to={calc.to}><Icon name={calc.kind === "screen" ? "info" : "calculator"} size={16} />{calc.label}</Link>}
+                              {!calc && SANDBOX_TASK_CONCEPTS.has(concept.id) && <Link to="/sandbox"><Icon name="bank" size={16} />샌드박스 과업</Link>}
                             </p>
                           </div>
                           <div className="course-state">
@@ -100,22 +101,21 @@ function ProgressPanel({ learning, concepts, isAuthenticated }: { learning: MyLe
       <div className="panel">
         <h3>진척 기록</h3>
         <p className="muted">로그인하면 확인 문제 점수와 완료 표시가 이 목차와 내 학습 화면에 남아요. 로그인 없이도 모든 개념을 읽고 문제를 풀 수 있어요.</p>
-        <Link className="btn btn-secondary btn-small" to="/login" style={{ marginTop: 14 }}>로그인하고 진척 기록하기</Link>
+        <Link className="btn btn-secondary btn-small learn-panel-action" to="/login">로그인하고 진척 기록하기</Link>
       </div>
     );
   }
   if (!learning) return <Loading message="진척을 불러오고 있어요" minHeight={160} />;
   const next = learning.nextConceptId ? concepts?.find(c => c.id === learning.nextConceptId) : null;
-  const ratio = learning.totalCount ? (learning.completedCount / learning.totalCount) * 100 : 0;
   return (
     <div className="panel learn-progress">
       <h3>내 진척</h3>
-      <div className="learn-progress-count"><strong>{learning.completedCount}</strong><span className="muted"> / {learning.totalCount} 완료</span></div>
-      <div className="progress-bar" role="img" aria-label={`${learning.totalCount}개 중 ${learning.completedCount}개 완료`}><i style={{ width: `${ratio}%` }} /></div>
+      <p className="progress-meta"><span className="muted">완료한 개념</span><strong>{learning.completedCount} / {learning.totalCount}</strong></p>
+      <ProgressBar value={learning.completedCount} total={learning.totalCount} label={`${learning.totalCount}개 중 ${learning.completedCount}개 완료`} />
       {next ? (
         <p className="muted">다음으로 권하는 개념은 <Link to={`/learn/${next.id}`}>{next.orderNo}. {next.title}</Link>이에요.</p>
       ) : (
-        <p className="muted">12개 개념을 모두 완료했어요. 오답이 있던 문항은 내 학습에서 다시 볼 수 있어요.</p>
+        <p className="muted">{learning.totalCount}개 개념을 모두 완료했어요. 오답이 있던 문항은 내 학습에서 다시 볼 수 있어요.</p>
       )}
       <Link to="/me/learning" className="learn-progress-link">내 학습 자세히 <Icon name="next" size={16} /></Link>
     </div>

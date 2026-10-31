@@ -30,7 +30,7 @@ export default function ConceptDiagram({ spec }: { spec: DiagramSpec }) {
   const height = spec.height ?? 240;
   const byId = new Map(spec.nodes.map(n => [n.id, n]));
   return (
-    <figure className="concept-diagram">
+    <figure className="figure-frame">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={spec.title} fontFamily="inherit" fontSize="14">
         <defs>
           <marker id="cd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">

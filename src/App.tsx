@@ -25,11 +25,39 @@ import ContractPage from "./pages/sandbox/ContractPage";
 import NotificationsPage from "./pages/sandbox/NotificationsPage";
 import ProfilePage from "./pages/sandbox/ProfilePage";
 import SandboxPage from "./pages/sandbox/SandboxPage";
+// WP17 — 대환대출 비교·DSR 계산기
+import DsrCalculatorPage from "./pages/calculators/DsrCalculatorPage";
+import RefinanceCalculatorPage from "./pages/calculators/RefinanceCalculatorPage";
+// WP21 — 증명서 발급·납입 캘린더
+import CalendarPage from "./pages/sandbox/calendar/CalendarPage";
+import CertificatePrintPage from "./pages/sandbox/certificates/CertificatePrintPage";
+import CertificatesPage from "./pages/sandbox/certificates/CertificatesPage";
 // WP8 — 운영
 import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP20 — 학습 미션
+import MissionPage from "./pages/missions/MissionPage";
+import MissionsPage from "./pages/missions/MissionsPage";
+// WP16 — 자동차 금융 비교
+import AutoFinanceCalculatorPage from "./pages/calculators/AutoFinanceCalculatorPage";
+// WP25 — 고객센터·금융소비자 권리 안내
+import FaqPage from "./pages/support/FaqPage";
+import GuidePage from "./pages/support/GuidePage";
+import NoticePage from "./pages/support/NoticePage";
+import NoticesPage from "./pages/support/NoticesPage";
+import RightsPage from "./pages/support/RightsPage";
+import SupportHomePage from "./pages/support/SupportHomePage";
+// WP23 — 상품 안내·대표 예시
+import ProductDetailPage from "./pages/products/ProductDetailPage";
+import ProductsPage from "./pages/products/ProductsPage";
+// WP26 — 시나리오 프리셋·초기화
+import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
+// WP22 — 리스크 지표·연체 관리·운영 이력
+import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
+import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
+import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -52,11 +80,23 @@ export default function App() {
           <Route path="/glossary/:slug" element={<TermPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/me/learning" element={<ProtectedRoute><MyLearningPage /></ProtectedRoute>} />
+          {/* WP20 — 학습 미션(목록·상세 공개, 진행 저장은 로그인) */}
+          <Route path="/missions" element={<MissionsPage />} />
+          <Route path="/missions/:id" element={<MissionPage />} />
+
+          {/* WP23 — 상품 안내·대표 예시 */}
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:code" element={<ProductDetailPage />} />
 
           <Route path="/calculators" element={<Navigate to="/calculators/schedule" replace />} />
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />
           <Route path="/calculators/screening" element={<ScreeningCalculatorPage />} />
           <Route path="/calculators/prepayment" element={<PrepaymentCalculatorPage />} />
+          {/* WP17 — 대환대출 비교·DSR 계산기 */}
+          <Route path="/calculators/refinance" element={<RefinanceCalculatorPage />} />
+          <Route path="/calculators/dsr" element={<DsrCalculatorPage />} />
+          {/* WP16 — 자동차 금융 비교 */}
+          <Route path="/calculators/auto-finance" element={<AutoFinanceCalculatorPage />} />
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -64,12 +104,29 @@ export default function App() {
           <Route path="/sandbox/applications/:id" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
           <Route path="/sandbox/contracts/:id" element={<ProtectedRoute><ContractPage /></ProtectedRoute>} />
           <Route path="/sandbox/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          {/* WP21 — 증명서 발급·인쇄용 증명서·납입 캘린더 */}
+          <Route path="/sandbox/certificates" element={<ProtectedRoute><CertificatesPage /></ProtectedRoute>} />
+          <Route path="/sandbox/contracts/:id/certificates/:type" element={<ProtectedRoute><CertificatePrintPage /></ProtectedRoute>} />
+          <Route path="/sandbox/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+          <Route path="/sandbox/scenarios" element={<ProtectedRoute><ScenariosPage /></ProtectedRoute>} /> {/* WP26 — 시나리오로 시작 */}
 
           <Route path="/admin" element={<Navigate to="/admin/applications" replace />} />
           <Route path="/admin/applications" element={<ProtectedRoute adminOnly><AdminApplicationsPage /></ProtectedRoute>} />
           <Route path="/admin/portfolio" element={<ProtectedRoute adminOnly><AdminPortfolioPage /></ProtectedRoute>} />
           <Route path="/admin/content" element={<ProtectedRoute adminOnly><AdminContentPage /></ProtectedRoute>} />
           <Route path="/admin/batch" element={<ProtectedRoute adminOnly><AdminBatchPage /></ProtectedRoute>} />
+          {/* WP22 — 리스크 지표·연체 관리·운영 이력 */}
+          <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/admin/collections" element={<ProtectedRoute adminOnly><AdminCollectionsPage /></ProtectedRoute>} />
+          <Route path="/admin/audit" element={<ProtectedRoute adminOnly><AdminAuditPage /></ProtectedRoute>} />
+
+          {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
+          <Route path="/support" element={<SupportHomePage />} />
+          <Route path="/support/faq" element={<FaqPage />} />
+          <Route path="/support/notices" element={<NoticesPage />} />
+          <Route path="/support/notices/:id" element={<NoticePage />} />
+          <Route path="/support/rights" element={<RightsPage />} />
+          <Route path="/support/guide" element={<GuidePage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

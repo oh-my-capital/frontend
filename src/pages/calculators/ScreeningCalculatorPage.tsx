@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { calculatorsApi } from "../../api/calculators";
-import type { Product, RepaymentMethod, ScreeningRequest, ScreeningResult } from "../../api/types";
+import type { EmploymentType, Product, RepaymentMethod, ScreeningRequest, ScreeningResult } from "../../api/types";
+import LimitLadder, { type LimitCandidate } from "../../components/charts/LimitLadder";
+import RateWaterfall, { type RateStep } from "../../components/charts/RateWaterfall";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -10,11 +13,36 @@ import MoneyInput from "../../components/MoneyInput";
 import SubPageHeader from "../../components/SubPageHeader";
 import DecisionSummary from "./parts/DecisionSummary";
 import { CheckField, DateField, NumberField, SelectField } from "./parts/fields";
-import { METHOD_LABEL, todayIso } from "./parts/labels";
+import { EMPLOYMENT_LABEL, METHOD_LABEL, todayIso } from "./parts/labels";
 import LimitBreakdown from "./parts/LimitBreakdown";
 import RateBreakdown from "./parts/RateBreakdown";
 import ScreeningReasons from "./parts/ScreeningReasons";
 import { useLoad } from "./parts/useLoad";
+
+/** 법정 최고금리(business-rules §3.2). 금리 워터폴의 기준선으로만 쓴다. */
+const RATE_CAP = 20;
+
+/** 적용 금리 워터폴 입력: 기준금리에서 시작해 밴드 스프레드를 올리고 자동이체 우대를 내린다. */
+function rateSteps(result: ScreeningResult): RateStep[] {
+  const { rate } = result;
+  if (!rate) return [];
+  const steps: RateStep[] = [{ label: `신용 밴드 ${result.creditBand ?? "—"}`, delta: rate.spread, note: "상품별 가산" }];
+  if (rate.discount > 0) steps.push({ label: "자동이체 우대", delta: -rate.discount });
+  return steps;
+}
+
+/** 한도 사다리 입력: 담보(LTV) 또는 상품 최대 · 소득배수 · DSR 역산. 병목은 서버가 준 bindingRule 로 표시한다. */
+function limitCandidates(result: ScreeningResult, productName: string | undefined, ltvRate: number | null): LimitCandidate[] {
+  const { limits, dsr } = result;
+  if (!limits) return [];
+  const list: LimitCandidate[] = [];
+  const mark = (code: string) => limits.bindingRule === code;
+  if (limits.ltvCap !== null) list.push({ name: ltvRate !== null ? `담보(LTV ${ltvRate}%)` : "담보(LTV)", amount: limits.ltvCap, note: ltvRate !== null ? `차량가 × ${ltvRate}%` : undefined, binding: mark("LIMIT-LTV") });
+  else if (limits.productCap !== null) list.push({ name: "상품 최대", amount: limits.productCap, note: productName, binding: mark("LIMIT-PRODUCT") });
+  if (limits.incomeCap !== null) list.push({ name: "소득배수", amount: limits.incomeCap, note: `밴드 ${result.creditBand ?? "—"} 배수`, binding: mark("LIMIT-INCOME") });
+  if (limits.dsrCap !== null) list.push({ name: "DSR 역산", amount: limits.dsrCap, note: dsr ? `DSR ${dsr.limit}% 여유로 역산` : undefined, binding: mark("LIMIT-DSR") });
+  return list;
+}
 
 /** 신용 밴드 표(business-rules §3.2). 보조 열의 규칙 안내용이며 계산은 서버(또는 mock 엔진)가 한다. */
 const BAND_TABLE = [
@@ -34,6 +62,7 @@ export default function ScreeningCalculatorPage() {
   const [annualIncome, setAnnualIncome] = useState<number | null>(48_000_000);
   const [existing, setExisting] = useState<number | null>(6_000_000);
   const [creditScore, setCreditScore] = useState<number | null>(820);
+  const [employmentType, setEmploymentType] = useState<EmploymentType>("EMPLOYEE");
   const [productCode, setProductCode] = useState("CREDIT_LOAN");
   const [vehicleValue, setVehicleValue] = useState<number | null>(32_000_000);
   const [requestedAmount, setRequestedAmount] = useState<number | null>(30_000_000);
@@ -49,6 +78,9 @@ export default function ScreeningCalculatorPage() {
 
   const product = products.data?.find(p => p.code === productCode) ?? null;
   const isAuto = product?.requiresCollateral ?? productCode === "AUTO_INSTALLMENT";
+  // 자격 미충족 거절이면 서버가 rate·limits 를 null 로 주므로 그림을 건너뛴다.
+  const rate = result?.rate ?? null;
+  const finalLimit = result?.limits?.finalLimit ?? null;
 
   /** 상품을 바꾸면 그 상품이 허용하는 기간·방식으로 맞춘다. */
   const chooseProduct = (code: string) => {
@@ -75,7 +107,7 @@ export default function ScreeningCalculatorPage() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) errors.asOf = "기준일을 날짜로 넣어요.";
     setFieldError(errors);
     if (Object.keys(errors).length) return;
-    run({ birthDate, annualIncome: annualIncome!, existingAnnualDebtService: existing!, creditScore: creditScore!, productCode, requestedAmount: requestedAmount!, termMonths, repaymentMethod: method, autoDebit, vehicleValue: isAuto ? vehicleValue : null, asOf });
+    run({ birthDate, annualIncome: annualIncome!, existingAnnualDebtService: existing!, creditScore: creditScore!, productCode, requestedAmount: requestedAmount!, termMonths, repaymentMethod: method, autoDebit, vehicleValue: isAuto ? vehicleValue : null, asOf, employmentType });
   };
 
   return (
@@ -98,6 +130,7 @@ export default function ScreeningCalculatorPage() {
                   <DateField label="생년월일" value={birthDate} onChange={setBirthDate} error={fieldError.birthDate} hint="기준일 기준 만 19세 이상이어야 해요" />
                   <MoneyInput label="연소득" value={annualIncome} onChange={setAnnualIncome} required error={fieldError.annualIncome} hint="세전 연 소득" />
                   <MoneyInput label="기존 연 원리금" value={existing} onChange={setExisting} required error={fieldError.existing} hint="다른 대출로 한 해에 갚는 원금+이자" />
+                  <SelectField label="고용형태" value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_LABEL) as EmploymentType[]).map(value => ({ value, label: EMPLOYMENT_LABEL[value] }))} hint="직장인 신용대출은 근로소득자만 신청할 수 있어요" />
                   <NumberField label="신용점수" value={creditScore} onChange={setCreditScore} min={300} max={1000} unit="점" error={fieldError.creditScore} hint="300~1000점. 600점 미만은 거절" />
                   <DateField label="기준일" value={asOf} onChange={setAsOf} error={fieldError.asOf} hint="나이 계산 기준(샌드박스에서는 영업일)" />
                 </div>
@@ -106,8 +139,8 @@ export default function ScreeningCalculatorPage() {
                 <legend>신청 조건</legend>
                 <div className="calc-fields">
                   <SelectField label="상품" value={productCode} options={(products.data ?? []).map(p => ({ value: p.code, label: p.name }))} onChange={chooseProduct} hint={product?.description} disabled={!products.data} />
-                  {isAuto && <MoneyInput label="차량가" value={vehicleValue} onChange={setVehicleValue} required error={fieldError.vehicleValue} hint="담보 한도 = 차량가 × 90%" />}
-                  <MoneyInput label="신청 금액" value={requestedAmount} onChange={setRequestedAmount} required error={fieldError.requestedAmount} hint={product ? `${product.name} ${product.minAmount.toLocaleString("ko-KR")}원부터${product.maxAmount ? ` ${product.maxAmount.toLocaleString("ko-KR")}원까지` : " 차량가 90%까지"}` : undefined} />
+                  {isAuto && <MoneyInput label="차량가" value={vehicleValue} onChange={setVehicleValue} required error={fieldError.vehicleValue} hint={`담보 한도 = 차량가 × ${product?.ltvRate ?? "상품 LTV"}%`} />}
+                  <MoneyInput label="신청 금액" value={requestedAmount} onChange={setRequestedAmount} required error={fieldError.requestedAmount} hint={product ? `${product.name} ${product.minAmount.toLocaleString("ko-KR")}원부터${product.maxAmount ? ` ${product.maxAmount.toLocaleString("ko-KR")}원까지` : ` 차량가 ${product.ltvRate ?? "—"}%까지`}` : undefined} />
                   <SelectField label="기간" value={termMonths} options={(product?.allowedTerms ?? [termMonths]).map(t => ({ value: t, label: `${t}회` }))} onChange={setTermMonths} />
                   <SelectField label="상환 방식" value={method} options={(product?.allowedMethods ?? [method]).map(m => ({ value: m, label: METHOD_LABEL[m] }))} onChange={setMethod} hint={isAuto ? "자동차 할부는 원리금균등만" : undefined} />
                   <CheckField label="자동이체 신청(우대 0.20%p)" checked={autoDebit} onChange={setAutoDebit} />
@@ -122,13 +155,19 @@ export default function ScreeningCalculatorPage() {
             <section className="calc-results" aria-live="polite">
               {!!error && <LoadError error={error} onRetry={() => submitted && run(submitted)} />}
               {!error && !result && (loading ? <Loading message="규칙을 순서대로 평가하고 있어요" minHeight={200} /> : (
-                <div className="state-box is-empty"><h3>아직 심사하지 않았어요</h3><p>위 조건으로 "심사하기"를 누르면 결정과 금리·한도 근거가 여기에 나와요.</p></div>
+                <EmptyState
+                  title="아직 심사하지 않았어요"
+                  description={'위 조건으로 "심사하기"를 누르면 금리가 어떻게 쌓였는지, 한도가 어디서 막혔는지 그림과 근거 표로 나와요. 규칙부터 보고 싶다면 한도 개념을 먼저 읽어요.'}
+                  action={{ to: "/learn/dsr-ltv-limit", label: "개념 7 · 한도의 규칙 읽기" }}
+                />
               ))}
               {result && submitted && (
                 <div className="stack calc-stack">
                   <DecisionSummary result={result} requestedAmount={submitted.requestedAmount} productMin={product?.minAmount ?? null} />
+                  {rate && <RateWaterfall base={{ label: "기준금리", delta: rate.base, note: product?.name }} steps={rateSteps(result)} finalRate={rate.applied} capRate={RATE_CAP} />}
+                  {finalLimit !== null && <LimitLadder candidates={limitCandidates(result, product?.name, product?.ltvRate ?? null)} finalAmount={finalLimit} requestedAmount={submitted.requestedAmount} />}
                   <RateBreakdown result={result} autoDebit={submitted.autoDebit} monthlyPayment={result.monthlyPayment} />
-                  <LimitBreakdown result={result} requestedAmount={submitted.requestedAmount} />
+                  <LimitBreakdown result={result} requestedAmount={submitted.requestedAmount} ltvRate={product?.ltvRate ?? null} />
                   <ScreeningReasons reasons={result.reasons} />
                   <Disclosure data={result.disclosure} />
                 </div>
@@ -142,7 +181,7 @@ export default function ScreeningCalculatorPage() {
               <ol className="calc-steps">
                 <li>자격: 만 19세 이상 · 연소득 0원 초과 · 신용점수 600점 이상 · 상품 범위 안</li>
                 <li>금리: 기준금리 + 밴드 스프레드 − 자동이체 우대 0.2%p, 최고 20.00%</li>
-                <li>한도: 상품 최대(또는 차량가 90%) · 소득배수 · DSR 50% 역산 중 최소, 만 원 절사</li>
+                <li>한도: 상품 최대(자동차 할부는 차량가 × 상품 LTV — 신차 90%·중고차 70%) · 소득배수 · DSR 50% 역산 중 최소, 만 원 절사</li>
                 <li>결정: 요청 ≤ 한도면 승인, 상품 최소 이상이면 조건부, 그 미만이면 거절</li>
               </ol>
             </div>

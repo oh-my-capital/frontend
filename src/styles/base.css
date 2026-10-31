@@ -1,5 +1,5 @@
 /*
- * 기반 스타일: 리셋·타이포그래피·버튼·입력·표·상태 chip·공용 조각(탭·진척 막대·지표 줄·그림 틀).
+ * 기반 스타일(디자인 v3): 리셋·타이포그래피·버튼·입력·표·상태 chip·공용 조각(탭·진척 막대·지표 줄·그림 틀)·본문 바로가기.
  * 화면별 규칙은 styles/<영역>.css에 둔다.
  * 원칙(docs/design/ui-guidelines.md): 종이색 배경, border-radius 0, 1px 실선 테두리, 전환 0.15~0.18s, 글자 최소 12px(그림 축만).
  * 색·크기·간격 리터럴을 여기에 새로 적지 않는다. tokens.css에 토큰을 만들어 쓴다.
@@ -71,7 +71,12 @@ ul, ol { margin: 0; padding-left: 22px; }
 
 /* 레이아웃: 콘텐츠 폭 min(100% − 64px, 1200px), 모바일 calc(100% − 40px). */
 .app-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
-.app-page > main { flex: 1; }
+/* v3: 본문은 #main-content(.app-main) 안에 들어간다. 본문 바로가기의 도착점이라 tabIndex=-1, 포커스 외곽선은 그리지 않는다. */
+.app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.app-main > main { flex: 1; }
+.app-main:focus { outline: none; }
+.skip-link { position: absolute; top: var(--sp-2); left: var(--sp-4); z-index: var(--z-skip); padding: var(--sp-3) var(--sp-4); background: var(--primary); color: var(--text-on-primary); font-weight: var(--fw-bold); transform: translateY(calc(-100% - var(--sp-4))); }
+.skip-link:focus { transform: none; color: var(--text-on-primary); }
 .content { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; }
 .page-main { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding: var(--sp-8) 0 var(--sp-11); }
 .page-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--aside-w); gap: var(--sp-8); align-items: start; }
@@ -93,7 +98,7 @@ ul, ol { margin: 0; padding-left: 22px; }
 .forbidden-panel .btn-row { margin-top: var(--sp-5); }
 .stack { display: grid; gap: var(--sp-4); }
 .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-5); padding-bottom: 14px; margin-bottom: var(--sp-5); border-bottom: var(--rule-heavy) solid var(--text); }
-.section-head h2 { font-size: 24px; }
+.section-head h2 { font-size: var(--fs-section); }
 .section-head p { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); }
 .section-head > a { display: inline-flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-base); font-weight: var(--fw-semibold); }
 .section-head > a:hover { color: var(--primary); }
@@ -200,6 +205,7 @@ ul, ol { margin: 0; padding-left: 22px; }
 .progress-meta strong { font-variant-numeric: tabular-nums; }
 
 /* 탭: 하위 화면 머리 탭(brand.css)과 같은 모양을 본문 안에서 쓴다. a·button 둘 다 받는다. */
+.tabs-wrap { min-width: 0; }
 .tabs { display: flex; gap: var(--sp-1); overflow-x: auto; border-bottom: var(--rule) solid var(--border); }
 .tabs > a, .tabs > button { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; min-height: var(--touch); padding: 0 var(--sp-4); border: 0; background: none; color: var(--text-muted); font-size: var(--fs-base); font-weight: var(--fw-semibold); text-decoration: none; transition: color var(--t-fast); }
 .tabs > :first-child { padding-left: var(--sp-1); }
@@ -208,6 +214,8 @@ ul, ol { margin: 0; padding-left: 22px; }
 .tabs > a:hover, .tabs > button:hover { color: var(--text); text-decoration: none; }
 .tabs > .is-active { color: var(--primary); font-weight: var(--fw-bold); }
 .tabs > .is-active::after { background: var(--primary); }
+.tabs > button:focus-visible { outline-offset: -3px; }
+.tabpanel { display: grid; gap: var(--sp-5); padding-top: 18px; min-width: 0; }
 
 /* 상태 chip: 배경 tint + 텍스트 라벨. 색만으로 상태를 말하지 않는다. */
 .status { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 10px; border: var(--rule) solid transparent; font-size: var(--fs-caption); font-weight: var(--fw-bold); white-space: nowrap; }
@@ -260,16 +268,16 @@ ul, ol { margin: 0; padding-left: 22px; }
 .timeline p { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
 
 /* 그림 틀: 개념 그림·추이·구성 그림이 같은 테두리와 설명 줄을 쓴다. */
-.concept-diagram, .figure-frame { border: var(--rule) solid var(--border); background: var(--surface); }
-.concept-diagram svg, .figure-frame svg { width: 100%; height: auto; }
-.concept-diagram figcaption, .figure-frame figcaption { padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.55; }
+.figure-frame { border: var(--rule) solid var(--border); background: var(--surface); }
+.figure-frame svg { width: 100%; height: auto; }
+.figure-frame figcaption { padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); line-height: 1.55; }
 .figure-frame > figcaption:first-child { border-top: 0; border-bottom: var(--rule) solid var(--border); background: var(--surface-soft); color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-bold); }
 /* 그림 범례: 색 조각 + 한국어 라벨. 색만으로 뜻을 전하지 않는다. */
 .figure-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); padding: 10px 14px; border-top: var(--rule) solid var(--border); color: var(--text-muted); font-size: var(--fs-caption); }
 .figure-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .figure-legend i { width: 10px; height: 10px; flex-shrink: 0; background: currentColor; }
 /* SVG 안 글자는 CSS로 크기를 준다(속성 리터럴 금지). */
-.figure-frame text, .concept-diagram text { font-family: inherit; }
+.figure-frame text { font-family: inherit; }
 .figure-frame .axis-label { font-size: var(--fs-micro); fill: var(--text-faint); }
 .figure-frame .point-label { font-size: var(--fs-caption); fill: var(--text-muted); font-weight: var(--fw-semibold); }
 
@@ -279,7 +287,7 @@ ul, ol { margin: 0; padding-left: 22px; }
 @media (max-width: 740px) {
   :root { --content-gutter: var(--content-gutter-sm); }
   .page-main { padding: 28px 0 var(--sp-10); }
-  h1 { font-size: 28px; }
+  h1 { font-size: var(--fs-h1-sm); }
   h2 { font-size: var(--fs-h2); }
   .panel { padding: 18px; }
   .def-list { grid-template-columns: 1fr; gap: 2px 0; }
@@ -293,8 +301,23 @@ ul, ol { margin: 0; padding-left: 22px; }
   .figure-row > div:nth-child(2n) { border-right: 0; }
   .figure-row > div:nth-child(n + 3) { border-top: var(--rule) solid var(--border); }
   .figure-row dd { font-size: var(--fs-h2); }
+  /* 보조 설명이 같은 줄에 붙으면 좁은 칸을 넘친다. 아래 줄로 내린다. */
+  .figure-row dd small { display: block; margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* 단계 흐름 그림(FigureFlow): 손으로 배치한 그림이 없는 콘텐츠 그림. 노드 상자를 세로로 잇고 연결 라벨을 화살표 옆에 둔다. */
+.figure-flow-steps { list-style: none; margin: 0; padding: var(--sp-4); display: grid; gap: 0; }
+.figure-flow-node { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); border: var(--rule) solid var(--border-strong); background: var(--surface); }
+.figure-flow-node strong { font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text); }
+.figure-flow-node small { flex-shrink: 0; font-size: var(--fs-caption); color: var(--text-muted); }
+.figure-flow-node.kind-company { border-color: var(--primary-line); background: var(--primary-tint); }
+.figure-flow-node.kind-person { border-color: var(--accent-line); background: var(--accent-tint); }
+.figure-flow-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) 0 var(--sp-1) var(--sp-4); color: var(--accent); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.figure-flow-link i { font-style: normal; color: var(--text-muted); }
+.figure-flow-others { margin: 0; padding: var(--sp-2) var(--sp-4) var(--sp-4); border-top: var(--rule) solid var(--border-soft); font-size: var(--fs-caption); color: var(--text-muted); }
+.figure-flow-others dt { font-weight: var(--fw-bold); color: var(--text); margin-bottom: var(--sp-1); }
+.figure-flow-others dd { margin: 0; }

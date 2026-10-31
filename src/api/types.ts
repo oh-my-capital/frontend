@@ -13,7 +13,11 @@ export type ReasonOutcome = "PASS" | "FAIL" | "INFO";
 export type LinkedCalculator = "schedule" | "screening" | "prepayment";
 export type EmploymentType = "EMPLOYEE" | "SELF_EMPLOYED" | "FREELANCER" | "NONE";
 export type ApplicationStatus = "APPLIED" | "APPROVED" | "CONDITIONAL" | "REJECTED" | "CANCELLED" | "EXECUTED";
-export type ContractStatus = "ACTIVE" | "OVERDUE" | "DEFAULTED" | "PAID_OFF";
+/** WITHDRAWN = 청약철회로 끝난 계약(WP19). PAID_OFF 와 함께 종료 상태다. */
+export type ContractStatus = "ACTIVE" | "OVERDUE" | "DEFAULTED" | "PAID_OFF" | "WITHDRAWN";
+
+/** 종료된 계약(완제·청약철회)인가. 상환·중도상환·시간 진행 조작을 보여 주지 않는다. */
+export const isClosedStatus = (status: ContractStatus): boolean => status === "PAID_OFF" || status === "WITHDRAWN";
 export type ClockAdvanceMode = "ONE_DAY" | "NEXT_DUE_DATE" | "DAYS";
 /** 건전성 분류(business-rules §9). 계약은 string이지만 화면 라벨을 위해 알려진 값을 적어 둔다. */
 export type AssetClass = "NORMAL" | "PRECAUTIONARY" | "SUBSTANDARD" | "DOUBTFUL" | "ESTIMATED_LOSS";
@@ -78,7 +82,8 @@ export interface Concept {
   figures?: Figure[];
   /** 본문 수치(제도 수치·가정값) */
   numbers?: ContentNumber[];
-  relatedTerms?: TermSummary[];
+  /** 관련 용어의 slug 목록(본문이 아니라 slug 만 온다). 본문은 `GET /glossary/{slug}`. */
+  relatedTerms?: string[];
   sources: Source[];
   contentVersion: number;
   prev: string | null;
@@ -204,6 +209,8 @@ export interface ScreeningRequest {
   vehicleValue?: Money | null;
   /** 기준일(나이 계산) */
   asOf: DateString;
+  /** 고용형태(WP23). 고용 조건이 있는 상품(직장인 신용대출)의 ELIG-EMPLOYMENT·우대에만 쓴다. 없으면 그 상품은 자격 미충족 */
+  employmentType?: EmploymentType | null;
 }
 export interface ScreeningReason {
   orderNo: number;
@@ -229,9 +236,10 @@ export interface ScreeningResult {
   decision: Decision;
   source: ScreeningSource;
   creditBand: string | null;
-  rate: ScreeningRate;
-  limits: ScreeningLimits;
-  dsr: ScreeningDsr;
+  /** 자격 단계(연령·소득·신용점수·상품 범위)에서 걸리면 금리·한도·DSR 을 계산하지 않고 null 로 온다. */
+  rate: ScreeningRate | null;
+  limits: ScreeningLimits | null;
+  dsr: ScreeningDsr | null;
   monthlyPayment: Money | null;
   offeredAmount: Money | null;
   reasons: ScreeningReason[];

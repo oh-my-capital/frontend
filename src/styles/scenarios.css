@@ -1,0 +1,55 @@
+/*
+ * 시나리오로 시작(S-260, WP26): 프리셋 표 · 2단계 적용 확인 · 초기화 구역.
+ * 공통 규칙(.table·.btn·.field-*·.figure-row·.def-list·.status-*)은 base.css. 여기에는 토큰만 쓴다(리터럴 금지).
+ * 740px 이하에서 프리셋 표는 행을 세로로 쌓아 가로 넘침이 없게 한다.
+ */
+
+.scenarios .stack { gap: var(--sp-7); min-width: 0; }
+/* 지표 칸의 보조 글자는 큰 숫자 아래 줄로 내린다(4칸이 좁아 큰 숫자가 꺾이지 않게). */
+.scenarios .figure-row dd small { display: block; margin-left: 0; }
+
+/* ── 프리셋 표 ─────────────────────────────────────────────────────────── */
+.scenario-table th[scope="row"], .scenario-table td { vertical-align: top; }
+/* 열 비율: 배울 것(목록)이 가장 길어 가장 넓게 둔다. */
+.scenario-table thead th:nth-child(1) { width: 27%; }
+.scenario-table thead th:nth-child(2) { width: 22%; }
+.scenario-table thead th:nth-child(3) { width: 35%; }
+.scenario-no { display: inline-flex; align-items: center; justify-content: center; min-width: var(--sp-6); height: var(--sp-6); margin-right: var(--sp-2); border: var(--rule) solid var(--accent-line); background: var(--accent-tint); color: var(--accent-strong); font-size: var(--fs-caption); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.scenario-title { font-size: var(--fs-body); font-weight: var(--fw-bold); }
+.scenario-scene { margin-top: var(--sp-2); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); line-height: var(--lh-body); }
+.scenario-produces { font-size: var(--fs-base); line-height: var(--lh-body); }
+.scenario-meta { margin-top: var(--sp-2); font-size: var(--fs-caption); line-height: var(--lh-snug); }
+.scenario-goals { display: grid; gap: var(--sp-1); padding-left: var(--sp-4); font-size: var(--fs-small); line-height: var(--lh-body); }
+.scenario-goals li::marker { color: var(--accent); }
+.scenario-links { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.scenario-action { min-width: 168px; }
+.scenario-action .btn { white-space: nowrap; }
+.scenario-confirm { display: grid; gap: var(--sp-2); justify-items: start; }
+.scenario-confirm p { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-snug); }
+.scenario-running { color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.scenario-action .form-error { margin-top: var(--sp-2); }
+
+/* ── 초기화 구역 ───────────────────────────────────────────────────────── */
+.scenario-danger { display: grid; gap: var(--sp-4); border-color: var(--danger-line); }
+.scenario-danger-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.scenario-danger-head h2 { color: var(--danger); font-size: var(--fs-h3); }
+.scenario-danger > p { color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
+.scenario-reset-form { display: grid; gap: var(--sp-3); max-width: 420px; }
+.scenario-reset-result { min-height: var(--sp-5); color: var(--text); font-size: var(--fs-small); }
+.scenario-reset-result:empty { min-height: 0; }
+
+/* ── 보조 열 ─────────────────────────────────────────────────────────── */
+.scenario-assumptions { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); margin: var(--sp-3) 0; font-size: var(--fs-small); }
+.scenario-assumptions dd { margin-bottom: var(--sp-2); line-height: var(--lh-body); }
+.scenarios aside { display: grid; gap: var(--sp-4); align-content: start; }
+
+@media (max-width: 740px) {
+  .scenario-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .scenario-table, .scenario-table caption, .scenario-table tbody, .scenario-table tr, .scenario-table th, .scenario-table td { display: block; width: 100%; }
+  .scenario-table tbody tr { border-bottom: var(--rule) solid var(--border); }
+  .scenario-table tbody tr:last-child { border-bottom: 0; }
+  .scenario-table th, .scenario-table td { border-bottom: 0; }
+  .scenario-action { min-width: 0; }
+  .scenario-reset-scope { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+  .scenario-reset-scope dd { margin-bottom: var(--sp-2); }
+}

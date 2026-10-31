@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { calculatorsApi } from "../../api/calculators";
 import type { RepaymentMethod, ScheduleRequest, ScheduleResponse } from "../../api/types";
+import AmortizationChart, { type AmortizationRow } from "../../components/charts/AmortizationChart";
 import Disclosure from "../../components/Disclosure";
+import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -10,11 +12,11 @@ import Money from "../../components/Money";
 import MoneyInput from "../../components/MoneyInput";
 import RateInput from "../../components/RateInput";
 import SubPageHeader from "../../components/SubPageHeader";
-import { formatDate } from "../../lib/format";
-import { DateField, NumberField, SelectField } from "./parts/fields";
-import { METHOD_DESCRIPTION, METHOD_LABEL, METHODS, PAYMENT_DAY_OPTIONS } from "./parts/labels";
-import ScheduleTable from "./parts/ScheduleTable";
 import Tabs from "../../components/Tabs";
+import { formatDate, formatNumber } from "../../lib/format";
+import { DateField, NumberField, SelectField } from "./parts/fields";
+import { METHOD_DESCRIPTION, METHOD_LABEL, METHODS, PAYMENT_DAY_OPTIONS, pct } from "./parts/labels";
+import ScheduleTable from "./parts/ScheduleTable";
 
 /** 기본값은 계산 예시 1(10,000,000 · 12회 · 12.00% · 2026-01-15 · 15일). 입력은 URL 쿼리로 공유한다. */
 const DEFAULTS: ScheduleRequest = { principal: 10_000_000, termMonths: 12, annualRate: 12, startDate: "2026-01-15", paymentDay: 15 };
@@ -27,9 +29,12 @@ function fromQuery(params: URLSearchParams): ScheduleRequest | null {
 function toQuery(req: ScheduleRequest): Record<string, string> {
   return { principal: String(req.principal), term: String(req.termMonths), rate: String(req.annualRate), start: req.startDate, day: String(req.paymentDay) };
 }
+const toChartRows = (rows: { installmentNo: number; principal: number; interest: number; payment: number; balanceAfter: number }[]): AmortizationRow[] =>
+  rows.map(r => ({ installmentNo: r.installmentNo, principal: r.principal, interest: r.interest, payment: r.payment, balance: r.balanceAfter }));
 
 /**
- * 상환 스케줄 계산기(S-06): 폼 → 세 방식 요약 비교표 → 방식 탭별 회차표(원금/이자 비중 막대, 이연 표시, 모바일 4열) → Disclosure.
+ * 상환 스케줄 계산기(S-06): 폼 → 선택 방식의 핵심 수치(figure-row) → 방식 탭(회차별 납입액 구성 그림 + 회차표) →
+ * 세 방식 요약 비교표(총이자 차이를 가로 막대로) → Disclosure.
  * 계산은 POST /calculators/schedule 한 번으로 세 방식을 모두 받는다. 제출하면 URL 쿼리에 입력을 남겨 주소로 공유할 수 있다.
  */
 export default function ScheduleCalculatorPage() {
@@ -75,6 +80,10 @@ export default function ScheduleCalculatorPage() {
   };
 
   const summaryRows = result?.results ?? [];
+  const selected = summaryRows.find(r => r.method === tab) ?? summaryRows[0] ?? null;
+  const maxInterest = summaryRows.length ? Math.max(...summaryRows.map(r => r.totalInterest)) : 0;
+  const minInterest = summaryRows.length ? Math.min(...summaryRows.map(r => r.totalInterest)) : 0;
+  const burden = selected && request ? (selected.totalInterest / request.principal) * 100 : 0;
 
   return (
     <>
@@ -82,7 +91,7 @@ export default function ScheduleCalculatorPage() {
         section="calculators"
         current="/calculators/schedule"
         title="상환 스케줄 계산기"
-        description="원금·기간·금리·실행일·납입일을 넣으면 원리금균등·원금균등·만기일시 세 방식의 월 납입액과 총이자를 한 표에서 비교하고, 방식마다 회차표를 보여 줘요. 약정일이 토·일이면 다음 월요일로 이연한 실제 납입일을 같이 적어요."
+        description="원금·기간·금리·실행일·납입일을 넣으면 원리금균등·원금균등·만기일시 세 방식의 월 납입액과 총이자를 한 표에서 비교하고, 방식마다 납입액 구성 그림과 회차표를 보여 줘요. 약정일이 토·일이면 다음 월요일로 이연한 실제 납입일을 같이 적어요."
         meta={request ? <>이 주소를 복사하면 같은 조건이 열려요 · 규칙 세트 v1</> : <>기본값은 계산 예시 1(1,000만 원 · 12회 · 연 12.00%)이에요</>}
       />
       <main className="page-main calc">
@@ -107,26 +116,32 @@ export default function ScheduleCalculatorPage() {
               <h2 id="calc-results-title" className="sr-only">계산 결과</h2>
               {!!error && <LoadError error={error} onRetry={() => request && run(request)} />}
               {!error && !result && (loading ? <Loading message="회차표를 계산하고 있어요" minHeight={200} /> : (
-                <div className="state-box is-empty"><h3>아직 계산하지 않았어요</h3><p>위 조건으로 "세 방식 비교하기"를 누르면 요약 비교표와 회차표가 여기에 나와요.</p></div>
+                <EmptyState
+                  title="아직 계산하지 않았어요"
+                  description={'위 조건으로 "세 방식 비교하기"를 누르면 핵심 수치·납입액 구성 그림·회차표가 여기에 나와요. 방식부터 짚고 싶다면 개념 글을 먼저 읽어요.'}
+                  action={{ to: "/learn/repayment-methods", label: "개념 6 · 상환 방식 3가지 읽기" }}
+                />
               ))}
-              {result && (
-                <>
-                  <div className="table-scroll"><table className="table calc-compare">
-                    <caption>세 방식 요약 비교<span className="table-caption-note">같은 원금·기간·금리에서 상환 방식만 바꿨을 때. 총이자가 가장 적은 방식이 원금균등이고 월 부담이 가장 작은 방식이 만기일시이다.</span></caption>
-                    <thead>
-                      <tr><th scope="col">항목</th>{summaryRows.map(r => <th key={r.method} scope="col" className="num">{METHOD_LABEL[r.method]}</th>)}</tr>
-                    </thead>
-                    <tbody>
-                      <tr><th scope="row">월 납입액</th>{summaryRows.map(r => <td key={r.method} className="num">{r.monthlyPayment !== null ? <Money value={r.monthlyPayment} strong /> : <span className="muted">회차마다 다름</span>}</td>)}</tr>
-                      <tr><th scope="row">첫 회 납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.firstPayment} /></td>)}</tr>
-                      <tr><th scope="row">마지막 회 납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.lastPayment} /></td>)}</tr>
-                      <tr><th scope="row">총이자</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.totalInterest} strong /></td>)}</tr>
-                      <tr><th scope="row">총납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.totalPayment} /></td>)}</tr>
-                    </tbody>
-                  </table></div>
+              {result && request && selected && (
+                <div className="stack calc-stack">
+                  <div>
+                    <p className="calc-figure-head">
+                      <strong>{METHOD_LABEL[selected.method]}</strong>
+                      <span>원금 {formatNumber(request.principal)}원 · {request.termMonths}회 · 연 {pct(request.annualRate)} · 실행 {formatDate(request.startDate)} · 매월 {request.paymentDay}일</span>
+                    </p>
+                    <dl className="figure-row" style={{ "--figure-cols": 4 } as CSSProperties}>
+                      <div>
+                        <dt>{selected.monthlyPayment !== null ? "월 납입액" : "첫 회 납입액"}</dt>
+                        <dd><Money value={selected.monthlyPayment ?? selected.firstPayment} />{selected.monthlyPayment === null && <small>마지막 회 {formatNumber(selected.lastPayment)}원</small>}</dd>
+                      </div>
+                      <div><dt>총이자</dt><dd className="accent"><Money value={selected.totalInterest} /></dd></div>
+                      <div><dt>총납입</dt><dd><Money value={selected.totalPayment} /></dd></div>
+                      <div><dt>실효 부담률</dt><dd>{burden.toFixed(2)}<span className="money-unit">%</span><small>총이자 ÷ 원금</small></dd></div>
+                    </dl>
+                  </div>
 
                   <Tabs
-                    label="상환 방식별 회차표"
+                    label="상환 방식별 납입액 구성과 회차표"
                     current={tab}
                     onChange={id => setTab(id as RepaymentMethod)}
                     items={summaryRows.map(r => ({
@@ -135,13 +150,42 @@ export default function ScheduleCalculatorPage() {
                       content: (
                         <>
                           <p className="calc-method-note">{METHOD_DESCRIPTION[r.method]}</p>
+                          <AmortizationChart rows={toChartRows(r.rows)} methodLabel={METHOD_LABEL[r.method]} principalTotal={request.principal} />
                           <ScheduleTable rows={r.rows} caption={`${METHOD_LABEL[r.method]} 회차표 · ${r.rows.length}회`} />
                         </>
                       ),
                     }))}
                   />
+
+                  <div className="table-scroll"><table className="table calc-compare">
+                    <caption>세 방식 요약 비교<span className="table-caption-note">같은 원금·기간·금리에서 상환 방식만 바꿨을 때. 막대 길이는 총이자의 크기이고, 막대 옆 숫자는 총이자가 가장 적은 방식과의 차이다.</span></caption>
+                    <thead>
+                      <tr><th scope="col">항목</th>{summaryRows.map(r => <th key={r.method} scope="col" className="num">{METHOD_LABEL[r.method]}</th>)}</tr>
+                    </thead>
+                    <tbody>
+                      <tr><th scope="row">월 납입액</th>{summaryRows.map(r => <td key={r.method} className="num">{r.monthlyPayment !== null ? <Money value={r.monthlyPayment} strong /> : <span className="muted">회차마다 다름</span>}</td>)}</tr>
+                      <tr><th scope="row">첫 회 납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.firstPayment} /></td>)}</tr>
+                      <tr><th scope="row">마지막 회 납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.lastPayment} /></td>)}</tr>
+                      <tr><th scope="row">총이자</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.totalInterest} strong /></td>)}</tr>
+                      <tr>
+                        <th scope="row">총이자 비교</th>
+                        {summaryRows.map(r => (
+                          <td key={r.method}>
+                            <span className="bar-cell">
+                              <span className="bar-track" role="img" aria-label={`총이자 ${formatNumber(r.totalInterest)}원, 가장 적은 방식보다 ${formatNumber(r.totalInterest - minInterest)}원 많다`}>
+                                <i style={{ width: `${maxInterest > 0 ? (r.totalInterest / maxInterest) * 100 : 0}%` }} />
+                              </span>
+                              <span className="num">{r.totalInterest === minInterest ? "가장 적음" : `+${formatNumber(r.totalInterest - minInterest)}원`}</span>
+                            </span>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr><th scope="row">총납입</th>{summaryRows.map(r => <td key={r.method} className="num"><Money value={r.totalPayment} /></td>)}</tr>
+                      <tr><th scope="row">실효 부담률</th>{summaryRows.map(r => <td key={r.method} className="num">{((r.totalInterest / request.principal) * 100).toFixed(2)}%</td>)}</tr>
+                    </tbody>
+                  </table></div>
                   <Disclosure data={result.disclosure} />
-                </>
+                </div>
               )}
             </section>
           </div>
@@ -151,6 +195,7 @@ export default function ScheduleCalculatorPage() {
               <h3>표 읽는 법</h3>
               <dl className="def-list calc-howto">
                 <div><dt>원금 비중 막대</dt><dd>납입액 중 원금이 차지하는 비율이다. 원리금균등은 회차가 지날수록 막대가 길어진다.</dd></div>
+                <div><dt>실효 부담률</dt><dd>총이자 ÷ 원금이다. 금리가 같아도 방식과 기간에 따라 달라진다.</dd></div>
                 <div><dt>이연</dt><dd>약정일이 토·일이면 실제 납입일을 다음 월요일로 옮긴다. 이연으로 늘어난 일수에 이자를 더 붙이지 않는다(교육용 단순화).</dd></div>
                 <div><dt>마지막 회차</dt><dd>원금은 남은 잔액 전부라 납입액이 몇 원 다를 수 있다. 절사 누적 보정이며 정상이다.</dd></div>
               </dl>

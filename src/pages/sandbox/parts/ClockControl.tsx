@@ -61,9 +61,9 @@ export default function ClockControl({ businessDate, nextDueDate, onAdvanced, ex
           <button type="submit" className="btn btn-secondary" disabled={busy || days < 1 || days > 400}>{running === "days" ? "진행 중…" : "진행"}</button>
         </form>
       </div>
-      <p className="clock-result" role="status" aria-live="polite" tabIndex={-1} ref={resultRef}>{busy ? "날짜마다 일마감을 돌리고 있어요…" : summary}</p>
+      <p className="clock-result" role="status" aria-live="polite" tabIndex={-1} ref={resultRef}>{busy ? "날짜마다 일마감을 돌리고 있어요…" : summary || "진행하면 여기에 생긴 사건과 새 알림이 한 줄로 요약돼요."}</p>
       {error && <p className="form-error" role="alert">{error}</p>}
-      {!compact && <p className="faint">하루 진행은 오늘 날짜의 일마감(알림 → 자동이체 → 연체 → 건전성 → 상실 → 월마감)을 돌리고 영업일을 하루 넘겨요. "다음 납입일까지"는 납입일 당일 마감까지 포함해요.</p>}
+      {!compact && <p className="clock-hint">하루 진행은 오늘 날짜의 일마감(알림 → 자동이체 → 연체 → 건전성 → 상실 → 월마감)을 돌리고 영업일을 하루 넘겨요. "다음 납입일까지"는 납입일 당일 마감까지 포함해요.</p>}
     </section>
   );
 }
