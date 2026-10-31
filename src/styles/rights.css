@@ -1,0 +1,22 @@
+/* WP19 청약철회·금리인하요구 패널(S-190~193). 계약 상세 보조 열 안에서만 쓴다. 토큰만 쓴다(ui-guidelines §2·3). */
+.rights-panel { display: grid; gap: var(--sp-3); min-width: 0; }
+.rights-panel > h3 { margin-bottom: 0; }
+.rights-lead { font-size: var(--fs-small); line-height: var(--lh-body); }
+.rights-period { display: grid; gap: var(--sp-2); }
+.rights-period-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); line-height: var(--lh-body); }
+.rights-quote, .rights-result { display: grid; gap: var(--sp-3); padding-top: var(--sp-3); border-top: var(--rule) solid var(--border); min-width: 0; }
+.rights-note { padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); background: var(--surface-soft); font-size: var(--fs-small); line-height: var(--lh-body); }
+.rights-table { width: 100%; }
+.rights-table th[scope="row"] { font-weight: var(--fw-semibold); }
+.rights-table tfoot th, .rights-table tfoot td { border-top: var(--rule-heavy) solid var(--text); }
+.rights-sub { display: block; margin-top: 2px; color: var(--text-faint); font-size: var(--fs-caption); font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+.rights-segment th[scope="row"] { padding-left: var(--sp-6); color: var(--text-muted); font-weight: var(--fw-medium); }
+.rights-history td .status { margin-right: var(--sp-1); }
+.rights-history td:not(.num) .rights-sub { display: inline; margin-top: 0; }
+.rights-basis { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
+.rights-basis a { font-weight: var(--fw-semibold); }
+.rights-result .fold { min-width: 0; }
+.rights-result .fold .table-scroll, .rights-result .fold table { max-width: 100%; }
+.rights-history th[scope="row"] { white-space: nowrap; }
+.rights-history td.num .rights-sub { display: block; }
+.rights-history td.num { white-space: normal; }
