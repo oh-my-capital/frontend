@@ -1,37 +1,38 @@
 /*
- * 홈(S-01): 안내 배너(2열: 글 + 슬라이드 주제의 수치 표) → 통합 검색 → 계산기 바로가기 표 → 학습 목차 12 → (로그인) 내 샌드박스 현황 표.
- * 카드 반복 없이 표·번호 목록으로 구성한다(ui-guidelines §2·§5). 색·글자 크기·간격은 토큰만 쓴다.
+ * 홈(S-01, 디자인 v3): 안내 배너(2열: 글 + 슬라이드 주제의 수치 표) → 주요 업무 줄(배너 아래에 걸침) → (로그인) 내 모의 여신 현황
+ * → 상품 안내 표 → 계산기 6종 표 → 배우기(검색 + 목차) → 고객센터·공지. 순서 근거는 docs/design/rea-capital-sites.md §4.3.
+ * 카드 반복 없이 표·번호 목록·칸 나눈 띠로 구성한다(ui-guidelines §2·§5). 색·글자 크기·간격은 토큰만 쓴다.
  */
 .home-notice { width: min(100% - var(--content-gutter), var(--content-w)); margin: var(--sp-4) auto 0; padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--good-line); background: var(--good-bg); color: var(--good); font-size: var(--fs-small); }
 .home-main { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding-bottom: var(--sp-6); }
 
 /* 배너 */
 .home-banner { position: relative; overflow: hidden; border-bottom: var(--rule) solid var(--border); background: var(--surface-soft); }
-.home-banner-inner { width: min(100% - var(--content-gutter), var(--content-w)); min-height: 420px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); grid-template-rows: auto auto; align-items: center; gap: var(--sp-5) var(--sp-9); padding: var(--sp-7) 0 var(--sp-9); }
+.home-banner-inner { width: min(100% - var(--content-gutter), var(--content-w)); min-height: var(--banner-min-h); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--banner-figure-w)); grid-template-rows: auto auto; align-items: center; gap: var(--sp-5) var(--sp-9); padding: var(--sp-7) 0 var(--sp-12); }
 .home-banner-copy { min-width: 0; grid-column: 1; grid-row: 1; }
-.home-slide { min-height: 236px; }
-.home-slide-tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 var(--sp-3); background: var(--primary); color: var(--text-on-primary); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.home-slide { min-height: var(--banner-copy-min-h); }
+.home-slide-tag { display: inline-flex; align-items: center; min-height: var(--sp-7); padding: 0 var(--sp-3); background: var(--primary); color: var(--text-on-primary); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
 .home-slide h2 { margin: var(--sp-4) 0; color: var(--text); font-size: var(--fs-display); font-weight: var(--fw-heavy); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); }
-.home-slide p { max-width: 540px; color: var(--text-muted); font-size: var(--fs-nav); line-height: var(--lh-loose); }
+.home-slide p { max-width: var(--banner-figure-w); color: var(--text-muted); font-size: var(--fs-nav); line-height: var(--lh-loose); }
 .home-banner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-top: var(--sp-6); }
-.home-pager { display: inline-flex; align-items: center; gap: 2px; height: var(--control-h); padding: 0 2px 0 var(--sp-4); border: var(--rule) solid var(--border); background: var(--surface); }
-.home-pager > span { display: inline-flex; align-items: center; gap: var(--sp-2); margin-right: 6px; color: var(--text-faint); font-size: var(--fs-small); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.home-pager { display: inline-flex; align-items: center; gap: 0; height: var(--control-h); padding: 0 0 0 var(--sp-4); border: var(--rule) solid var(--border); background: var(--surface); }
+.home-pager > span { display: inline-flex; align-items: center; gap: var(--sp-2); margin-right: var(--sp-2); color: var(--text-faint); font-size: var(--fs-small); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .home-pager strong { color: var(--text); }
-.home-pager i { width: 1px; height: var(--sp-3); background: var(--border-strong); }
+.home-pager i { width: var(--rule); height: var(--sp-3); background: var(--border-strong); }
 .home-pager button { display: grid; place-items: center; width: var(--touch); height: var(--touch); border: 0; background: transparent; color: var(--text); }
 .home-pager button:hover { background: var(--surface-soft); }
-.home-banner-action { gap: 6px; padding: 0 var(--sp-5); }
-.home-banner-learn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.home-banner-action { gap: var(--sp-2); padding: 0 var(--sp-5); }
+.home-banner-learn { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
 .home-banner-learn:hover { color: var(--primary); }
 /* 오른쪽 열: 그 슬라이드 주제의 수치 표. 왼쪽 글 아래에는 같은 슬라이드의 장면 그림을 둔다. */
 .home-banner-img { min-width: 0; display: grid; justify-items: center; grid-column: 1; grid-row: 2; }
-.home-banner-img img { grid-area: 1 / 1; width: 100%; max-width: 500px; max-height: 220px; height: auto; object-fit: contain; opacity: 0; transition: opacity var(--t-base); }
+.home-banner-img img { grid-area: 1 / 1; width: 100%; max-width: var(--banner-figure-w); max-height: var(--banner-img-h); height: auto; object-fit: contain; opacity: 0; transition: opacity var(--t-base); }
 .home-banner-img img.is-active { opacity: 1; }
 .home-banner-art { min-width: 0; grid-column: 2; grid-row: 1 / span 2; }
 
 /* 배너 오른쪽: 슬라이드 주제의 실제 수치 표(계산 예시·업무 규칙의 값) */
 .home-figure { display: grid; align-content: start; width: 100%; border: var(--rule) solid var(--border); background: var(--surface); }
-.home-figure-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); padding: 14px var(--sp-5) var(--sp-3); border-bottom: var(--rule) solid var(--border); }
+.home-figure-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); border-bottom: var(--rule) solid var(--border); }
 .home-figure-head h3 { font-size: var(--fs-h4); }
 .home-figure-head span { color: var(--text-faint); font-size: var(--fs-caption); white-space: nowrap; }
 .home-figure .figure-row { border: 0; border-bottom: var(--rule) solid var(--border); }
@@ -42,86 +43,148 @@
 .home-figure-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); border-top: var(--rule) solid var(--border); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-caption); }
 .home-figure-foot a { display: inline-flex; align-items: center; min-height: var(--touch); font-weight: var(--fw-bold); white-space: nowrap; }
 
-/* 통합 검색: 배너 아래에 걸친다. */
-.home-search { position: relative; z-index: 2; max-width: 880px; margin: -38px auto 0; }
-.home-search form { display: flex; align-items: center; height: 72px; padding: 0 var(--sp-2) 0 var(--sp-6); border: var(--rule-heavy) solid var(--primary); background: var(--surface); }
-.home-search form:focus-within { outline: var(--rule-accent) solid var(--primary); outline-offset: 2px; }
+/* 주요 업무 줄: 배너 아래에 걸치는 칸 나눈 한 띠(rea §3-4). 지표 줄과 같은 구조라 카드 반복이 아니다. */
+.home-quick { position: relative; z-index: 2; width: min(100% - var(--content-gutter), var(--content-w)); margin: calc(-1 * var(--sp-10)) auto 0; }
+.home-quick ul { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border: var(--rule) solid var(--border-strong); border-top: var(--rule-heavy) solid var(--primary); background: var(--surface); }
+.home-quick li { min-width: 0; border-left: var(--rule) solid var(--border); }
+.home-quick li:first-child { border-left: 0; }
+.home-quick a { display: grid; grid-template-columns: var(--icon-box) minmax(0, 1fr); align-items: start; gap: var(--sp-3); height: 100%; min-height: var(--touch); padding: var(--sp-4); color: var(--text); text-decoration: none; transition: background-color var(--t-fast); }
+.home-quick a:hover { background: var(--surface-soft); text-decoration: none; }
+.home-quick a:hover strong { color: var(--primary); }
+.home-quick a:focus-visible { outline-offset: calc(-1 * var(--rule-accent)); }
+.home-quick-icon { display: grid; place-items: center; width: var(--icon-box); height: var(--icon-box); border: var(--rule) solid var(--primary-line); background: var(--primary-tint); color: var(--primary); }
+.home-quick-text { display: grid; gap: var(--sp-1); min-width: 0; }
+.home-quick-text strong { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); font-size: var(--fs-base); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
+.home-quick-text > span { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
+
+/* 통합 검색: 배우기 구역 머리 아래. 용어 사전으로 보낸다. */
+.home-search { margin-bottom: var(--sp-6); }
+.home-search form { display: flex; align-items: center; height: calc(var(--control-h) + var(--sp-4)); padding: 0 var(--sp-1) 0 var(--sp-5); border: var(--rule-heavy) solid var(--primary); background: var(--surface); }
+.home-search form:focus-within { outline: var(--rule-accent) solid var(--primary); outline-offset: var(--rule-heavy); }
 .home-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--text); font-size: var(--fs-lead); outline: none; }
 .home-search input::placeholder { color: var(--text-faint); }
 .home-search input::-webkit-search-cancel-button { display: none; }
-.home-search button { display: grid; place-items: center; flex-shrink: 0; width: 56px; height: 56px; border: 0; background: var(--primary); color: var(--text-on-primary); transition: background-color var(--t-fast); }
+.home-search button { display: grid; place-items: center; flex-shrink: 0; width: var(--control-h); height: var(--control-h); border: 0; background: var(--primary); color: var(--text-on-primary); transition: background-color var(--t-fast); }
 .home-search button:hover { background: var(--primary-strong); }
-.home-search-suggest { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-4); }
+.home-search-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); }
 .home-search-suggest > span { margin-right: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-bold); }
-.home-search-suggest > a { display: inline-flex; align-items: center; min-height: var(--touch); padding: 0 14px; border: var(--rule) solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); text-decoration: none; }
+.home-search-suggest > a { display: inline-flex; align-items: center; min-height: var(--touch); padding: 0 var(--sp-3); border: var(--rule) solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); text-decoration: none; }
 .home-search-suggest > a:hover { border-color: var(--primary); color: var(--primary); }
 
 /* 구역 */
 .home-section { margin-top: var(--sp-10); }
 .home-section .section-head h2 em { color: var(--primary); font-style: normal; }
 
-/* 계산기 바로가기 표: 카드가 아니라 링크 묶음 표. */
-.home-calc-table tbody th a { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-size: var(--fs-body); font-weight: var(--fw-bold); }
+/* 상품 안내 표(API 결과) · 대체 링크 줄 */
+.home-product-table tbody th a { color: var(--text); font-size: var(--fs-body); font-weight: var(--fw-bold); }
+.home-product-table tbody th a:hover { color: var(--primary); }
+.home-product-summary { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-medium); line-height: var(--lh-body); }
+.home-product-table td.go, .home-calc-table td.go { text-align: right; white-space: nowrap; }
+.home-product-table td.go a, .home-calc-table td.go a { display: inline-flex; align-items: center; min-height: var(--touch); font-weight: var(--fw-semibold); }
+.home-fallback { padding: var(--sp-5); border: var(--rule) solid var(--border); background: var(--surface); }
+.home-fallback > p { color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
+.home-link-list { margin: 0; padding: 0; list-style: none; }
+.home-fallback .home-link-list { margin-top: var(--sp-3); border-top: var(--rule) solid var(--border); }
+.home-link-list li { border-bottom: var(--rule) solid var(--border); }
+.home-link-list li:last-child { border-bottom: 0; }
+.home-link-list a { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--sp-1) var(--sp-4); min-height: var(--control-h); padding: var(--sp-2) 0; color: var(--text); text-decoration: none; }
+.home-link-list a::after { content: '→'; grid-column: 2; grid-row: 1 / span 2; color: var(--text-faint); }
+.home-link-list a:hover strong, .home-link-list a:hover::after { color: var(--primary); }
+.home-link-list strong { font-size: var(--fs-base); font-weight: var(--fw-bold); }
+.home-link-list span { grid-column: 1; color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
+
+/* 계산기 6종 표: 카드가 아니라 링크 묶음 표. */
+.home-calc-table tbody th a { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--touch); color: var(--text); font-size: var(--fs-body); font-weight: var(--fw-bold); }
 .home-calc-table tbody th a:hover { color: var(--primary); }
-.home-calc-table td.go { text-align: right; white-space: nowrap; }
-.home-calc-table td.go a { font-weight: var(--fw-semibold); }
+.home-calc-table tbody th a svg { flex-shrink: 0; }
+.home-calc-table td.home-calc-group { color: var(--accent-strong); font-size: var(--fs-small); font-weight: var(--fw-semibold); white-space: nowrap; }
 
 /* 학습 목차: 2열 번호 목록. 진척은 공용 .progress-bar(ProgressBar) 하나만 쓴다. */
-.home-course-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--sp-7); align-items: start; }
-.home-course-side { display: grid; gap: 14px; padding: 22px; border: var(--rule) solid var(--border); background: var(--surface); }
+.home-course-grid { display: grid; grid-template-columns: var(--aside-w) minmax(0, 1fr); gap: var(--sp-7); align-items: start; }
+.home-course-side { display: grid; gap: var(--sp-4); padding: var(--sp-5); border: var(--rule) solid var(--border); background: var(--surface); }
 .home-course-side p { color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-loose); }
 .home-course-progress { display: grid; gap: var(--sp-2); }
 .home-course-progress .progress-meta strong { color: var(--text); font-size: var(--fs-h3); }
 .home-course-parts { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; border-top: var(--rule) solid var(--border); }
-.home-course-parts li { display: grid; gap: 2px; padding-top: var(--sp-2); }
+.home-course-parts li { display: grid; gap: var(--sp-1); padding-top: var(--sp-2); }
 .home-course-parts strong { font-size: var(--fs-small); }
 .home-course-parts span { color: var(--text-muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
 .home-course-list { margin: 0; padding: 0; list-style: none; border-top: var(--rule-heavy) solid var(--text); columns: 2; column-gap: var(--sp-7); }
 .home-course-list li { break-inside: avoid; border-bottom: var(--rule) solid var(--border); }
-.home-course-link { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-3); align-items: baseline; padding: var(--sp-3) var(--sp-1) 6px; color: var(--text); text-decoration: none; }
+.home-course-link { display: grid; grid-template-columns: var(--icon-box) minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-3); align-items: baseline; padding: var(--sp-3) var(--sp-1) var(--sp-2); color: var(--text); text-decoration: none; }
 .home-course-link:hover strong { color: var(--primary); }
 .home-course-list .no { color: var(--accent); font-size: var(--fs-small); font-weight: var(--fw-heavy); font-variant-numeric: tabular-nums; }
 .home-course-list strong { font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
 .home-course-list .summary { grid-column: 2; color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
 .home-course-list .meta { grid-column: 3; grid-row: 1; justify-self: end; color: var(--text-faint); font-size: var(--fs-caption); white-space: nowrap; }
-.home-course-list .meta .status { margin-left: 6px; }
-.home-course-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--sp-4); padding-left: calc(40px + var(--sp-3) + var(--sp-1)); }
+.home-course-list .meta .status { margin-left: var(--sp-2); }
+.home-course-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--sp-4); padding-left: calc(var(--icon-box) + var(--sp-3) + var(--sp-1)); }
 .home-course-links a { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); text-decoration: none; }
 .home-course-links a:hover { color: var(--primary); text-decoration: underline; }
+
+.home-course-mission a { display: inline-flex; align-items: center; gap: var(--sp-1); font-weight: var(--fw-bold); }
+
+/* 고객센터·공지: 2열(공지 | 도움말). 공지를 못 받으면 도움말 한 열만. */
+.home-support-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-7); align-items: start; }
+.home-support-grid.is-single { grid-template-columns: minmax(0, 1fr); }
+.home-support-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); margin-bottom: 0; }
+.home-support-head a { display: inline-flex; align-items: center; min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.home-notice-list { margin: 0; padding: 0; list-style: none; }
+.home-notice-list li { border-bottom: var(--rule) solid var(--border); }
+.home-notice-list a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); min-height: var(--control-h); color: var(--text); text-decoration: none; }
+.home-notice-list a:hover strong { color: var(--primary); text-decoration: underline; text-underline-offset: var(--rule-accent); }
+.home-notice-list strong { min-width: 0; overflow: hidden; font-size: var(--fs-base); font-weight: var(--fw-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.home-notice-cat { padding: 0 var(--sp-2); border: var(--rule) solid var(--border); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); white-space: nowrap; }
+.home-notice-list time { color: var(--text-faint); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* 내 샌드박스 현황 */
 .home-sandbox .table th[scope='row'] { width: 32%; color: var(--text-muted); font-weight: var(--fw-semibold); }
 .home-sandbox-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-4); }
 
+@media (max-width: 1100px) {
+  .home-quick ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-quick li:nth-child(3n + 1) { border-left: 0; }
+  .home-quick li:nth-child(n + 4) { border-top: var(--rule) solid var(--border); }
+}
 @media (max-width: 1000px) {
-  .home-notice, .home-main, .home-banner-inner { width: calc(100% - var(--content-gutter-sm) - var(--sp-2)); }
-  .home-banner-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: var(--sp-7); min-height: 380px; }
+  .home-notice, .home-main, .home-banner-inner, .home-quick { width: calc(100% - var(--content-gutter-sm) - var(--sp-2)); }
+  .home-support-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
+  .home-banner-inner { grid-template-columns: minmax(0, 1fr) minmax(0, var(--banner-figure-w-md)); gap: var(--sp-7); min-height: var(--banner-min-h-md); }
   .home-course-grid { grid-template-columns: 1fr; gap: var(--sp-5); }
   .home-course-list { columns: 1; }
 }
 @media (max-width: 740px) {
-  .home-notice, .home-main, .home-banner-inner { width: calc(100% - var(--content-gutter-sm)); }
-  .home-banner-inner { grid-template-columns: 1fr; grid-template-rows: none; gap: var(--sp-6); padding: var(--sp-7) 0 var(--sp-10); min-height: 0; }
+  .home-notice, .home-main, .home-banner-inner, .home-quick { width: calc(100% - var(--content-gutter-sm)); }
+  .home-banner-inner { grid-template-columns: 1fr; grid-template-rows: none; gap: var(--sp-6); padding: var(--sp-7) 0 var(--sp-11); min-height: 0; }
+  .home-quick { margin-top: calc(-1 * var(--sp-8)); }
+  .home-quick ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-quick li, .home-quick li:nth-child(3n + 1) { border-left: var(--rule) solid var(--border); }
+  .home-quick li:nth-child(2n + 1) { border-left: 0; }
+  .home-quick li:nth-child(n + 3) { border-top: var(--rule) solid var(--border); }
+  .home-quick a { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); padding: var(--sp-3); }
+  .home-quick-text > span { display: none; }
+  .home-product-table td.go, .home-product-table th:last-child { display: none; }
+  .home-calc-table th:nth-child(2), .home-calc-table td:nth-child(2) { display: none; }
+  .home-notice-list a { grid-template-columns: minmax(0, 1fr) auto; }
+  .home-notice-cat { display: none; }
   .home-banner-copy, .home-banner-img, .home-banner-art { grid-column: 1; grid-row: auto; }
-  .home-banner-img img { max-height: 160px; }
+  .home-banner-img img { max-height: var(--banner-img-h-sm); }
   .home-slide { min-height: 0; }
-  .home-slide h2 { margin: 14px 0 var(--sp-3); font-size: clamp(27px, 7.4vw, 34px); }
+  .home-slide h2 { margin: var(--sp-4) 0 var(--sp-3); font-size: var(--fs-display-sm); }
   .home-slide p { font-size: var(--fs-body); }
-  .home-banner-controls { margin-top: 22px; }
-  .home-figure-head { padding: var(--sp-3) 14px; }
-  .home-figure-foot { padding: 0 14px; }
-  .home-figure .table th, .home-figure .table td { padding: var(--sp-2) 10px; font-size: var(--fs-caption); }
-  .home-search { margin-top: -30px; }
-  .home-search form { height: 60px; padding-left: var(--sp-4); }
+  .home-banner-controls { margin-top: var(--sp-5); }
+  .home-figure-head { padding: var(--sp-3) var(--sp-4); }
+  .home-figure-foot { padding: 0 var(--sp-4); }
+  .home-figure .table th, .home-figure .table td { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-caption); }
+  .home-search form { height: calc(var(--control-h) + var(--sp-2)); padding-left: var(--sp-4); }
   .home-search input { font-size: var(--fs-body); }
-  .home-search button { width: 46px; height: 46px; }
-  .home-search-suggest { justify-content: flex-start; }
-  .home-section { margin-top: 52px; }
+  .home-search button { width: var(--touch); height: var(--touch); }
+  .home-section { margin-top: var(--sp-9); }
   .home-calc-table td.go { display: none; }
-  .home-calc-table th:nth-child(3), .home-calc-table td:nth-child(3) { display: none; }
-  .home-course-link { grid-template-columns: 32px minmax(0, 1fr); }
+  .home-calc-table th:nth-child(4), .home-calc-table td:nth-child(4), .home-calc-table th:last-child { display: none; }
+  .home-course-link { grid-template-columns: var(--sp-7) minmax(0, 1fr); }
   .home-course-list .meta { grid-column: 2; grid-row: auto; justify-self: start; white-space: normal; }
-  .home-course-links { padding-left: calc(32px + var(--sp-3) + var(--sp-1)); }
+  .home-course-links { padding-left: calc(var(--sp-7) + var(--sp-3) + var(--sp-1)); }
   .home-sandbox .table th[scope='row'] { width: 44%; }
 }
 @media (max-width: 420px) {

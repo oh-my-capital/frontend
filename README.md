@@ -27,9 +27,12 @@ npm run preview        # dist/ 를 5190에서 확인
 | `VITE_MOCK` | (비움) | `1`이면 `src/api/mock/`의 고정 응답으로 동작 |
 | `API_PROXY_TARGET` | `http://localhost:8090` | dev·preview 서버의 `/api` 프록시 대상(빌드에는 안 들어감) |
 
-## 디자인 시스템 v2
+## 디자인 시스템 v3
 
 색·글자 크기·간격 **리터럴을 CSS·JSX에 적지 않는다.** 필요하면 `styles/tokens.css`에 토큰을 먼저 만든다(ADR-017).
+v3(ADR-019)는 시중 캐피탈 사이트 8곳의 역설계(docs `design/rea-capital-sites.md`) 결론으로 머리·바닥·하위 화면 머리·홈을 다시 짰다.
+**메뉴는 `src/components/nav.ts` 한 파일**이 정의하고 머리 메가 메뉴·모바일 드로어·바닥 바로가기·`SubPageHeader` 위치 표시와 탭이 모두 읽는다.
+새 화면을 메뉴에 넣을 때는 `nav.ts`만 고친다.
 
 ```text
 styles/
@@ -37,17 +40,19 @@ styles/
 │                글자 사다리 --fs-micro(12) ~ --fs-display, 굵기·줄간격·자간
 │                4px 눈금 --sp-1 ~ --sp-12, 선 --rule/--rule-heavy/--rule-accent, --radius 0
 │                크기 --touch(44) --control-h(48) --content-w, 모션 --t-fast/--t-base
+│                v3: --utility-h --header-row-h --gnb-brand-w(메가 메뉴 격자) --fs-wordmark
+│                    --shadow-overlay --z-header/--z-overlay --banner-* --measure
 ├── base.css     리셋·타이포·Pretendard @font-face·레이아웃·공용 조각
 │                .panel .panel-head .section-head .figure-row .tabs/.tabpanel
 │                .progress-bar .bar-cell/.bar-track .table .status-* .state-box
 │                .disclosure .fold .stepper .timeline .figure-frame .forbidden-panel
 ├── charts.css   .chart(겉틀) .chart-row .chart-legend .chart-summary .chart-data
 │                .chart-grid/-axis/-line/-area/-dot/-value .ladder-* .mixbar-*
-├── brand.css    워드마크·두 줄 머리·푸터·SubPageHeader
+├── brand.css    워드마크·머리(유틸리티 줄 + 메가 메뉴 + 1100px 이하 드로어)·바닥·SubPageHeader
 └── home · account · learn · glossary · calculators · sandbox · admin   화면별 규칙만
 ```
 
-공용 컴포넌트(`src/components/`): `Layout` `Header` `SiteFooter` `Brand` `Icon` `PageTitle` `SubPageHeader`
+공용 컴포넌트(`src/components/`): `nav.ts`(메뉴 정의) `Layout`(본문 바로가기 포함) `Header` `SiteFooter` `Brand` `Icon` `PageTitle` `SubPageHeader`
 `ProtectedRoute`(+`ForbiddenPage`) `Loading` `LoadError` `EmptyState` `Tabs`(+`FilterGroup`) `ProgressBar`
 `Stepper` `Timeline` `DataTable` `StatusChip` `Money` `MoneyInput` `RateInput` `Disclosure` `ConceptDiagram`.
 
@@ -98,6 +103,7 @@ src/
 - 표는 `DataTable` 또는 `<table class="table">` + `caption` + `th scope`. 열이 많으면 `scroll`/`.table-scroll`.
 - 상태는 `StatusChip`(라벨 필수). 로딩 `Loading`, 오류 `LoadError`(문장 + 다시 시도 + 요청 ID), 빈 상태 `EmptyState`(다음 행동 1개).
 - 하위 화면은 `SubPageHeader` → `main.page-main` → 핵심 수치 `.figure-row` → `.page-grid`(주 내용 + `aside`) → `.next-actions`.
+  `SubPageHeader`의 `section`은 `learn` `calculators` `sandbox` `admin` `account`(v2)와 `products` `support`(v3). 위치 표시·탭은 `nav.ts`에서 만든다.
 - 인터랙티브 요소는 최소 `--touch`(44px). 인라인 `style`은 막대 길이·색 토큰 전달·`--figure-cols`만 허용.
 - 계약(`docs/contracts/CapiMATE-API.yml`)과 `types.ts`가 어긋나면 계약을 먼저 고치고 같은 PR에서 타입을 맞춘다.
 

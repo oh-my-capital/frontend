@@ -1,9 +1,10 @@
 /*
- * 디자인 토큰 v2. docs/design/ui-guidelines.md §3을 그대로 옮긴 것이며 값은 이 문서에서만 바꾼다.
+ * 디자인 토큰 v3(v2 + 머리·메가 메뉴·바닥·홈 주요 업무 줄 토큰, docs/design/rea-capital-sites.md). docs/design/ui-guidelines.md §3을 그대로 옮긴 것이며 값은 이 문서에서만 바꾼다.
  * FinMATE(오렌지·초록)와 종이색·텍스트·테두리 계열을 공유하고, CapiMATE는 남색·황토를 포인트로 쓴다.
  * 상태 색은 배경 tint + 텍스트 라벨 조합으로만 쓴다. 넓은 면적에 채도 높은 색을 칠하지 않는다.
  *
  * v2에서 더한 것: 표면 단계, 상태 테두리, 글자 크기 사다리, 자간·굵기, 간격 눈금, 선·모션, 그림 계열.
+ * v3에서 더한 것: 머리 높이 조각, 워드마크 크기, 메가 메뉴 격자, 떠 있는 층의 그림자·쌓임 순서, 설명 문단 폭.
  * CSS 안에 색·크기·간격 리터럴을 새로 적지 않는다. 필요하면 여기에 토큰을 만든다.
  */
 :root {
@@ -74,8 +75,11 @@
   --fs-h2: 22px;
   --fs-h2-lg: 25px;
   --fs-figure: 26px;   /* 지표 숫자 */
+  --fs-section: 24px;  /* 구역 제목(.section-head h2) */
   --fs-h1: clamp(28px, 2.6vw, 32px);
+  --fs-h1-sm: 28px;    /* 740px 이하 화면 제목 */
   --fs-display: clamp(32px, 3.6vw, 44px); /* 홈 배너 제목 */
+  --fs-display-sm: clamp(27px, 7.4vw, 34px); /* 740px 이하 홈 배너 제목 */
 
   /* ── 자간·굵기·줄간격 ── */
   --lh-tight: 1.3;
@@ -111,6 +115,30 @@
   --content-gutter: 64px;
   --content-gutter-sm: 40px;
   --aside-w: 320px;
+
+  /* ── v3 머리·메가 메뉴·바닥(rea-capital-sites.md §4) ── */
+  --utility-h: 36px;          /* 유틸리티 줄(보이는 높이. 터치 영역은 --touch) */
+  --header-row-h: 76px;       /* 메인 줄 */
+  --header-row-h-sm: 64px;    /* 1100px 이하 메인 줄 */
+  --gnb-brand-w: 240px;       /* 워드마크 칸 = 메가 메뉴 설명 칸. 1단 메뉴 칸과 패널 열이 같은 격자를 쓴다 */
+  --gnb-panel-min-h: 260px;
+  --fs-wordmark: 28px;
+  --fs-wordmark-sm: 23px;     /* 바닥·모바일 워드마크 */
+  --ls-wordmark: -.05em;      /* Arial 800 워드마크 자간(28px 기준 −1.4px) */
+  --brand-symbol-sm: 28px;
+  --icon-box: 40px;           /* 홈 주요 업무 줄 아이콘 칸 */
+  --measure: 760px;           /* 설명 문단 최대 폭 */
+  --banner-min-h: 420px;      /* 홈 배너 */
+  --banner-min-h-md: 380px;
+  --banner-copy-min-h: 236px; /* 슬라이드 글 높이를 고정해 넘길 때 아래가 흔들리지 않게 */
+  --banner-figure-w: 520px;   /* 배너 오른쪽 수치 표·설명 문단 폭 */
+  --banner-figure-w-md: 420px;
+  --banner-img-h: 220px;
+  --banner-img-h-sm: 160px;
+  --shadow-overlay: 0 16px 32px rgba(30, 42, 51, .10); /* 메가 메뉴처럼 본문 위에 뜨는 층에만 */
+  --z-header: 20;
+  --z-overlay: 30;
+  --z-skip: 40;
 
   /* ── 모션 ── */
   --t-fast: .15s;
