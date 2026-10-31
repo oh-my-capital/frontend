@@ -16,6 +16,8 @@ type Props = {
   detail?: string;
   /** false 면 탭 줄을 숨긴다(계정 화면 등). */
   tabs?: boolean;
+  /** 제목 띠 안의 고지 한 줄(예: 고객센터의 "실제 상담 없음"). */
+  notice?: ReactNode;
 };
 
 /**
@@ -23,7 +25,7 @@ type Props = {
  * 탭·위치 표시는 nav.ts 에서 만든다 — 메뉴에 화면을 더하면 여기에 저절로 생긴다. 탭이 하나뿐인 묶음은 탭 줄을 그리지 않는다.
  * props 는 v2와 같다(하위 호환).
  */
-export default function SubPageHeader({ section, current, title, description, meta, actions, detail, tabs = true }: Props) {
+export default function SubPageHeader({ section, current, title, description, meta, actions, detail, tabs = true, notice }: Props) {
   const group: SubPageSection = SUBPAGE_SECTIONS[section];
   const currentLabel = group.links.find(link => link.to === current)?.label ?? title;
   const showTabs = tabs && group.links.length > 1;
@@ -47,6 +49,7 @@ export default function SubPageHeader({ section, current, title, description, me
             <h1>{title}</h1>
             {description && <p className="subpage-description">{description}</p>}
             {meta && <p className="subpage-meta">{meta}</p>}
+            {notice}
           </div>
           {actions && <div className="subpage-actions">{actions}</div>}
         </div>

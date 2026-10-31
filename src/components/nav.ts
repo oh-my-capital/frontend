@@ -115,6 +115,7 @@ export const NAV_MENUS: NavMenu[] = [
         links: [
           { to: "/sandbox", label: "현황", login: true },
           { to: "/sandbox/calendar", label: "납입 캘린더", login: true },
+          { to: "/sandbox/certificates", label: "증명서 발급", login: true },
           { to: "/sandbox/notifications", label: "알림함", login: true },
         ],
       },
@@ -141,6 +142,7 @@ export const NAV_MENUS: NavMenu[] = [
           { to: "/support", label: "고객센터 홈" },
           { to: "/support/faq", label: "자주 묻는 질문" },
           { to: "/support/notices", label: "공지사항" },
+          { to: "/support/guide", label: "이용 가이드" },
         ],
       },
       { label: "금융소비자 보호", links: [{ to: "/support/rights", label: "금융소비자 권리 안내" }] },
