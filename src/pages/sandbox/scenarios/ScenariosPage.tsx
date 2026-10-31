@@ -1,6 +1,7 @@
 import { useCallback, useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { errorMessage } from "../../../api/client";
+import { missionsApi, type Mission } from "../../../api/missions";
 import { scenariosApi, type Scenario } from "../../../api/scenarios";
 import { sandboxApi } from "../../../api/sandbox";
 import type { Sandbox } from "../../../api/types";
@@ -25,6 +26,9 @@ export default function ScenariosPage() {
   const navigate = useNavigate();
   const summary = useLoad<Sandbox>(signal => sandboxApi.summary(signal), []);
   const scenarios = useLoad<Scenario[]>(signal => scenariosApi.list(signal), []);
+  // 연결 미션 id → 제목. 미션 목록을 못 불러오면 id 를 그대로 보여 준다(시나리오 적용에는 영향 없음).
+  const missions = useLoad<Mission[]>(signal => missionsApi.list(signal), []);
+  const missionTitle = (id: string) => missions.data?.find(m => m.id === id)?.title ?? id;
   const [confirming, setConfirming] = useState<string | null>(null);
   const [running, setRunning] = useState<Scenario | null>(null);
   const [error, setError] = useState<{ id: string; message: string } | null>(null);
@@ -103,7 +107,7 @@ export default function ScenariosPage() {
                             <p className="scenario-links">
                               {sc.relatedConcepts.map(c => <Link key={c.id} to={`/learn/${c.id}`}>{c.title}</Link>)}
                             </p>
-                            {sc.relatedMissions.length > 0 && <p className="scenario-meta faint">연결 미션: {sc.relatedMissions.join(" · ")}</p>}
+                            {sc.relatedMissions.length > 0 && <p className="scenario-links">연결 미션: {sc.relatedMissions.map(id => <Link key={id} to={`/missions/${id}`}>{missionTitle(id)}</Link>)}</p>}
                           </td>
                           <td className="scenario-action">
                             {isRunning ? (

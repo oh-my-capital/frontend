@@ -16,6 +16,7 @@ export interface Scenario {
   produces: string;
   learningGoals: string[];
   relatedConcepts: ConceptLink[];
+  /** 학습 미션 id(WP20). 화면은 /missions/{id} 로 잇는다. */
   relatedMissions: string[];
   creates: "CONTRACT" | "APPLICATION";
   approxAdvanceDays: number;
