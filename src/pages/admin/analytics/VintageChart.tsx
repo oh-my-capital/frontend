@@ -83,7 +83,8 @@ export default function VintageChart({ cohorts, maxMob, thresholdDays }: { cohor
           </g>
         ))}
         <line className="chart-axis" x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} />
-        {mobs.filter(m => m % step === 0 || m === span).map(m => (
+        {/* 눈금은 step 배수만. 마지막 MOB 가 배수가 아니면 바로 앞 라벨과 겹치므로 그리지 않는다(값 표가 모든 MOB 를 준다). */}
+        {mobs.filter(m => m % step === 0).map(m => (
           <text key={m} className="chart-label" x={x(m)} y={H - 18} textAnchor="middle">{m}</text>
         ))}
         <text className="chart-label" x={W - PAD.right} y={H - 4} textAnchor="end">경과 개월(MOB)</text>

@@ -49,20 +49,20 @@ export default function AdminAnalyticsPage() {
       />
       <main className="page-main admin-main">
         {roll.data && <KeyFigures matrix={roll.data} />}
-        <div className="admin-grid">
+        {/* 롤레이트 표는 열이 9개라 보조 열 옆에 두면 큰 화면에서도 잘린다. 전체 폭으로 둔다. */}
+        <section aria-labelledby="roll-title">
+          <div className="section-head">
+            <div>
+              <h2 id="roll-title">롤레이트 행렬</h2>
+              <p>전월 말 연체 구간에 있던 계약이 당월 말 어디에 있는지를 센다. 60일에 기한이익상실이 되므로 60일 이상 두 구간은 상실 계약이다.</p>
+            </div>
+          </div>
+          {roll.loading && !roll.data && <Loading message="롤레이트를 계산하고 있어요" minHeight={280} />}
+          {roll.error != null && !isForbidden(roll.error) && <LoadError error={roll.error} onRetry={roll.reload} />}
+          {roll.data && <RollRateSection matrix={roll.data} month={month} onMonth={selectMonth} />}
+        </section>
+        <div className="admin-grid rr-after">
           <div className="stack admin-stack">
-            <section aria-labelledby="roll-title">
-              <div className="section-head">
-                <div>
-                  <h2 id="roll-title">롤레이트 행렬</h2>
-                  <p>전월 말 연체 구간에 있던 계약이 당월 말 어디에 있는지를 센다. 60일에 기한이익상실이 되므로 60일 이상 두 구간은 상실 계약이다.</p>
-                </div>
-              </div>
-              {roll.loading && !roll.data && <Loading message="롤레이트를 계산하고 있어요" minHeight={280} />}
-              {roll.error != null && !isForbidden(roll.error) && <LoadError error={roll.error} onRetry={roll.reload} />}
-              {roll.data && <RollRateSection matrix={roll.data} month={month} onMonth={selectMonth} />}
-            </section>
-
             <section aria-labelledby="vintage-title">
               <div className="section-head">
                 <div>

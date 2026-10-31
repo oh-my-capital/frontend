@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { adminAnalyticsApi, NOTE_MAX, NOTE_MIN, type CollectionItem, type CollectionQueue, type DelinquencyBucket } from "../../../api/adminAnalytics";
 import { ApiError, errorMessage } from "../../../api/client";
@@ -49,7 +49,7 @@ export default function AdminCollectionsPage() {
         <p className="admin-note collection-boundary" role="note">
           교육용 화면이에요. 실제 채권 추심·연락·문자 발송·채권 매각은 하지 않으며, 메모는 운영 기록으로만 남아요. 이메일은 앞 두 글자만 보여요.
         </p>
-        <div className={current ? "admin-grid admin-grid-detail" : "admin-grid"}>
+        <div className="admin-grid">
           <div className="stack admin-stack">
             <section aria-labelledby="queue-title">
               <div className="section-head">
@@ -133,33 +133,41 @@ function QueueTable({ items, selected, onSelect }: { items: CollectionItem[]; se
       render: r => (
         <>
           <button type="button" className="admin-linklike" onClick={() => onSelect(r.contractId)} aria-pressed={r.contractId === selected}>{r.contractNo}</button>
+          <span className="admin-sub faint">{r.productName}</span>
           <span className="admin-sub faint admin-email">{r.userEmailMasked}</span>
+          {r.notes > 0 && <span className="admin-sub collection-note-count">메모 {r.notes}건</span>}
         </>
       ),
     },
-    { key: "product", header: "상품", nowrap: true, render: r => r.productName },
     {
       key: "status",
       header: "상태·연체일",
-      nowrap: true,
       render: r => {
         const s = statusLabel(r.status);
         return (
           <>
             <StatusChip label={s.label} tone={s.tone} detail={` ${r.overdueDays}일`} />
-            <span className="admin-sub faint">{STATE_LABEL[r.bucket]} · 시작 {formatDate(r.startedOn)}</span>
+            <span className="admin-sub faint">{STATE_LABEL[r.bucket]}</span>
+            <span className="admin-sub faint">시작 {formatDate(r.startedOn)}</span>
           </>
         );
       },
     },
-    { key: "principal", header: "미납 원금", numeric: true, render: r => <Money value={r.unpaidPrincipal} /> },
-    { key: "interest", header: "미납 이자", numeric: true, render: r => <Money value={r.unpaidInterest} /> },
-    { key: "overdue", header: "연체이자", numeric: true, render: r => <Money value={r.overdueInterest} /> },
-    { key: "total", header: "청구 합계", numeric: true, render: r => <Money value={r.totalDue} strong /> },
+    {
+      key: "due",
+      header: "청구 합계",
+      numeric: true,
+      render: r => (
+        <>
+          <Money value={r.totalDue} strong />
+          <span className="admin-sub faint collection-breakdown">원금 <Money value={r.unpaidPrincipal} /></span>
+          <span className="admin-sub faint collection-breakdown">이자 <Money value={r.unpaidInterest} /> · 연체이자 <Money value={r.overdueInterest} /></span>
+        </>
+      ),
+    },
     {
       key: "next",
       header: "다음 단계",
-      nowrap: true,
       render: r => r.nextStep ? (
         <>
           <span>{r.nextStep.label}</span>
@@ -167,12 +175,11 @@ function QueueTable({ items, selected, onSelect }: { items: CollectionItem[]; se
         </>
       ) : <span className="faint">남은 단계 없음</span>,
     },
-    { key: "notes", header: "메모", numeric: true, render: r => (r.notes > 0 ? `${r.notes}건` : "—") },
   ];
   return (
     <DataTable
       caption="연체 계약 목록"
-      captionNote="계약번호를 누르면 오른쪽에 내부 메모가 열린다. 기준일은 각 샌드박스의 마지막 일마감일(영업일 − 1)이다."
+      captionNote="계약번호를 누르면 내부 메모가 열린다. 청구 합계 = 미납 원금 + 미납 이자 + 연체이자, 기준일은 각 샌드박스의 마지막 일마감일(영업일 − 1)이다."
       columns={columns}
       rows={items}
       rowKey={r => r.contractId}
@@ -203,6 +210,9 @@ function ReadingPanel() {
 
 function NotesPanel({ item, onClose, onSaved }: { item: CollectionItem; onClose: () => void; onSaved: () => void }) {
   const notes = useLoad(() => adminAnalyticsApi.notes(item.contractId), [item.contractId]);
+  const heading = useRef<HTMLHeadingElement>(null);
+  // 계약을 고르면 패널 제목으로 초점을 옮긴다. 좁은 화면에서는 패널이 표 아래에 있어 초점 이동이 곧 스크롤이다.
+  useEffect(() => { heading.current?.focus(); }, [item.contractId]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -234,13 +244,14 @@ function NotesPanel({ item, onClose, onSaved }: { item: CollectionItem; onClose:
       <div className="admin-detail-head">
         <div>
           <p className="faint">{item.userEmailMasked} · {item.productName}</p>
-          <h2 id="notes-title">{item.contractNo}</h2>
+          <h2 id="notes-title" ref={heading} tabIndex={-1}>{item.contractNo}</h2>
         </div>
         <button type="button" className="btn btn-secondary btn-small" onClick={onClose}>닫기</button>
       </div>
       <dl className="def-list admin-def">
-        <dt>상태</dt><dd>{statusLabel(item.status).label} · 연체 {item.overdueDays}일 · {STATE_LABEL[item.bucket]}</dd>
+        <dt>상태</dt><dd>{statusLabel(item.status).label} · 연체일 {item.overdueDays}일 · {STATE_LABEL[item.bucket]} 구간</dd>
         <dt>청구 합계</dt><dd><Money value={item.totalDue} /> (기준 {formatDate(item.asOfDate)})</dd>
+        <dt>청구 내역</dt><dd>미납 원금 <Money value={item.unpaidPrincipal} /> · 미납 이자 <Money value={item.unpaidInterest} /> · 연체이자 <Money value={item.overdueInterest} /></dd>
         <dt>통지·상실</dt><dd>통지 {item.noticeSentOn ? formatDate(item.noticeSentOn) : "전"} · 상실 {item.acceleratedOn ? formatDate(item.acceleratedOn) : "전"}</dd>
         <dt>다음 단계</dt><dd>{item.nextStep ? `${item.nextStep.label} ${formatDate(item.nextStep.dueOn)}` : "없음"}</dd>
       </dl>
