@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { learningApi } from "../../api/learning";
 import type { Concept, ConceptSummary, MyLearning, MyLearningConcept, QuizResult } from "../../api/types";
 import ConceptDiagram from "../../components/ConceptDiagram";
+import FigureFlow from "../../components/FigureFlow";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
 import Loading from "../../components/Loading";
@@ -86,11 +87,14 @@ export default function ConceptPage() {
           <article className="concept-body">
             {data.sections.map((section, index) => {
               const spec = learnDiagramFor(section.figure);
+              // 손으로 배치한 그림이 없으면 콘텐츠의 노드·엣지를 단계 흐름으로 그린다(그림 id 가 콘텐츠에만 있는 경우).
+              const flow = !spec && section.figure ? data.figures?.find(f => f.id === section.figure) : undefined;
               return (
                 <section key={section.heading} id={`section-${index + 1}`} className="concept-section">
                   <h2>{section.heading}</h2>
                   <p>{section.body}</p>
                   {spec && <ConceptDiagram spec={spec} />}
+                  {flow && <FigureFlow figure={flow} />}
                 </section>
               );
             })}

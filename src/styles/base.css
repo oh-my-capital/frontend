@@ -308,3 +308,16 @@ ul, ol { margin: 0; padding-left: 22px; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* 단계 흐름 그림(FigureFlow): 손으로 배치한 그림이 없는 콘텐츠 그림. 노드 상자를 세로로 잇고 연결 라벨을 화살표 옆에 둔다. */
+.figure-flow-steps { list-style: none; margin: 0; padding: var(--sp-4); display: grid; gap: 0; }
+.figure-flow-node { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); border: var(--rule) solid var(--border-strong); background: var(--surface); }
+.figure-flow-node strong { font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text); }
+.figure-flow-node small { flex-shrink: 0; font-size: var(--fs-caption); color: var(--text-muted); }
+.figure-flow-node.kind-company { border-color: var(--primary-line); background: var(--primary-tint); }
+.figure-flow-node.kind-person { border-color: var(--accent-line); background: var(--accent-tint); }
+.figure-flow-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) 0 var(--sp-1) var(--sp-4); color: var(--accent); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.figure-flow-link i { font-style: normal; color: var(--text-muted); }
+.figure-flow-others { margin: 0; padding: var(--sp-2) var(--sp-4) var(--sp-4); border-top: var(--rule) solid var(--border-soft); font-size: var(--fs-caption); color: var(--text-muted); }
+.figure-flow-others dt { font-weight: var(--fw-bold); color: var(--text); margin-bottom: var(--sp-1); }
+.figure-flow-others dd { margin: 0; }

@@ -475,7 +475,7 @@ function CalculatorTable() {
   );
 }
 
-/** 학습 목차 12개: 번호 목록, 로그인 시 진척 표시(API 또는 mock). */
+/** 학습 목차(개념 수는 API 응답, 구간은 learn/links.ts COURSE_PARTS): 번호 목록, 로그인 시 진척 표시(API 또는 mock). */
 function CourseList() {
   const { isAuthenticated } = useAuth();
   const [concepts, setConcepts] = useState<ConceptSummary[] | null>(null);
@@ -514,7 +514,7 @@ function CourseList() {
               {myLearning.nextConceptId && <p>다음으로 권하는 개념은 <Link to={`/learn/${myLearning.nextConceptId}`}>{concepts?.find(c => c.id === myLearning.nextConceptId)?.title ?? myLearning.nextConceptId}</Link>이에요.</p>}
             </div>
           ) : (
-            <p>여신의 구조(1~4) → 금리·한도·심사(5~8) → 연체·건전성·중도상환(9~12) 순서로 읽으면 대출 한 건의 생애를 처음부터 끝까지 따라가게 돼요.</p>
+            <p>{COURSE_PARTS.map(part => `${part.label}(${part.from}~${part.to})`).join(" → ")} 순서로 읽으면 대출 한 건의 생애와 그 뒤의 채권 관리·권리까지 따라가게 돼요.</p>
           )}
           <ol className="home-course-parts">
             {COURSE_PARTS.map(part => {
