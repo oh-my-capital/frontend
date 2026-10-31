@@ -7,9 +7,9 @@ import { STATE_LABEL, STATE_ORDER, pct } from "./riskLabels";
 
 export type RollBasis = "balance" | "contracts";
 
-/** 칸의 방향: 왼쪽(더 나은 구간)·대각선(유지)·오른쪽(더 나쁜 구간)·완제. 색 계열과 화면 낭독용 낱말에 쓴다. */
+/** 칸의 방향: 왼쪽(더 나은 구간)·대각선(유지)·오른쪽(더 나쁜 구간)·완제·종료. 색 계열과 화면 낭독용 낱말에 쓴다. */
 type Direction = "better" | "same" | "worse" | "paid";
-const DIRECTION_WORD: Record<Direction, string> = { better: "개선", same: "유지", worse: "악화", paid: "완제" };
+const DIRECTION_WORD: Record<Direction, string> = { better: "개선", same: "유지", worse: "악화", paid: "완제·종료" };
 
 function direction(from: RiskState, to: RiskState): Direction {
   if (to === "PAID_OFF") return "paid";
@@ -93,7 +93,7 @@ export function RollRateLegend() {
       <li><i className="rr-swatch rr-better rr-heat-4" aria-hidden="true" />개선(더 나은 구간으로)</li>
       <li><i className="rr-swatch rr-same rr-heat-4" aria-hidden="true" />유지(같은 구간)</li>
       <li><i className="rr-swatch rr-worse rr-heat-4" aria-hidden="true" />악화(더 나쁜 구간으로)</li>
-      <li><i className="rr-swatch rr-paid rr-heat-4" aria-hidden="true" />완제</li>
+      <li><i className="rr-swatch rr-paid rr-heat-4" aria-hidden="true" />완제·종료(청약철회 포함)</li>
       <li className="faint">색이 짙을수록 비율이 높다(0 · 10 · 25 · 50 · 75% 경계)</li>
     </ul>
   );

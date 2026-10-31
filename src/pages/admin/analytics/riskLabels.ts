@@ -13,7 +13,7 @@ export const STATE_LABEL: Record<RiskState, string> = {
   DPD_30_59: "30~59일",
   DPD_60_89: "60~89일(상실)",
   DPD_90_PLUS: "90일 이상(상실)",
-  PAID_OFF: "완제",
+  PAID_OFF: "완제·종료",
 };
 
 export const BUCKETS: DelinquencyBucket[] = ["DPD_1_29", "DPD_30_59", "DPD_60_89", "DPD_90_PLUS"];
