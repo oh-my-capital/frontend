@@ -8,11 +8,11 @@ import ProgressBar from "../../components/ProgressBar";
 import StatusChip from "../../components/StatusChip";
 import SubPageHeader from "../../components/SubPageHeader";
 import { useAuth } from "../../context/AuthContext";
-import { calculatorLink, COURSE_PARTS } from "./links";
+import { calculatorLink, COURSE_PARTS, COURSE_TOTAL, SANDBOX_TASK_CONCEPTS } from "./links";
 import { useLoad } from "./useLoad";
 
 /**
- * 입문 과정 목차(S-02). 12개념 번호 목록(제목·요약·문제 수·연결 계산기·완료 표시)과 권장 순서 설명.
+ * 입문 과정 목차(S-02). 개념 번호 목록(1단계 12 + WP24 13~16)(제목·요약·문제 수·연결 계산기·완료 표시)과 권장 순서 설명.
  * 로그인 시 /me/learning 으로 완료·최고점을 표시한다. 어느 개념이든 처음부터 열려 있다(ADR-006).
  */
 export default function CoursePage() {
@@ -27,7 +27,7 @@ export default function CoursePage() {
         section="learn"
         current="/course"
         title="입문 과정 목차"
-        description="여신의 구조(1~4) → 금리·한도·심사(5~8) → 연체·건전성·중도상환(9~12) 순서로 읽으면 대출 한 건의 생애를 처음부터 끝까지 따라가게 돼요. 권장 순서는 1에서 12지만 어느 개념이든 바로 열 수 있고, 개념마다 확인 문제와 연결된 계산기나 샌드박스 과업이 있어요."
+        description={`${COURSE_PARTS.map(part => `${part.label}(${part.from}~${part.to})`).join(" → ")} 순서로 읽으면 대출 한 건의 생애와 그 뒤의 채권 관리·권리까지 따라가게 돼요. 권장 순서는 1에서 ${COURSE_TOTAL}이지만 어느 개념이든 바로 열 수 있고, 개념마다 확인 문제와 연결된 계산기·안내 화면이나 샌드박스 과업이 있어요.`}
         meta={concepts.data ? `개념 ${concepts.data.length}개 · 확인 문제 ${concepts.data.reduce((sum, c) => sum + c.quizCount, 0)}문항 · 출처와 확인일은 개념마다 적혀 있어요` : undefined}
       />
       <main className="page-main">
@@ -56,8 +56,8 @@ export default function CoursePage() {
                             <p>{concept.summary}</p>
                             <p className="course-meta">
                               <span>확인 문제 {concept.quizCount}문항</span>
-                              {calc && <Link to={calc.to}><Icon name="calculator" size={16} />{calc.label}</Link>}
-                              {!calc && concept.orderNo >= 9 && concept.orderNo <= 11 && <Link to="/sandbox"><Icon name="bank" size={16} />샌드박스 과업</Link>}
+                              {calc && <Link to={calc.to}><Icon name={calc.kind === "screen" ? "info" : "calculator"} size={16} />{calc.label}</Link>}
+                              {!calc && SANDBOX_TASK_CONCEPTS.has(concept.id) && <Link to="/sandbox"><Icon name="bank" size={16} />샌드박스 과업</Link>}
                             </p>
                           </div>
                           <div className="course-state">
@@ -115,7 +115,7 @@ function ProgressPanel({ learning, concepts, isAuthenticated }: { learning: MyLe
       {next ? (
         <p className="muted">다음으로 권하는 개념은 <Link to={`/learn/${next.id}`}>{next.orderNo}. {next.title}</Link>이에요.</p>
       ) : (
-        <p className="muted">12개 개념을 모두 완료했어요. 오답이 있던 문항은 내 학습에서 다시 볼 수 있어요.</p>
+        <p className="muted">{learning.totalCount}개 개념을 모두 완료했어요. 오답이 있던 문항은 내 학습에서 다시 볼 수 있어요.</p>
       )}
       <Link to="/me/learning" className="learn-progress-link">내 학습 자세히 <Icon name="next" size={16} /></Link>
     </div>
