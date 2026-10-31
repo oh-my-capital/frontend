@@ -7,7 +7,8 @@ import { pct, won } from "./labels";
  * 한도 요소 근거 표: 상품 최대(또는 LTV) · 소득배수 · DSR 역산 → 최종 한도(만 원 절사).
  * 요소 길이 비교와 병목은 위 그림(LimitLadder)이 막대로 보여 주므로 여기서는 역산 근거 숫자를 적는다.
  */
-export default function LimitBreakdown({ result, requestedAmount }: { result: ScreeningResult; requestedAmount: number }) {
+/** ltvRate 는 상품의 담보인정비율(%). 상품마다 다르다(신차 90 · 중고차 70, WP23). */
+export default function LimitBreakdown({ result, requestedAmount, ltvRate = null }: { result: ScreeningResult; requestedAmount: number; ltvRate?: number | null }) {
   const { limits, dsr } = result;
   // 자격 단계에서 걸리면 서버가 한도·DSR 을 아예 계산하지 않는다(limits·dsr 이 null).
   if (!limits || !dsr || limits.finalLimit === null) {
@@ -15,7 +16,7 @@ export default function LimitBreakdown({ result, requestedAmount }: { result: Sc
   }
   const rows: { code: string; label: string; basis: string; value: number | null }[] = [
     limits.ltvCap !== null
-      ? { code: "LIMIT-LTV", label: "담보(LTV 90%)", basis: "차량가 × 0.9, 원 미만 절사", value: limits.ltvCap }
+      ? { code: "LIMIT-LTV", label: ltvRate !== null ? `담보(LTV ${ltvRate}%)` : "담보(LTV)", basis: `차량가 × ${ltvRate !== null ? `${ltvRate}%` : "상품 LTV"}, 원 미만 절사`, value: limits.ltvCap }
       : { code: "LIMIT-PRODUCT", label: "상품 최대", basis: "상품이 정한 최대 금액", value: limits.productCap },
     { code: "LIMIT-INCOME", label: "소득배수", basis: `연소득 × 밴드 ${result.creditBand ?? "—"} 배수`, value: limits.incomeCap },
     { code: "LIMIT-DSR", label: "DSR 역산", basis: `허용 연 원리금 = 연소득 × ${dsr.limit}% − 기존 ${won(dsr.existingAnnual)} → 월 여유로 역산한 최대 원금, 만 원 절사`, value: limits.dsrCap },

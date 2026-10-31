@@ -209,6 +209,8 @@ export interface ScreeningRequest {
   vehicleValue?: Money | null;
   /** 기준일(나이 계산) */
   asOf: DateString;
+  /** 고용형태(WP23). 고용 조건이 있는 상품(직장인 신용대출)의 ELIG-EMPLOYMENT·우대에만 쓴다. 없으면 그 상품은 자격 미충족 */
+  employmentType?: EmploymentType | null;
 }
 export interface ScreeningReason {
   orderNo: number;

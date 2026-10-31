@@ -23,7 +23,7 @@ const BINDING_LABEL: Record<string, string> = {
   "LIMIT-PRODUCT": "상품 최대 금액",
   "LIMIT-INCOME": "소득배수 한도",
   "LIMIT-DSR": "DSR 한도",
-  "LIMIT-LTV": "담보(LTV 90%) 한도",
+  "LIMIT-LTV": "담보(LTV) 한도",
 };
 
 /**
@@ -126,7 +126,7 @@ export default function ApplicationPage() {
             {a.screening.rate && a.screening.limits ? (
               <>
                 <RateBreakdown result={a.screening} autoDebit={a.autoDebit} monthlyPayment={a.screening.monthlyPayment} />
-                <LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} />
+                <LimitBreakdown result={a.screening} requestedAmount={a.requestedAmount} ltvRate={a.product.ltvRate} />
               </>
             ) : (
               <p className="application-note is-danger">자격 단계에서 걸려 금리·한도는 계산하지 않았어요. 아래 근거 표에서 걸린 규칙을 확인해요.</p>

@@ -19,14 +19,14 @@ export const METHOD_DESCRIPTION: Record<RepaymentMethod, string> = {
 export const METHODS: RepaymentMethod[] = ["EQUAL_PAYMENT", "EQUAL_PRINCIPAL", "BULLET"];
 export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = { EMPLOYEE: "근로소득자", SELF_EMPLOYED: "자영업자", FREELANCER: "프리랜서", NONE: "소득 활동 없음" };
 export const RULE_LABEL: Record<string, string> = {
-  "ELIG-AGE": "자격 · 연령", "ELIG-INCOME": "자격 · 소득", "ELIG-SCORE": "자격 · 신용점수", "ELIG-PRODUCT": "자격 · 상품 범위",
+  "ELIG-AGE": "자격 · 연령", "ELIG-INCOME": "자격 · 소득", "ELIG-SCORE": "자격 · 신용점수", "ELIG-PRODUCT": "자격 · 상품 범위", "ELIG-EMPLOYMENT": "자격 · 고용형태",
   "RATE-BAND": "금리 · 신용 밴드", "RATE-APPLIED": "금리 · 적용 금리",
   "LIMIT-PRODUCT": "한도 · 상품 최대", "LIMIT-LTV": "한도 · 담보(LTV)", "LIMIT-INCOME": "한도 · 소득배수", "LIMIT-DSR": "한도 · DSR 역산", "LIMIT-FINAL": "한도 · 최종 한도",
   "DSR-RATIO": "DSR 비율", DECISION: "결정",
 };
 export const REASON_CODE_LABEL: Record<string, string> = {
   AGE_UNDER_19: "만 19세 미만", INCOME_MISSING: "소득 없음", CREDIT_SCORE_LOW: "신용점수 미달", PRODUCT_CONSTRAINT: "상품 범위 밖",
-  LIMIT_REDUCED: "한도 축소", DSR_EXCEEDED: "DSR 초과", LIMIT_BELOW_MIN: "한도가 상품 최소 미만",
+  LIMIT_REDUCED: "한도 축소", DSR_EXCEEDED: "DSR 초과", LIMIT_BELOW_MIN: "한도가 상품 최소 미만", EMPLOYMENT_NOT_ELIGIBLE: "고용형태 조건 미충족",
 };
 export const ROW_STATUS_LABEL: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "danger" }> = {
   SCHEDULED: { label: "예정", tone: "neutral" }, PAID: { label: "납입", tone: "good" }, OVERDUE: { label: "미납", tone: "danger" }, PARTIAL: { label: "일부 납입", tone: "warn" },
