@@ -13,7 +13,7 @@ import { COURSE_PARTS } from "./links";
 import { useLoad } from "./useLoad";
 
 /**
- * 내 학습(S-10). 완료 n/12 · 개념별 최고점·완료·마지막 시도 · 오답 문항 다시 보기(S-03의 해당 문항으로 스크롤) · 다음 추천.
+ * 내 학습(S-10). 완료 n/전체(16) · 개념별 최고점·완료·마지막 시도 · 오답 문항 다시 보기(S-03의 해당 문항으로 스크롤) · 다음 추천.
  * 로그인 전용(App.tsx 의 ProtectedRoute). 개념 순서·요약은 /learning/concepts 에서 받는다.
  */
 export default function MyLearningPage() {
@@ -106,7 +106,7 @@ export default function MyLearningPage() {
                     <Link className="btn btn-primary btn-small learn-panel-action" to={`/learn/${next.id}`}>이 개념 읽기 <Icon name="next" size={15} /></Link>
                   </>
                 ) : (
-                  <p className="muted">12개 개념을 모두 완료했어요. 샌드박스에서 대출 한 건의 생애를 직접 겪어 봐요.</p>
+                  <p className="muted">{data.totalCount}개 개념을 모두 완료했어요. 샌드박스에서 대출 한 건의 생애를 직접 겪어 봐요.</p>
                 )}
               </div>
             </aside>
