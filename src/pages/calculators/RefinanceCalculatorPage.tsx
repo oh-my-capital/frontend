@@ -112,7 +112,7 @@ export default function RefinanceCalculatorPage() {
                     <RateInput label="연이율" value={oldRate} onChange={setOldRate} required error={fieldError.oldRate} />
                     <NumberField label="잔존 회차" value={remaining} onChange={setRemaining} min={1} max={120} unit="회" error={fieldError.remaining} />
                     <SelectField label="상환 방식" value={oldMethod} options={methodOptions} onChange={setOldMethod} />
-                    <RateInput label="중도상환수수료율" value={feeRate} onChange={setFeeRate} required max={10} error={fieldError.feeRate} hint="신용대출 0.70%, 자동차 할부 1.50%" />
+                    <RateInput label="중도상환수수료율" value={feeRate} onChange={setFeeRate} required max={10} error={fieldError.feeRate} hint="신용대출 0.70%, 자동차 할부 1.50%." />
                     <DateField label="실행일" value={startDate} onChange={setStartDate} error={fieldError.startDate} hint="3년이 지나면 수수료 면제" />
                   </div>
                 </fieldset>

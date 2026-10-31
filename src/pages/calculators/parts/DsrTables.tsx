@@ -13,7 +13,7 @@ function basisText(d: DsrDebtService, years: number): string {
   return d.remainingMonths < 12 ? `남은 ${d.remainingMonths}회 납입 합` : "향후 12회 납입 합";
 }
 
-/** 건별 연 원리금 표: 잔액·금리·잔존·방식 → 연 원금·연 이자·연 원리금·근거, 합계 줄. 열이 많아 .table-scroll 안에 둔다. */
+/** 건별 연 원리금 표: 대출(금리·방식·잔존) → 잔액·연 원금·연 이자·연 원리금·근거, 합계 줄. 모바일은 대출·잔액·연 원리금 3열만 둔다. */
 export function DsrDebtTable({ result }: { result: DsrResult }) {
   return (
     <div className="table-scroll">
@@ -26,28 +26,24 @@ export function DsrDebtTable({ result }: { result: DsrResult }) {
         </caption>
         <thead>
           <tr>
-            <th scope="col">대출</th>
+            <th scope="col">대출 · 방식</th>
             <th scope="col" className="num">잔액</th>
-            <th scope="col" className="num">금리 · 잔존</th>
-            <th scope="col">방식</th>
-            <th scope="col" className="num">연 원금</th>
-            <th scope="col" className="num">연 이자</th>
+            <th scope="col" className="num hide-sm">연 원금</th>
+            <th scope="col" className="num hide-sm">연 이자</th>
             <th scope="col" className="num">연 원리금</th>
-            <th scope="col">근거</th>
+            <th scope="col" className="hide-sm">근거</th>
           </tr>
         </thead>
         <tbody>
-          {result.debts.length === 0 && <tr><td colSpan={8} className="faint">기존 대출이 없다. 연 원리금 합은 0원이다.</td></tr>}
+          {result.debts.length === 0 && <tr><td colSpan={6} className="faint">기존 대출이 없다. 연 원리금 합은 0원이다.</td></tr>}
           {result.debts.map(d => (
             <tr key={d.index}>
-              <th scope="row">{d.index} · {DEBT_TYPE_LABEL[d.type]}</th>
+              <th scope="row">{d.index} · {DEBT_TYPE_LABEL[d.type]}<span className="dsr-sub">{pct(d.annualRate)} · {METHOD_LABEL[d.repaymentMethod]} · 잔존 {d.remainingMonths}개월</span></th>
               <td className="num"><Money value={d.balance} /></td>
-              <td className="num">{pct(d.annualRate)} · {d.remainingMonths}개월</td>
-              <td>{METHOD_LABEL[d.repaymentMethod]}</td>
-              <td className="num">{formatNumber(d.annualPrincipal)}</td>
-              <td className="num">{formatNumber(d.annualInterest)}</td>
+              <td className="num hide-sm">{formatNumber(d.annualPrincipal)}</td>
+              <td className="num hide-sm">{formatNumber(d.annualInterest)}</td>
               <td className="num"><Money value={d.annualDebtService} strong /></td>
-              <td className="dsr-basis">{basisText(d, result.bulletPrincipalYears)}</td>
+              <td className="dsr-basis hide-sm">{basisText(d, result.bulletPrincipalYears)}</td>
             </tr>
           ))}
         </tbody>
@@ -55,11 +51,10 @@ export function DsrDebtTable({ result }: { result: DsrResult }) {
           <tr>
             <th scope="row">합계</th>
             <td className="num"><Money value={result.debts.reduce((s, d) => s + d.balance, 0)} /></td>
-            <td colSpan={2} />
-            <td className="num">{formatNumber(result.debts.reduce((s, d) => s + d.annualPrincipal, 0))}</td>
-            <td className="num">{formatNumber(result.debts.reduce((s, d) => s + d.annualInterest, 0))}</td>
+            <td className="num hide-sm">{formatNumber(result.debts.reduce((s, d) => s + d.annualPrincipal, 0))}</td>
+            <td className="num hide-sm">{formatNumber(result.debts.reduce((s, d) => s + d.annualInterest, 0))}</td>
             <td className="num"><Money value={result.totalAnnualDebtService} strong /></td>
-            <td>연소득의 {pct(result.dsrRatio)}</td>
+            <td className="hide-sm">연소득의 {pct(result.dsrRatio)}</td>
           </tr>
         </tfoot>
       </table>
@@ -80,14 +75,14 @@ export function DsrLimitTable({ result }: { result: DsrResult }) {
           </span>
         </caption>
         <thead>
-          <tr><th scope="col">상환 방식</th><th scope="col" className="num">추가 한도</th><th scope="col" className="num">새 대출 연 원리금</th><th scope="col" className="num">빌린 뒤 DSR</th></tr>
+          <tr><th scope="col">상환 방식</th><th scope="col" className="num">추가 한도</th><th scope="col" className="num hide-sm">새 대출 연 원리금</th><th scope="col" className="num">빌린 뒤 DSR</th></tr>
         </thead>
         <tbody>
           {result.limits.map(l => (
             <tr key={l.repaymentMethod} className={l.requested ? "is-current" : undefined}>
               <th scope="row">{METHOD_LABEL[l.repaymentMethod]}{l.requested && <> <StatusChip label="선택한 방식" tone="info" /></>}</th>
               <td className="num"><Money value={l.limit} strong={l.requested} /></td>
-              <td className="num">{formatNumber(l.newAnnualDebtService)}</td>
+              <td className="num hide-sm">{formatNumber(l.newAnnualDebtService)}</td>
               <td className="num">{pct(l.dsrAfter)}</td>
             </tr>
           ))}

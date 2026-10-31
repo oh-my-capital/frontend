@@ -1,11 +1,26 @@
 import { useId } from "react";
 import type { RefinanceRow } from "../../../api/refinance";
-import { ChartShell, axisTicks, labelStep, shortMoney } from "../../../components/charts/chartShell";
+import { ChartShell, labelStep, shortMoney } from "../../../components/charts/chartShell";
 import { formatNumber } from "../../../lib/format";
 
 const W = 660;
 const H = 250;
 const PAD = { top: 24, right: 24, bottom: 36, left: 72 };
+
+/**
+ * 0을 지나는 눈금. 누적 절감은 음수가 될 수 있어 chartShell.axisTicks(0~최대)를 쓰지 않고,
+ * (최댓값 − 최솟값) ÷ 4 를 1·2·2.5·5·10 × 10ⁿ 으로 올린 간격으로 최솟값 아래~최댓값 위까지 같은 간격 눈금을 만든다.
+ */
+function signedTicks(min: number, max: number): { bottom: number; top: number; ticks: number[] } {
+  const raw = Math.max(max - min, 1) / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = magnitude * ([1, 2, 2.5, 5, 10].find(m => raw <= magnitude * m) ?? 10);
+  const bottom = Math.floor(min / step) * step;
+  const top = Math.max(Math.ceil(max / step) * step, bottom + step);
+  const ticks: number[] = [];
+  for (let t = bottom; t <= top + step / 2; t += step) ticks.push(Math.round(t));
+  return { bottom, top, ticks };
+}
 
 /**
  * 누적 이자 절감(선) vs 갈아타기 비용(가로 점선) + 손익분기 회차(세로 기준선·점). 인라인 SVG, ChartShell 규칙(범례·요약·값 표).
@@ -16,10 +31,7 @@ export default function RefinanceSavingChart({ rows, cost, breakeven }: { rows: 
   const id = useId();
   const points = [{ no: 0, cum: 0 }, ...rows.map(r => ({ no: r.installmentNo, cum: r.cumulativeSaving }))];
   const values = points.map(p => p.cum);
-  const { top, ticks: upper } = axisTicks(Math.max(cost, ...values, 1));
-  const lowest = Math.min(0, ...values);
-  const bottom = lowest < 0 ? -axisTicks(-lowest).top : 0;
-  const ticks = bottom < 0 ? [bottom, ...upper] : upper;
+  const { bottom, top, ticks } = signedTicks(Math.min(0, ...values), Math.max(cost, ...values, 1));
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (points.length <= 1 ? innerW / 2 : (innerW * i) / (points.length - 1));
