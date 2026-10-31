@@ -49,6 +49,9 @@ import NoticePage from "./pages/support/NoticePage";
 import NoticesPage from "./pages/support/NoticesPage";
 import RightsPage from "./pages/support/RightsPage";
 import SupportHomePage from "./pages/support/SupportHomePage";
+// WP23 — 상품 안내·대표 예시
+import ProductDetailPage from "./pages/products/ProductDetailPage";
+import ProductsPage from "./pages/products/ProductsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -74,6 +77,10 @@ export default function App() {
           {/* WP20 — 학습 미션(목록·상세 공개, 진행 저장은 로그인) */}
           <Route path="/missions" element={<MissionsPage />} />
           <Route path="/missions/:id" element={<MissionPage />} />
+
+          {/* WP23 — 상품 안내·대표 예시 */}
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:code" element={<ProductDetailPage />} />
 
           <Route path="/calculators" element={<Navigate to="/calculators/schedule" replace />} />
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />

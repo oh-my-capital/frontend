@@ -1,0 +1,62 @@
+/*
+ * 상품 안내(S-230 목록, S-231 상세, WP23).
+ * 토큰은 tokens.css, 공용 조각은 base.css(.figure-row .tabs .table .section-head .panel .disclosure …)를 그대로 쓴다.
+ * 이 파일에는 색·글자 크기·간격 리터럴을 적지 않는다(ui-guidelines §2).
+ */
+
+.products .page-grid { margin-top: var(--sp-6); }
+.products-main { min-width: 0; display: grid; gap: var(--sp-9); }
+.products-main > *, .products-main section > * { min-width: 0; }
+
+/* 교육용 모의 상품 고지: 황토 왼쪽 선 + 보조 면. 화면마다 맨 위에 한 번. */
+.products-notice { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); margin: 0; padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--accent-line); border-left: var(--rule-accent) solid var(--accent); background: var(--accent-tint); color: var(--text); font-size: var(--fs-base); line-height: var(--lh-body); }
+.products-notice strong { color: var(--accent-strong); font-weight: var(--fw-bold); white-space: nowrap; }
+
+.products-figures { margin-top: var(--sp-5); }
+.products-figures .products-figure-text .money { font-size: var(--fs-h2); }
+
+/* 표 공통. 표 안의 .sr-only(절대 위치)가 가로 스크롤 상자를 벗어나 페이지를 넓히지 않도록 스크롤 상자를 기준 상자로 둔다(375px 넘침 0). */
+.products .table-scroll { position: relative; }
+.products-table th[scope='row'], .products-conditions th[scope='row'], .products-example th[scope='row'] { min-width: 0; }
+.products-conditions th[scope='row'], .products-example th[scope='row'], .products-discounts th[scope='row'] { white-space: nowrap; font-weight: var(--fw-semibold); }
+.products-name { font-size: var(--fs-body); font-weight: var(--fw-bold); }
+/* 상품 열은 이름·대상 문장이 한 글자씩 꺾이지 않을 만큼 넓게(토큰 배수), 한도는 "최소 ~"·"최대" 두 덩어리로만 줄바꿈. */
+.products-table tbody th[scope='row'] { min-width: calc(var(--sp-12) * 2); }
+.products-amount span { white-space: nowrap; }
+.products-sub { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+td.num .products-sub { text-align: right; }
+.products-nowrap { white-space: nowrap; }
+.products-more { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--touch); font-weight: var(--fw-semibold); white-space: nowrap; }
+.products-figure { font-size: var(--fs-h3); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.products-conditions td, .products-example td { line-height: var(--lh-body); }
+.products-example td.num { white-space: normal; }
+.products-category-note { margin: 0 0 var(--sp-3); color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
+
+/* 대표 예시 아래 행동: 계산기·모의 신청. */
+.products-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-top: var(--sp-4); }
+.products-actions .faint { font-size: var(--fs-caption); }
+
+/* 필요 조건·유의사항 목록 */
+.products-list { display: grid; gap: var(--sp-2); margin: 0; padding-left: var(--sp-6); font-size: var(--fs-base); line-height: var(--lh-body); }
+.products-list li::marker { color: var(--accent); font-weight: var(--fw-bold); }
+.products-notes { padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-8); border: var(--rule) solid var(--border); background: var(--surface-soft); }
+
+/* 대표 예시 산정 기준 */
+.products-basis > h2 { font-size: var(--fs-h3); padding-bottom: var(--sp-2); border-bottom: var(--rule) solid var(--border); }
+.products-basis > p { margin: var(--sp-3) 0; color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-body); }
+.products-basis .def-list { font-size: var(--fs-small); }
+.products-basis .def-list dd { line-height: var(--lh-body); }
+
+/* 보조 열 */
+.products-howto { font-size: var(--fs-small); }
+.products-howto dd { line-height: var(--lh-body); }
+.products-aside-text { margin: var(--sp-2) 0 0; font-size: var(--fs-small); line-height: var(--lh-body); }
+.products-links { display: grid; margin: 0; padding: 0; list-style: none; font-size: var(--fs-base); }
+.products-links li + li { border-top: var(--rule) solid var(--border-soft); }
+.products-links a { display: flex; align-items: center; min-height: var(--touch); padding: var(--sp-1) 0; font-weight: var(--fw-semibold); }
+
+@media (max-width: 740px) {
+  .products-main { gap: var(--sp-8); }
+  .products-conditions th[scope='row'], .products-example th[scope='row'], .products-discounts th[scope='row'] { white-space: normal; }
+  .products-notes { padding-left: var(--sp-7); }
+}
