@@ -152,6 +152,7 @@ export default function SandboxPage() {
           <Link to="/sandbox/apply">대출 신청 <Icon name="next" size={16} /></Link>
           <Link to="/sandbox/notifications">알림함 <Icon name="next" size={16} /></Link>
           <SelfServiceLinks />
+          <Link to="/sandbox/scenarios">시나리오로 시작 <Icon name="next" size={16} /></Link>
           <Link to="/learn/delinquency-and-overdue-interest">개념 9 · 연체와 연체이자 <Icon name="next" size={16} /></Link>
         </nav>
       </main>
