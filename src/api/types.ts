@@ -13,7 +13,11 @@ export type ReasonOutcome = "PASS" | "FAIL" | "INFO";
 export type LinkedCalculator = "schedule" | "screening" | "prepayment";
 export type EmploymentType = "EMPLOYEE" | "SELF_EMPLOYED" | "FREELANCER" | "NONE";
 export type ApplicationStatus = "APPLIED" | "APPROVED" | "CONDITIONAL" | "REJECTED" | "CANCELLED" | "EXECUTED";
-export type ContractStatus = "ACTIVE" | "OVERDUE" | "DEFAULTED" | "PAID_OFF";
+/** WITHDRAWN = 청약철회로 끝난 계약(WP19). PAID_OFF 와 함께 종료 상태다. */
+export type ContractStatus = "ACTIVE" | "OVERDUE" | "DEFAULTED" | "PAID_OFF" | "WITHDRAWN";
+
+/** 종료된 계약(완제·청약철회)인가. 상환·중도상환·시간 진행 조작을 보여 주지 않는다. */
+export const isClosedStatus = (status: ContractStatus): boolean => status === "PAID_OFF" || status === "WITHDRAWN";
 export type ClockAdvanceMode = "ONE_DAY" | "NEXT_DUE_DATE" | "DAYS";
 /** 건전성 분류(business-rules §9). 계약은 string이지만 화면 라벨을 위해 알려진 값을 적어 둔다. */
 export type AssetClass = "NORMAL" | "PRECAUTIONARY" | "SUBSTANDARD" | "DOUBTFUL" | "ESTIMATED_LOSS";

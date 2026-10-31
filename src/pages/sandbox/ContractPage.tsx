@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { sandboxApi } from "../../api/sandbox";
-import type { Contract, ContractEvent, PrepaymentQuote, Provision, Sandbox, ScheduleRow, Transaction } from "../../api/types";
+import { isClosedStatus, type Contract, type ContractEvent, type PrepaymentQuote, type Provision, type Sandbox, type ScheduleRow, type Transaction } from "../../api/types";
 import Disclosure from "../../components/Disclosure";
 import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
@@ -110,6 +110,7 @@ export default function ContractPage() {
   const daysToDue = c.nextDueDate && c.nextDueDate >= s.businessDate ? daysBetween(s.businessDate, c.nextDueDate) + 1 : null;
   const repaidPrincipal = Math.max(0, c.principal - c.outstandingPrincipal);
   const repaidShare = c.principal > 0 ? Math.round((repaidPrincipal / c.principal) * 100) : 0;
+  const closed = isClosedStatus(c.status);
   const progressTone = c.status === "PAID_OFF" ? "good" : isOverdue ? "danger" : "primary";
 
   return (
@@ -141,14 +142,14 @@ export default function ContractPage() {
           <div className="contract-main">
             <dl className="figure-row" style={{ "--figure-cols": 4 } as CSSProperties}>
               <div><dt>잔액(남은 원금)</dt><dd><Money value={c.outstandingPrincipal} /><small>원금 {won(c.principal)} 중</small></dd></div>
-              <div><dt>다음 납입</dt><dd>{c.nextDueDate ? <>{formatDate(c.nextDueDate)}<small>{won(c.nextPayment ?? 0)}</small></> : <>없음<small>{c.status === "PAID_OFF" ? "완제" : "예정 없음"}</small></>}</dd></div>
+              <div><dt>다음 납입</dt><dd>{c.nextDueDate ? <>{formatDate(c.nextDueDate)}<small>{won(c.nextPayment ?? 0)}</small></> : <>없음<small>{c.status === "PAID_OFF" ? "완제" : c.status === "WITHDRAWN" ? "청약 철회" : "예정 없음"}</small></>}</dd></div>
               <div><dt>연체일</dt><dd className={isOverdue ? "danger" : undefined}>{c.overdueDays}일{isOverdue && <small>{c.status === "DEFAULTED" ? "기한이익상실" : "연체 중"}</small>}</dd></div>
               <div><dt>건전성 분류</dt><dd className={klass.tone === "good" ? undefined : "accent"}>{ASSET_CLASS_LABEL[c.assetClass] ?? klass.label}<small>연체 {c.overdueDays}일 기준</small></dd></div>
             </dl>
             <div className="contract-progress">
               <ProgressBar value={repaidPrincipal} total={c.principal} tone={progressTone} label={`총 원금 ${won(c.principal)} 중 ${won(repaidPrincipal)} 상환(${repaidShare}%)`} />
               <p className="progress-meta"><strong>상환 진행 {repaidShare}%</strong> <span>갚은 원금 {won(repaidPrincipal)} / 총 원금 {won(c.principal)}</span></p>
-              <p className="contract-progress-note">{c.paidInstallments} / {c.totalInstallments}회 납입 · 총 납입 {won(c.totalPaid)}(그중 이자 {won(c.totalInterestPaid)}) · {c.status === "PAID_OFF" ? "완제된 계약이에요." : isOverdue ? "연체 중이라 막대를 붉게 표시했어요. 미납분을 갚으면 다시 진행돼요." : "자동이체·수동 상환으로 원금이 줄면 막대가 차요."}</p>
+              <p className="contract-progress-note">{c.paidInstallments} / {c.totalInstallments}회 납입 · 총 납입 {won(c.totalPaid)}(그중 이자 {won(c.totalInterestPaid)}) · {c.status === "PAID_OFF" ? "완제된 계약이에요." : c.status === "WITHDRAWN" ? "청약철회로 끝난 계약이에요. 원금과 약정 이자를 돌려줘 남은 회차가 없어요." : isOverdue ? "연체 중이라 막대를 붉게 표시했어요. 미납분을 갚으면 다시 진행돼요." : "자동이체·수동 상환으로 원금이 줄면 막대가 차요."}</p>
             </div>
             <table className="table contract-summary">
               <caption>계약 요약 · 영업일 {formatDate(s.businessDate)} 기준</caption>
@@ -230,12 +231,12 @@ export default function ContractPage() {
           </div>
 
           <aside aria-label="상환과 시간 진행" className="contract-side">
-            {c.status !== "PAID_OFF" && (
+            {!closed && (
               <ClockControl compact businessDate={s.businessDate} nextDueDate={s.nextDueDate} onAdvanced={reloadAll}
                 extra={daysToDue !== null ? { label: `이 계약 다음 납입일까지(${daysToDue}일)`, request: { mode: "DAYS", days: daysToDue } } : null} />
             )}
-            {c.status !== "PAID_OFF" && <RepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
-            {c.status !== "PAID_OFF" && <PrepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
+            {!closed && <RepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
+            {!closed && <PrepayPanel contract={c} balance={s.settlementBalance} onDone={reloadAll} />}
             <RightsPanel contract={c} sandbox={s} onDone={reloadAll} />
             <DepositForm balance={s.settlementBalance} suggested={c.amountDueNow > s.settlementBalance ? c.amountDueNow - s.settlementBalance : null} onDeposited={reloadAll} />
           </aside>

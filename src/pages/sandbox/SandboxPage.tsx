@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { sandboxApi } from "../../api/sandbox";
-import type { ContractSummary, Notification, Sandbox } from "../../api/types";
+import { isClosedStatus, type ContractSummary, type Notification, type Sandbox } from "../../api/types";
 import EmptyState from "../../components/EmptyState";
 import Icon from "../../components/Icon";
 import LoadError from "../../components/LoadError";
@@ -37,7 +37,7 @@ export default function SandboxPage() {
   }
   const s = summary.data;
   const list = contracts.data ?? [];
-  const live = list.filter(c => c.status !== "PAID_OFF");
+  const live = list.filter(c => !isClosedStatus(c.status));
   const nextDue = s?.nextDueDate ?? null;
   const nextPayment = live.filter(c => c.nextDueDate === nextDue).reduce((sum, c) => sum + (c.nextPayment ?? 0), 0);
   const shortfall = s && nextPayment > s.settlementBalance ? nextPayment - s.settlementBalance : 0;
@@ -109,7 +109,7 @@ export default function SandboxPage() {
                                 <td className="num">{pct(c.contractRate)}</td>
                                 <td><ContractStatusChip status={c.status} overdueDays={c.overdueDays} /></td>
                                 <td><StatusChip label={ASSET_CLASS_LABEL[c.assetClass] ?? klass.label} tone={klass.tone} /></td>
-                                <td>{c.nextDueDate ? <>{formatDate(c.nextDueDate)}<span className="admin-sub faint"><Money value={c.nextPayment} /></span></> : c.status === "PAID_OFF" ? "완제" : "—"}</td>
+                                <td>{c.nextDueDate ? <>{formatDate(c.nextDueDate)}<span className="admin-sub faint"><Money value={c.nextPayment} /></span></> : c.status === "PAID_OFF" ? "완제" : c.status === "WITHDRAWN" ? "청약 철회" : "—"}</td>
                               </tr>
                             );
                           })}

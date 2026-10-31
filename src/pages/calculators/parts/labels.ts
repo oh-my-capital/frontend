@@ -32,13 +32,15 @@ export const ROW_STATUS_LABEL: Record<string, { label: string; tone: "neutral" |
   SCHEDULED: { label: "예정", tone: "neutral" }, PAID: { label: "납입", tone: "good" }, OVERDUE: { label: "미납", tone: "danger" }, PARTIAL: { label: "일부 납입", tone: "warn" },
 };
 /** 거래 종류(Transaction.type). */
-export const TX_TYPE_LABEL: Record<string, string> = { AUTO_DEBIT: "자동이체", MANUAL: "수동 상환", PREPAYMENT_FULL: "전액 중도상환", PREPAYMENT_PARTIAL: "일부 중도상환" };
+export const TX_TYPE_LABEL: Record<string, string> = { AUTO_DEBIT: "자동이체", MANUAL: "수동 상환", PREPAYMENT_FULL: "전액 중도상환", PREPAYMENT_PARTIAL: "일부 중도상환", WITHDRAWAL: "청약철회 반환" };
 /** 결제계좌 원장 종류(LedgerEntry.type). */
-export const LEDGER_TYPE_LABEL: Record<string, string> = { DEPOSIT: "입금", LOAN_DISBURSEMENT: "대출 실행 입금", AUTO_DEBIT: "자동이체 출금", MANUAL_REPAYMENT: "수동 상환 출금", PREPAYMENT: "중도상환 출금" };
+export const LEDGER_TYPE_LABEL: Record<string, string> = { DEPOSIT: "입금", LOAN_DISBURSEMENT: "대출 실행 입금", AUTO_DEBIT: "자동이체 출금", MANUAL_REPAYMENT: "수동 상환 출금", PREPAYMENT: "중도상환 출금", WITHDRAWAL: "청약철회 반환 출금" };
 export const NOTIFICATION_TYPE_LABEL: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "danger" }> = {
   PAYMENT_DUE_SOON: { label: "납입 예정", tone: "warn" }, PAYMENT_COMPLETED: { label: "납입 완료", tone: "good" },
   OVERDUE_STARTED: { label: "연체", tone: "danger" }, ACCELERATION_NOTICE: { label: "상실 예정", tone: "danger" }, ACCELERATED: { label: "기한이익상실", tone: "danger" }, PAID_OFF: { label: "완제", tone: "neutral" },
 };
+/** 금리인하요구 거절 사유(WP19 rate_cut_requests.reason_code). */
+export const RATE_CUT_REASON_LABEL: Record<string, string> = { NOT_ELIGIBLE: "자격 미충족", NO_IMPROVEMENT: "금리 개선 없음", BELOW_MIN_REDUCTION: "인하 폭 부족" };
 export const ASSET_CLASS_LABEL: Record<string, string> = { NORMAL: "정상", PRECAUTIONARY: "요주의", SUBSTANDARD: "고정", DOUBTFUL: "회수의문", ESTIMATED_LOSS: "추정손실" };
 
 export const PAYMENT_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: `매월 ${i + 1}일` }));
@@ -106,6 +108,9 @@ export function eventTitle(e: ContractEvent): string {
     case "PAID_OFF": return "완제";
     case "DEFERMENT_APPLIED": return "원금 상환 유예 적용"; // WP18
     case "MATURITY_EXTENDED": return "만기 연장 적용"; // WP18
+    case "WITHDRAWN": return "청약철회"; // WP19
+    case "RATE_CUT_ACCEPTED": return "금리인하요구 수락"; // WP19
+    case "RATE_CUT_REJECTED": return "금리인하요구 거절"; // WP19
     default: return e.type;
   }
 }
@@ -136,6 +141,9 @@ export function describeEvent(e: ContractEvent): string {
     case "PAID_OFF": return `완제(총 납입 ${amount}${typeof d.totalInterest === "number" ? `, 총 이자 ${won(d.totalInterest)}` : ""})`;
     case "DEFERMENT_APPLIED": return `원금 상환 유예 ${String(d.months ?? "")}개월 · ${typeof d.interestOnlyPayment === "number" ? `${String(d.interestOnlyInstallments ?? "")}회 이자만 ${won(d.interestOnlyPayment)} · ` : ""}이후 월 ${won(Number(d.monthlyPaymentAfter ?? 0))}(전 ${won(Number(d.monthlyPaymentBefore ?? 0))}) · 만기 ${String(d.maturityDateAfter ?? "")} 그대로`; // WP18
     case "MATURITY_EXTENDED": return `만기 연장 ${String(d.months ?? "")}개월 · 만기 ${String(d.maturityDateBefore ?? "")} → ${String(d.maturityDateAfter ?? "")} · 월 ${won(Number(d.monthlyPaymentBefore ?? 0))} → ${won(Number(d.monthlyPaymentAfter ?? 0))}`; // WP18
+    case "WITHDRAWN": return `청약철회 · 반환 ${amount}${typeof d.principal === "number" ? `(원금 ${won(d.principal)}` : ""}${typeof d.netInterest === "number" ? ` · 순 이자 ${won(d.netInterest)}` : ""}${typeof d.principal === "number" ? ")" : ""} · 중도상환수수료 없음${typeof d.elapsedDays === "number" ? ` · 실행 후 ${d.elapsedDays}일째` : ""}`; // WP19
+    case "RATE_CUT_ACCEPTED": return `금리인하요구 수락 · 연 ${typeof d.previousRate === "number" ? pct(d.previousRate) : "—"} → ${typeof d.recomputedRate === "number" ? pct(d.recomputedRate) : "—"}${typeof d.newPayment === "number" ? ` · 월 ${won(Number(d.previousPayment ?? 0))} → ${won(d.newPayment)}` : ""}`; // WP19
+    case "RATE_CUT_REJECTED": return `금리인하요구 거절${d.reasonCode ? `(${RATE_CUT_REASON_LABEL[String(d.reasonCode)] ?? String(d.reasonCode)})` : ""}${typeof d.previousRate === "number" ? ` · 현재 연 ${pct(d.previousRate)} 유지` : ""}`; // WP19
     default: return e.type;
   }
 }
