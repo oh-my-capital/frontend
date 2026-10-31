@@ -1,9 +1,11 @@
 import type { CSSProperties } from "react";
 import type { RemixiconComponentType } from "@remixicon/react";
 import {
-  RiAddLine, RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine, RiBankLine, RiBook2Line, RiCalculatorLine, RiCalendarLine,
-  RiCheckLine, RiCloseLine, RiErrorWarningLine, RiFileListLine, RiInformationLine, RiLockLine, RiNotification3Line, RiPauseLine,
-  RiPlayFill, RiSearchLine, RiSettings3Line, RiTimeLine, RiUserLine, RiWalletLine,
+  RiAddLine, RiArrowDownSLine, RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine, RiArrowUpLine, RiBankLine, RiBook2Line,
+  RiCalculatorLine, RiCalendarCheckLine, RiCalendarLine, RiCarLine, RiCheckLine, RiClapperboardLine, RiCloseLine, RiErrorWarningLine,
+  RiFileAddLine, RiFileList3Line, RiFileListLine, RiHome4Line, RiInformationLine, RiLockLine, RiMegaphoneLine, RiMenuLine,
+  RiNotification3Line, RiPauseLine, RiPlayFill, RiQuestionLine, RiSearchLine, RiSettings3Line, RiShieldCheckLine, RiTimeLine,
+  RiUserLine, RiWalletLine,
 } from "@remixicon/react";
 
 /**
@@ -12,7 +14,9 @@ import {
  */
 export type IconName =
   | "arrow" | "next" | "prev" | "plus" | "check" | "close" | "search" | "pause" | "play"
-  | "book" | "calculator" | "bank" | "wallet" | "calendar" | "time" | "list" | "alert" | "info" | "lock" | "user" | "settings" | "bell";
+  | "book" | "calculator" | "bank" | "wallet" | "calendar" | "time" | "list" | "alert" | "info" | "lock" | "user" | "settings" | "bell"
+  // v3(WP15): 머리·홈 주요 업무 줄
+  | "menu" | "down" | "up" | "home" | "shield" | "question" | "notice" | "car" | "apply" | "contract" | "calendarCheck" | "scene";
 
 const ICONS: Record<IconName, RemixiconComponentType> = {
   arrow: RiArrowRightLine,
@@ -37,6 +41,18 @@ const ICONS: Record<IconName, RemixiconComponentType> = {
   user: RiUserLine,
   settings: RiSettings3Line,
   bell: RiNotification3Line,
+  menu: RiMenuLine,
+  down: RiArrowDownSLine,
+  up: RiArrowUpLine,
+  home: RiHome4Line,
+  shield: RiShieldCheckLine,
+  question: RiQuestionLine,
+  notice: RiMegaphoneLine,
+  car: RiCarLine,
+  apply: RiFileAddLine,
+  contract: RiFileList3Line,
+  calendarCheck: RiCalendarCheckLine,
+  scene: RiClapperboardLine,
 };
 
 export default function Icon({ name, size = 18, style, className }: { name: IconName; size?: number; style?: CSSProperties; className?: string }) {

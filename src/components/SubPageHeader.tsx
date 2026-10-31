@@ -1,17 +1,11 @@
 import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
-
-/** 같은 묶음 화면으로 가는 탭(ui-guidelines §5 하위 화면). */
-export const SECTIONS = {
-  learn: { label: "배우기", links: [{ to: "/course", label: "입문 과정" }, { to: "/glossary", label: "용어 사전" }, { to: "/methodology", label: "방법론" }, { to: "/me/learning", label: "내 학습" }] },
-  calculators: { label: "계산기", links: [{ to: "/calculators/schedule", label: "상환 스케줄" }, { to: "/calculators/screening", label: "심사 시뮬레이터" }, { to: "/calculators/prepayment", label: "중도상환 견적" }] },
-  sandbox: { label: "모의 여신", links: [{ to: "/sandbox", label: "현황" }, { to: "/sandbox/profile", label: "가상 고객 프로필" }, { to: "/sandbox/apply", label: "대출 신청" }, { to: "/sandbox/notifications", label: "알림함" }] },
-  admin: { label: "운영", links: [{ to: "/admin/applications", label: "심사 큐" }, { to: "/admin/portfolio", label: "포트폴리오" }, { to: "/admin/content", label: "콘텐츠" }, { to: "/admin/batch", label: "배치" }] },
-  account: { label: "계정", links: [{ to: "/settings", label: "계정 설정" }] },
-} as const;
+import Icon from "./Icon";
+import { SUBPAGE_SECTIONS, type SubPageSection, type SubPageSectionKey } from "./nav";
 
 type Props = {
-  section: keyof typeof SECTIONS;
+  /** 묶음 키(learn·calculators·sandbox·admin·account, v3에서 products·support 추가). 목록은 nav.ts SUBPAGE_SECTIONS. */
+  section: SubPageSectionKey;
   /** 탭 중 현재 화면의 경로. 상세 화면이면 상위 목록의 경로. */
   current: string;
   title: string;
@@ -24,22 +18,30 @@ type Props = {
   tabs?: boolean;
 };
 
-/** 하위 화면 머리: 현재 위치, 큰 제목 + 한 줄 설명, 같은 묶음 탭. */
+/**
+ * 하위 화면 머리(디자인 v3, rea-capital-sites.md §4.4): 흰 위치 표시 띠(홈 > 1단 메뉴 > 화면) → 제목 띠(큰 제목 + 설명 + 행동) → 같은 묶음 탭.
+ * 탭·위치 표시는 nav.ts 에서 만든다 — 메뉴에 화면을 더하면 여기에 저절로 생긴다. 탭이 하나뿐인 묶음은 탭 줄을 그리지 않는다.
+ * props 는 v2와 같다(하위 호환).
+ */
 export default function SubPageHeader({ section, current, title, description, meta, actions, detail, tabs = true }: Props) {
-  const group = SECTIONS[section];
+  const group: SubPageSection = SUBPAGE_SECTIONS[section];
   const currentLabel = group.links.find(link => link.to === current)?.label ?? title;
+  const showTabs = tabs && group.links.length > 1;
+  const showGroupCrumb = group.to !== current || !!detail;
   return (
     <div className="subpage-head">
-      <div className="subpage-inner">
-        <nav className="crumbs" aria-label="현재 위치">
+      <div className="subpage-crumbs">
+        <nav className="subpage-inner crumbs" aria-label="현재 위치">
           <ol>
-            <li><Link to="/">홈</Link></li>
-            <li>{group.label}</li>
+            <li><Link to="/" className="crumbs-home"><Icon name="home" size={16} /><span>홈</span></Link></li>
+            {showGroupCrumb ? <li><Link to={group.to}>{group.label}</Link></li> : <li>{group.label}</li>}
             {detail
               ? <><li><Link to={current}>{currentLabel}</Link></li><li aria-current="page">{detail}</li></>
               : <li aria-current="page">{currentLabel}</li>}
           </ol>
         </nav>
+      </div>
+      <div className="subpage-inner subpage-band">
         <div className="subpage-title">
           <div>
             <h1>{title}</h1>
@@ -49,11 +51,12 @@ export default function SubPageHeader({ section, current, title, description, me
           {actions && <div className="subpage-actions">{actions}</div>}
         </div>
       </div>
-      {tabs && (
+      {showTabs && (
         <nav className="subpage-tabs" aria-label={`${group.label} 메뉴`}>
           <div className="subpage-inner">
             {group.links.map(link => (
-              <NavLink key={link.to} to={link.to} end={link.to === "/sandbox"} className={({ isActive }) => (isActive ? "is-active" : undefined)}>{link.label}</NavLink>
+              // 상세 화면(계약 상세 등)에서는 current 로 넘긴 상위 목록 탭을 켠다.
+              <NavLink key={link.to} to={link.to} end={link.to === "/sandbox" || link.to === "/support"} className={({ isActive }) => (isActive || link.to === current ? "is-active" : undefined)}>{link.label}</NavLink>
             ))}
           </div>
         </nav>

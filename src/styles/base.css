@@ -1,5 +1,5 @@
 /*
- * 기반 스타일: 리셋·타이포그래피·버튼·입력·표·상태 chip·공용 조각(탭·진척 막대·지표 줄·그림 틀).
+ * 기반 스타일(디자인 v3): 리셋·타이포그래피·버튼·입력·표·상태 chip·공용 조각(탭·진척 막대·지표 줄·그림 틀)·본문 바로가기.
  * 화면별 규칙은 styles/<영역>.css에 둔다.
  * 원칙(docs/design/ui-guidelines.md): 종이색 배경, border-radius 0, 1px 실선 테두리, 전환 0.15~0.18s, 글자 최소 12px(그림 축만).
  * 색·크기·간격 리터럴을 여기에 새로 적지 않는다. tokens.css에 토큰을 만들어 쓴다.
@@ -71,7 +71,12 @@ ul, ol { margin: 0; padding-left: 22px; }
 
 /* 레이아웃: 콘텐츠 폭 min(100% − 64px, 1200px), 모바일 calc(100% − 40px). */
 .app-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
-.app-page > main { flex: 1; }
+/* v3: 본문은 #main-content(.app-main) 안에 들어간다. 본문 바로가기의 도착점이라 tabIndex=-1, 포커스 외곽선은 그리지 않는다. */
+.app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.app-main > main { flex: 1; }
+.app-main:focus { outline: none; }
+.skip-link { position: absolute; top: var(--sp-2); left: var(--sp-4); z-index: var(--z-skip); padding: var(--sp-3) var(--sp-4); background: var(--primary); color: var(--text-on-primary); font-weight: var(--fw-bold); transform: translateY(calc(-100% - var(--sp-4))); }
+.skip-link:focus { transform: none; color: var(--text-on-primary); }
 .content { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; }
 .page-main { width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding: var(--sp-8) 0 var(--sp-11); }
 .page-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--aside-w); gap: var(--sp-8); align-items: start; }
@@ -93,7 +98,7 @@ ul, ol { margin: 0; padding-left: 22px; }
 .forbidden-panel .btn-row { margin-top: var(--sp-5); }
 .stack { display: grid; gap: var(--sp-4); }
 .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-5); padding-bottom: 14px; margin-bottom: var(--sp-5); border-bottom: var(--rule-heavy) solid var(--text); }
-.section-head h2 { font-size: 24px; }
+.section-head h2 { font-size: var(--fs-section); }
 .section-head p { margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-small); }
 .section-head > a { display: inline-flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; min-height: var(--touch); color: var(--text-muted); font-size: var(--fs-base); font-weight: var(--fw-semibold); }
 .section-head > a:hover { color: var(--primary); }
@@ -282,7 +287,7 @@ ul, ol { margin: 0; padding-left: 22px; }
 @media (max-width: 740px) {
   :root { --content-gutter: var(--content-gutter-sm); }
   .page-main { padding: 28px 0 var(--sp-10); }
-  h1 { font-size: 28px; }
+  h1 { font-size: var(--fs-h1-sm); }
   h2 { font-size: var(--fs-h2); }
   .panel { padding: 18px; }
   .def-list { grid-template-columns: 1fr; gap: 2px 0; }

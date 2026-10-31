@@ -1,15 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { homeApi } from "../api/home";
+import { homeApi, type HomeNotice, type HomeProduct } from "../api/home";
 import type { ConceptSummary, MyLearning, Sandbox } from "../api/types";
-import Icon from "../components/Icon";
+import Icon, { type IconName } from "../components/Icon";
 import Loading from "../components/Loading";
 import LoadError from "../components/LoadError";
 import Money from "../components/Money";
 import ProgressBar from "../components/ProgressBar";
 import StatusChip from "../components/StatusChip";
 import { useAuth } from "../context/AuthContext";
-import { formatDate, formatNumber } from "../lib/format";
+import { formatDate, formatNumber, formatRate } from "../lib/format";
 import { calculatorLink, CONCEPT_TERMS, COURSE_PARTS } from "./learn/links";
 
 /** 슬라이드 오른쪽 표의 종류. 이미지에 기대지 않고 슬라이드마다 그 주제의 실제 수치를 보여 준다. */
@@ -39,7 +39,11 @@ const ASSET_CLASS_ROWS = [
   { days: "365일~", label: "추정손실", rate: "100%", provision: 9_211_512 },
 ];
 
-/** 홈(S-01). 포털형: 배너 → 통합 검색 → 계산기 바로가기 표 → 학습 목차 12 → (로그인) 내 샌드박스 현황 표. */
+/**
+ * 홈(S-01, 디자인 v3). 시중 캐피탈 첫 화면이 수렴한 순서(docs/design/rea-capital-sites.md §3·§4.3)를 따른다:
+ * 안내 배너 → 주요 업무 줄 → (로그인) 내 모의 여신 현황 → 상품 안내 → 계산기 6종 → 배우기(검색 + 목차) → 고객센터·공지.
+ * 상품·공지는 다른 WP의 API다. 실패하면 상품은 정적 링크로 대체하고 공지는 숨긴다. 숫자는 서버·골든 예시 값만 쓴다.
+ */
 export default function HomePage() {
   const notice = (useLocation().state as { notice?: string } | null)?.notice;
   const { isAuthenticated } = useAuth();
@@ -47,13 +51,134 @@ export default function HomePage() {
     <main>
       {notice && <p className="home-notice" role="status">{notice}</p>}
       <Banner />
+      <QuickTasks />
       <div className="home-main">
-        <HomeSearch />
+        {isAuthenticated && <SandboxStatus />}
+        <ProductSection />
         <CalculatorTable />
         <CourseList />
-        {isAuthenticated && <SandboxStatus />}
+        <SupportSection />
       </div>
     </main>
+  );
+}
+
+// 주요 업무 줄(rea §3-4): 칸 나눈 한 띠. 카드 반복이 아니라 지표 줄(.figure-row)과 같은 구조다.
+const QUICK_TASKS: { to: string; label: string; hint: string; icon: IconName; login?: boolean }[] = [
+  { to: "/sandbox/apply", label: "모의 대출 신청", hint: "가상 고객으로 상품을 골라 신청하고 심사 근거를 봐요", icon: "apply", login: true },
+  { to: "/sandbox", label: "내 계약·납입", hint: "계약 상태·잔액·다음 납입일을 보고 시간을 진행해요", icon: "contract", login: true },
+  { to: "/sandbox/calendar", label: "납입 캘린더", hint: "모든 계약의 회차를 달력에서 예정·납입·연체로 봐요", icon: "calendarCheck", login: true },
+  { to: "/sandbox/scenarios", label: "장면 시나리오", hint: "연체 25일·청약철회 가능 같은 상태를 바로 열어요", icon: "scene", login: true },
+  { to: "/support/rights", label: "금융소비자 권리", hint: "청약철회·금리인하요구 같은 권리와 근거 조문", icon: "shield" },
+  { to: "/support/faq", label: "자주 묻는 질문", hint: "막혔을 때 분류별 질문과 답부터 찾아봐요", icon: "question" },
+];
+
+function QuickTasks() {
+  const { isAuthenticated } = useAuth();
+  return (
+    <nav className="home-quick" aria-label="주요 업무">
+      <ul>
+        {QUICK_TASKS.map(task => (
+          <li key={task.to}>
+            <Link to={task.to}>
+              <span className="home-quick-icon"><Icon name={task.icon} size={20} /></span>
+              <span className="home-quick-text">
+                <strong>{task.label}{task.login && !isAuthenticated && <span className="nav-tag">로그인</span>}</strong>
+                <span>{task.hint}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+type ProductState = { status: "loading" } | { status: "ready"; products: HomeProduct[] } | { status: "fallback" };
+
+/** 상품 안내: GET /api/products(WP23)를 표로. 404·실패·빈 목록이면 정적 링크 줄로 대체하고 숫자를 지어내지 않는다. */
+function ProductSection() {
+  const [state, setState] = useState<ProductState>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    homeApi.products(controller.signal)
+      .then(products => { if (!controller.signal.aborted) setState(products.length ? { status: "ready", products } : { status: "fallback" }); })
+      .catch(() => { if (!controller.signal.aborted) setState({ status: "fallback" }); });
+    return () => controller.abort();
+  }, []);
+
+  return (
+    <section className="home-section" aria-labelledby="home-products-title">
+      <div className="section-head">
+        <div>
+          <h2 id="home-products-title">상품 <em>안내</em></h2>
+          <p>교육용 모의 상품이다. 금리 범위·한도·기간은 규칙 세트에서 나오고, 상세 화면이 같은 규칙으로 대표 예시를 계산한다.</p>
+        </div>
+        <Link to="/products">상품 전체 보기 <Icon name="next" size={16} /></Link>
+      </div>
+      {state.status === "loading" ? (
+        <Loading message="상품 목록을 불러오고 있어요" minHeight={160} />
+      ) : state.status === "ready" ? (
+        <ProductTable products={state.products} />
+      ) : (
+        <div className="home-fallback">
+          <p>상품 목록을 지금은 불러올 수 없어요. 아래 화면에서 상품 조건을 보거나 바로 계산해 볼 수 있어요.</p>
+          <ul className="home-link-list">
+            <li><Link to="/products"><strong>상품 안내</strong><span>상품별 대상·금리 범위·한도·기간과 대표 예시</span></Link></li>
+            <li><Link to="/sandbox/apply"><strong>모의 대출 신청</strong><span>상품 표에서 골라 조건을 넣고 신청(로그인)</span></Link></li>
+            <li><Link to="/calculators/auto-finance"><strong>할부·리스·렌트 비교</strong><span>같은 차량가·기간으로 네 방식의 월 부담과 총 비용</span></Link></li>
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+const termText = (p: HomeProduct) =>
+  p.minTerm !== null && p.maxTerm !== null && p.minTerm !== p.maxTerm ? `${p.minTerm}~${p.maxTerm}개월` : p.maxTerm !== null ? `${p.maxTerm}개월` : "—";
+const rateText = (p: HomeProduct) =>
+  p.minRate !== null && p.maxRate !== null ? `${formatRate(p.minRate)} ~ ${formatRate(p.maxRate)}` : p.minRate !== null ? `${formatRate(p.minRate)}부터` : p.maxRate !== null ? `${formatRate(p.maxRate)}까지` : "—";
+
+/** 서버가 준 열만 그린다(모든 상품에 없는 열은 빼서 "—"만 늘어선 열을 만들지 않는다). */
+function ProductTable({ products }: { products: HomeProduct[] }) {
+  const has = {
+    category: products.some(p => p.category),
+    rate: products.some(p => p.minRate !== null || p.maxRate !== null),
+    amount: products.some(p => p.maxAmount !== null),
+    term: products.some(p => p.maxTerm !== null),
+  };
+  return (
+    <div className="table-scroll home-product-table">
+      <table className="table table-links">
+        <caption>상품 {products.length}개 · 교육용 모의 상품이며 실제 금융회사의 조건이 아니다</caption>
+        <thead>
+          <tr>
+            <th scope="col">상품</th>
+            {has.category && <th scope="col">구분</th>}
+            {has.rate && <th scope="col" className="num">금리(연)</th>}
+            {has.amount && <th scope="col" className="num">최대 한도</th>}
+            {has.term && <th scope="col" className="num">기간</th>}
+            <th scope="col"><span className="sr-only">상세</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(product => (
+            <tr key={product.code}>
+              <th scope="row">
+                <Link to={`/products/${encodeURIComponent(product.code)}`}>{product.name}</Link>
+                {product.summary && <span className="home-product-summary">{product.summary}</span>}
+              </th>
+              {has.category && <td>{product.category ?? "—"}</td>}
+              {has.rate && <td className="num">{rateText(product)}</td>}
+              {has.amount && <td className="num">{product.maxAmount !== null ? <Money value={product.maxAmount} /> : "—"}</td>}
+              {has.term && <td className="num">{termText(product)}</td>}
+              <td className="go"><Link to={`/products/${encodeURIComponent(product.code)}`} aria-label={`${product.name} 상세`}>상세 →</Link></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -294,7 +419,7 @@ function HomeSearch() {
     navigate(q ? `/glossary?q=${encodeURIComponent(q)}` : "/glossary");
   };
   return (
-    <section className="home-search" aria-label="용어·개념 검색">
+    <div className="home-search" role="group" aria-label="용어·개념 검색">
       <form role="search" onSubmit={submit}>
         <label className="sr-only" htmlFor="home-search-input">찾을 용어나 개념</label>
         <input id="home-search-input" type="search" value={value} onChange={event => setValue(event.target.value)} placeholder="용어나 개념을 찾아요. 예: 연체이자는 무엇에 붙나요" autoComplete="off" />
@@ -304,23 +429,27 @@ function HomeSearch() {
         <span>처음이라면</span>
         {SUGGESTED_TERMS.map(term => <Link key={term.slug} to={`/glossary/${term.slug}`}>{term.label}</Link>)}
       </p>
-    </section>
+    </div>
   );
 }
 
-const CALCULATORS = [
-  { to: "/calculators/schedule", name: "상환 스케줄 계산기", what: "세 가지 상환 방식의 회차표와 총이자를 한 표에서 비교한다", inputs: "원금 · 기간 · 금리 · 실행일 · 납입일" },
-  { to: "/calculators/screening", name: "심사 시뮬레이터", what: "자격 → 금리 → 한도 → 결정 순서로 심사하고 규칙별 근거를 표로 보여 준다", inputs: "생년월일 · 소득 · 기존 원리금 · 신용점수 · 상품 · 금액" },
-  { to: "/calculators/prepayment", name: "중도상환 견적", what: "잔액·경과이자·수수료·총액을 계산하고 잔존기간별 수수료 추이를 그린다", inputs: "대출 조건 · 상환일 · 수수료율 · 일부 상환액" },
+// 분류는 머리 메뉴(nav.ts)의 계산기 2단 분류와 같은 말을 쓴다.
+const CALCULATORS: { to: string; group: string; name: string; what: string; inputs: string; icon: IconName }[] = [
+  { to: "/calculators/schedule", group: "상환·이자", name: "상환 스케줄 계산기", what: "세 가지 상환 방식의 회차표와 총이자를 한 표에서 비교한다", inputs: "원금 · 기간 · 금리 · 실행일 · 납입일", icon: "calculator" },
+  { to: "/calculators/prepayment", group: "상환·이자", name: "중도상환 견적", what: "잔액·경과이자·수수료·총액을 계산하고 잔존기간별 수수료 추이를 그린다", inputs: "대출 조건 · 상환일 · 수수료율 · 일부 상환액", icon: "calculator" },
+  { to: "/calculators/refinance", group: "상환·이자", name: "대환 비교", what: "갈아타기 비용과 남은 이자 차이로 순이익과 손익분기 회차를 계산한다", inputs: "기존 잔액·금리·잔존 회차 · 새 금리·기간·부대비용", icon: "calculator" },
+  { to: "/calculators/screening", group: "심사·한도", name: "심사 시뮬레이터", what: "자격 → 금리 → 한도 → 결정 순서로 심사하고 규칙별 근거를 표로 보여 준다", inputs: "생년월일 · 소득 · 기존 원리금 · 신용점수 · 상품 · 금액", icon: "calculator" },
+  { to: "/calculators/dsr", group: "심사·한도", name: "DSR 계산기", what: "기존 대출 여러 건의 연 원리금을 합산한 DSR과 더 빌릴 수 있는 한도를 계산한다", inputs: "연소득 · 기존 대출(최대 10건) · 새 대출 조건", icon: "calculator" },
+  { to: "/calculators/auto-finance", group: "자동차 금융", name: "할부·리스·렌트 비교", what: "같은 차량가·기간으로 네 방식의 월 부담·총 지출·만기 소유권을 비교한다", inputs: "차량가 · 선수금 · 기간 · 금리 · 잔존가치율", icon: "car" },
 ];
 
-/** 바로 가는 계산기 3개: 카드가 아니라 표 형태 링크 묶음(ui-guidelines §5 ③). 로그인 없이 쓴다. */
+/** 계산기 6종: 카드가 아니라 표 형태 링크 묶음(ui-guidelines §5 ③). 로그인 없이 쓴다. */
 function CalculatorTable() {
   return (
     <section className="home-section" aria-labelledby="home-calc-title">
       <div className="section-head">
         <div>
-          <h2 id="home-calc-title">바로 가는 <em>계산기</em></h2>
+          <h2 id="home-calc-title">계산기 <em>{CALCULATORS.length}종</em></h2>
           <p>로그인 없이 쓴다. 모든 결과 아래에 규칙·계산 버전과 교육용 고지를 붙인다.</p>
         </div>
         <Link to="/methodology">계산 규칙 보기 <Icon name="next" size={16} /></Link>
@@ -328,15 +457,16 @@ function CalculatorTable() {
       <table className="table table-links home-calc-table">
         <caption className="sr-only">계산기 목록</caption>
         <thead>
-          <tr><th scope="col">계산기</th><th scope="col">무엇을 계산하나</th><th scope="col">입력</th><th scope="col"><span className="sr-only">열기</span></th></tr>
+          <tr><th scope="col">계산기</th><th scope="col">분류</th><th scope="col">무엇을 계산하나</th><th scope="col">입력</th><th scope="col"><span className="sr-only">열기</span></th></tr>
         </thead>
         <tbody>
           {CALCULATORS.map(calc => (
             <tr key={calc.to}>
-              <th scope="row"><Link to={calc.to}><Icon name="calculator" size={18} />{calc.name}</Link></th>
+              <th scope="row"><Link to={calc.to}><Icon name={calc.icon} size={18} />{calc.name}</Link></th>
+              <td className="home-calc-group">{calc.group}</td>
               <td>{calc.what}</td>
               <td className="muted">{calc.inputs}</td>
-              <td className="go"><Link to={calc.to}>열기 →</Link></td>
+              <td className="go"><Link to={calc.to} aria-label={`${calc.name} 열기`}>열기 →</Link></td>
             </tr>
           ))}
         </tbody>
@@ -369,11 +499,12 @@ function CourseList() {
     <section className="home-section" aria-labelledby="home-course-title">
       <div className="section-head">
         <div>
-          <h2 id="home-course-title">입문 과정 <em>{concepts ? `${concepts.length}개` : "12개"} 개념</em></h2>
-          <p>권장 순서는 1에서 12지만 어느 개념이든 바로 열 수 있다. 개념마다 확인 문제와 연결된 계산기·용어가 있다.</p>
+          <h2 id="home-course-title">입문 과정 <em>{concepts ? `${concepts.length}개 개념` : "개념"}</em></h2>
+          <p>권장 순서대로 읽어도 되고 어느 개념이든 바로 열어도 된다. 개념마다 확인 문제와 연결된 계산기·용어가 있다.</p>
         </div>
         <Link to="/course">목차 자세히 <Icon name="next" size={16} /></Link>
       </div>
+      <HomeSearch />
       <div className="home-course-grid">
         <aside className="home-course-side" aria-label="학습 진척">
           {myLearning ? (
@@ -398,6 +529,7 @@ function CourseList() {
               );
             })}
           </ol>
+          <p className="home-course-mission"><Link to="/missions"><Icon name="scene" size={16} />학습 미션</Link> — 샌드박스에서 해 볼 과업을 고르면 조건을 만족할 때 자동으로 완료 표시돼요.</p>
           {!isAuthenticated && (
             <>
               <p className="muted">로그인하면 확인 문제 점수와 완료 표시가 여기와 목차에 남아요. 읽기와 문제 풀이는 로그인 없이도 돼요.</p>
@@ -483,6 +615,76 @@ function SandboxStatus() {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+type NoticeState = { status: "loading" } | { status: "ready"; notices: HomeNotice[] } | { status: "hidden" };
+
+const HELP_LINKS = [
+  { to: "/support/faq", label: "자주 묻는 질문", hint: "분류별로 찾거나 검색해요" },
+  { to: "/support/rights", label: "금융소비자 권리 안내", hint: "청약철회권·금리인하요구권 등과 근거 조문" },
+  { to: "/support", label: "이용 가이드", hint: "처음 오신 분이 따라 할 순서" },
+  { to: "/methodology", label: "계산 규칙(방법론)", hint: "규칙 세트 수치의 출처·확인일과 가정값" },
+];
+
+/** 고객센터·공지: 공지는 GET /api/support/notices(WP25) 최근 4건. 실패하거나 비면 공지 열을 숨기고 도움말만 남긴다. */
+function SupportSection() {
+  const [state, setState] = useState<NoticeState>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    homeApi.notices(controller.signal)
+      .then(notices => { if (!controller.signal.aborted) setState(notices.length ? { status: "ready", notices: notices.slice(0, 4) } : { status: "hidden" }); })
+      .catch(() => { if (!controller.signal.aborted) setState({ status: "hidden" }); });
+    return () => controller.abort();
+  }, []);
+
+  const showNotices = state.status !== "hidden";
+  return (
+    <section className="home-section" aria-labelledby="home-support-title">
+      <div className="section-head">
+        <div>
+          <h2 id="home-support-title">{showNotices ? <>고객센터 · <em>공지</em></> : <em>고객센터</em>}</h2>
+          <p>실제 상담·민원 접수는 없다. 막혔을 때 볼 도움말{showNotices ? "과 서비스 변경 공지" : ""}를 모았다.</p>
+        </div>
+        <Link to="/support">고객센터 열기 <Icon name="next" size={16} /></Link>
+      </div>
+      <div className={`home-support-grid${showNotices ? "" : " is-single"}`}>
+        {showNotices && (
+          <div className="home-notices">
+            <div className="panel-head home-support-head">
+              <h3>공지사항</h3>
+              <Link to="/support/notices">전체 보기</Link>
+            </div>
+            {state.status === "loading" ? (
+              <Loading message="공지를 불러오고 있어요" minHeight={176} />
+            ) : state.status === "ready" ? (
+              <ul className="home-notice-list">
+                {state.notices.map(item => (
+                  <li key={item.id}>
+                    <Link to="/support/notices">
+                      {item.category && <span className="home-notice-cat">{item.category}</span>}
+                      <strong>{item.title}</strong>
+                      <time dateTime={item.postedOn}>{formatDate(item.postedOn)}</time>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        )}
+        <div className="home-help">
+          <div className="panel-head home-support-head">
+            <h3>도움이 필요할 때</h3>
+          </div>
+          <ul className="home-link-list">
+            {HELP_LINKS.map(link => (
+              <li key={link.to}><Link to={link.to}><strong>{link.label}</strong><span>{link.hint}</span></Link></li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </section>
   );
 }
