@@ -14,6 +14,7 @@ import { ASSET_CLASS_LABEL, NOTIFICATION_TYPE_LABEL, pct } from "../calculators/
 import { useLoad } from "../calculators/parts/useLoad";
 import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
+import SelfServiceLinks from "./calendar/SelfServiceLinks";
 
 /**
  * 내 모의 여신(S-11): 지표 네 칸(영업일·결제계좌 잔액·진행 중 계약·다음 납입일) → 한 줄 요약(프로필·연체·잔액·알림)
@@ -150,6 +151,7 @@ export default function SandboxPage() {
         <nav className="next-actions" aria-label="다음 행동">
           <Link to="/sandbox/apply">대출 신청 <Icon name="next" size={16} /></Link>
           <Link to="/sandbox/notifications">알림함 <Icon name="next" size={16} /></Link>
+          <SelfServiceLinks />
           <Link to="/learn/delinquency-and-overdue-interest">개념 9 · 연체와 연체이자 <Icon name="next" size={16} /></Link>
         </nav>
       </main>

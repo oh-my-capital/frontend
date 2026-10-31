@@ -1,0 +1,86 @@
+/*
+ * WP21 — 증명서 발급(S-210)·인쇄용 증명서(S-211). 색·크기·간격은 tokens.css 토큰만 쓴다.
+ * 인쇄(@media print): 공통 머리·바닥·하위 화면 머리·도구 줄을 숨기고 A4 여백, 페이지마다 워터마크를 남긴다.
+ * 공통 머리·바닥을 숨기는 규칙은 body:has(.cert-print)로 인쇄용 증명서 화면에만 건다(다른 화면 인쇄에는 영향 없음).
+ */
+
+/* ---------- 발급 화면(S-210) ---------- */
+.cert-main { display: grid; gap: var(--sp-8); min-width: 0; }
+.cert-form { display: grid; gap: var(--sp-5); }
+.cert-form .panel-head { margin-bottom: 0; }
+.cert-types { display: grid; gap: var(--sp-2); min-width: 0; margin: 0; padding: 0; border: 0; }
+.cert-types legend { margin-bottom: var(--sp-2); padding: 0; }
+.cert-type { display: flex; align-items: flex-start; gap: var(--sp-3); min-height: var(--touch); padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); background: var(--surface); cursor: pointer; transition: border-color var(--t-fast), background-color var(--t-fast); }
+.cert-type:hover { border-color: var(--border-hover); }
+.cert-type:has(input:checked) { border-color: var(--primary); background: var(--primary-tint); box-shadow: inset var(--rule-accent) 0 0 var(--primary); }
+.cert-type:has(input:focus-visible) { outline: var(--rule-accent) solid var(--primary); outline-offset: 2px; }
+.cert-type input { flex-shrink: 0; width: var(--sp-5); height: var(--sp-5); margin: var(--sp-1) 0 0; accent-color: var(--primary); }
+.cert-type > span { display: grid; gap: var(--sp-1); min-width: 0; }
+.cert-type strong { font-size: var(--fs-base); }
+.cert-type.is-disabled { cursor: not-allowed; background: var(--surface-soft); color: var(--text-muted); }
+.cert-type.is-disabled:hover { border-color: var(--border); }
+.cert-type-why { color: var(--warn); font-weight: var(--fw-semibold); }
+.cert-period { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.cert-preview, .cert-history { min-width: 0; }
+.cert-guide { display: grid; gap: var(--sp-2); padding-left: var(--sp-5); color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
+.cert-guide strong { color: var(--text); }
+.cert-no { font-size: var(--fs-small); text-align: left; }
+.cert-hint { margin-top: var(--sp-3); color: var(--text-muted); font-size: var(--fs-small); }
+
+/* ---------- 인쇄용 화면 도구 줄(S-211) ---------- */
+.cert-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+.cert-toolbar-note { flex-basis: 100%; color: var(--text-muted); font-size: var(--fs-small); }
+
+/* ---------- 문서 본문(미리보기·인쇄 공용) ---------- */
+.cert-doc { position: relative; overflow: hidden; display: grid; gap: var(--sp-6); max-width: calc(var(--content-w) - var(--aside-w)); padding: var(--sp-9) var(--sp-8); border: var(--rule) solid var(--border-strong); background: var(--surface); }
+.cert-print .cert-doc { margin: 0 auto; }
+.cert-flag { justify-self: start; padding: var(--sp-1) var(--sp-3); border: var(--rule) solid var(--danger-line); background: var(--danger-bg); color: var(--danger); font-size: var(--fs-caption); font-weight: var(--fw-bold); letter-spacing: var(--ls-wide); }
+.cert-head { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-5); border-bottom: var(--rule-heavy) solid var(--text); text-align: center; }
+.cert-head h2 { font-size: var(--fs-h1); letter-spacing: var(--ls-wide); }
+.cert-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2) var(--sp-6); font-size: var(--fs-small); }
+.cert-meta > div { display: flex; flex-wrap: wrap; gap: var(--sp-2); min-width: 0; }
+.cert-meta dt { color: var(--text-muted); font-weight: var(--fw-semibold); }
+.cert-meta dd { overflow-wrap: anywhere; }
+.cert-meta .num { text-align: left; }
+.cert-section { display: grid; gap: var(--sp-3); min-width: 0; }
+.cert-section h3 { font-size: var(--fs-lead); }
+.cert-contract dd { overflow-wrap: anywhere; }
+.cert-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.cert-table tbody th, .cert-table tfoot th { font-weight: var(--fw-semibold); }
+.cert-alloc { display: block; color: var(--text-faint); font-size: var(--fs-caption); }
+.cert-statement { font-size: var(--fs-body); line-height: var(--lh-loose); }
+.cert-note { color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
+.cert-notice { padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--danger-line); border-left: var(--rule-accent) solid var(--danger); background: var(--danger-bg); color: var(--danger); font-size: var(--fs-small); font-weight: var(--fw-semibold); line-height: var(--lh-body); }
+.cert-issuer { color: var(--text-faint); font-size: var(--fs-caption); line-height: var(--lh-body); }
+.cert-doc .disclosure { margin-top: 0; }
+
+/* 워터마크: 본문 위에 아주 옅게 겹친다(내용을 가리지 않도록 클릭·선택을 받지 않는다). 같은 문구가 본문 위·아래 고지에도 글로 있다. */
+.cert-watermark { position: absolute; inset: 0; z-index: 1; display: grid; align-content: space-around; justify-items: center; overflow: hidden; pointer-events: none; user-select: none; }
+.cert-watermark span { color: var(--danger); font-size: var(--fs-display); font-weight: var(--fw-heavy); white-space: nowrap; opacity: .08; transform: rotate(-24deg); }
+
+@media (max-width: 740px) {
+  .cert-doc { gap: var(--sp-5); padding: var(--sp-6) var(--sp-4); }
+  .cert-period { grid-template-columns: 1fr; }
+  .cert-meta { justify-content: flex-start; text-align: left; }
+  .cert-head { text-align: left; }
+}
+
+@media print {
+  /* A4 여백은 인쇄 물리 단위(mm)로 준다. 화면 간격 토큰(px)은 @page 안에서 쓸 수 없다. */
+  @page { size: A4; margin: 16mm 14mm; }
+  body:has(.cert-print), body:has(.cert-print) .app-page { background: var(--surface); }
+  body:has(.cert-print) .site-header,
+  body:has(.cert-print) .site-footer,
+  body:has(.cert-print) .subpage-head,
+  .cert-toolbar,
+  .cert-hint { display: none; }
+  .cert-print.page-main { width: auto; margin: 0; padding: 0; }
+  .cert-print .cert-doc { max-width: none; gap: var(--sp-5); padding: 0; border: 0; overflow: visible; }
+  .cert-print .cert-doc .disclosure a { display: none; }
+  .cert-print .table-scroll { overflow: visible; border: 0; }
+  .cert-print .table { font-size: var(--fs-caption); }
+  .cert-print .table tr { break-inside: avoid; }
+  /* fixed 는 인쇄에서 페이지마다 반복된다 → 여러 장이어도 장마다 워터마크가 남는다. */
+  .cert-print .cert-watermark { position: fixed; }
+  .cert-print .cert-doc, .cert-print .cert-doc * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

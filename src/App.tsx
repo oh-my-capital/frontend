@@ -28,6 +28,10 @@ import SandboxPage from "./pages/sandbox/SandboxPage";
 // WP17 — 대환대출 비교·DSR 계산기
 import DsrCalculatorPage from "./pages/calculators/DsrCalculatorPage";
 import RefinanceCalculatorPage from "./pages/calculators/RefinanceCalculatorPage";
+// WP21 — 증명서 발급·납입 캘린더
+import CalendarPage from "./pages/sandbox/calendar/CalendarPage";
+import CertificatePrintPage from "./pages/sandbox/certificates/CertificatePrintPage";
+import CertificatesPage from "./pages/sandbox/certificates/CertificatesPage";
 // WP8 — 운영
 import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
@@ -76,6 +80,10 @@ export default function App() {
           <Route path="/sandbox/applications/:id" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
           <Route path="/sandbox/contracts/:id" element={<ProtectedRoute><ContractPage /></ProtectedRoute>} />
           <Route path="/sandbox/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          {/* WP21 — 증명서 발급·인쇄용 증명서·납입 캘린더 */}
+          <Route path="/sandbox/certificates" element={<ProtectedRoute><CertificatesPage /></ProtectedRoute>} />
+          <Route path="/sandbox/contracts/:id/certificates/:type" element={<ProtectedRoute><CertificatePrintPage /></ProtectedRoute>} />
+          <Route path="/sandbox/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
 
           <Route path="/admin" element={<Navigate to="/admin/applications" replace />} />
           <Route path="/admin/applications" element={<ProtectedRoute adminOnly><AdminApplicationsPage /></ProtectedRoute>} />
