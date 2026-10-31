@@ -21,6 +21,7 @@ import Tabs from "../../components/Tabs";
 import { useLoad } from "../calculators/parts/useLoad";
 import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
+import CertificateLink from "./certificates/CertificateLink";
 
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 
@@ -238,6 +239,7 @@ export default function ContractPage() {
         <nav className="next-actions" aria-label="다음 행동">
           <Link to="/sandbox">내 모의 여신 <Icon name="next" size={16} /></Link>
           <Link to="/sandbox/notifications">알림함 <Icon name="next" size={16} /></Link>
+          <CertificateLink contractId={c.id} />
           <Link to="/learn/acceleration">개념 10 · 기한이익상실 <Icon name="next" size={16} /></Link>
         </nav>
       </main>
