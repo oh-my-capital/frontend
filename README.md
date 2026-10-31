@@ -30,7 +30,7 @@ npm run preview        # dist/ 를 5190에서 확인
 ## 디자인 시스템 v3
 
 색·글자 크기·간격 **리터럴을 CSS·JSX에 적지 않는다.** 필요하면 `styles/tokens.css`에 토큰을 먼저 만든다(ADR-017).
-v3(ADR-019)는 시중 캐피탈 사이트 8곳의 역설계(docs `design/rea-capital-sites.md`) 결론으로 머리·바닥·하위 화면 머리·홈을 다시 짰다.
+v3(ADR-020)는 시중 캐피탈 사이트 8곳의 역설계(docs `design/rea-capital-sites.md`) 결론으로 머리·바닥·하위 화면 머리·홈을 다시 짰다.
 **메뉴는 `src/components/nav.ts` 한 파일**이 정의하고 머리 메가 메뉴·모바일 드로어·바닥 바로가기·`SubPageHeader` 위치 표시와 탭이 모두 읽는다.
 새 화면을 메뉴에 넣을 때는 `nav.ts`만 고친다.
 
