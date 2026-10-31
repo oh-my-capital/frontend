@@ -104,6 +104,8 @@ export function eventTitle(e: ContractEvent): string {
     case "ACCELERATION_NOTICE": return "기한이익상실 예정 통지";
     case "ACCELERATED": return "기한이익상실";
     case "PAID_OFF": return "완제";
+    case "DEFERMENT_APPLIED": return "원금 상환 유예 적용"; // WP18
+    case "MATURITY_EXTENDED": return "만기 연장 적용"; // WP18
     default: return e.type;
   }
 }
@@ -132,6 +134,8 @@ export function describeEvent(e: ContractEvent): string {
     case "ACCELERATION_NOTICE": return `기한이익상실 예정 통지 · 연체 ${typeof d.overdueDays === "number" ? d.overdueDays : 45}일, ${String(d.expectedDefaultOn ?? "")}까지 ${amount}을 정리하지 않으면 상실`;
     case "ACCELERATED": return `기한이익상실, 전액 ${amount} 청구${typeof d.baseAmount === "number" ? `(잔액 ${won(d.baseAmount)}` : ""}${typeof d.unpaidInterest === "number" ? ` + 미납 이자 ${won(d.unpaidInterest)}` : ""}${typeof d.unpaidOverdueInterest === "number" ? ` + 연체이자 ${won(d.unpaidOverdueInterest)}` : ""}${typeof d.baseAmount === "number" ? ")" : ""}`;
     case "PAID_OFF": return `완제(총 납입 ${amount}${typeof d.totalInterest === "number" ? `, 총 이자 ${won(d.totalInterest)}` : ""})`;
+    case "DEFERMENT_APPLIED": return `원금 상환 유예 ${String(d.months ?? "")}개월 · ${typeof d.interestOnlyPayment === "number" ? `${String(d.interestOnlyInstallments ?? "")}회 이자만 ${won(d.interestOnlyPayment)} · ` : ""}이후 월 ${won(Number(d.monthlyPaymentAfter ?? 0))}(전 ${won(Number(d.monthlyPaymentBefore ?? 0))}) · 만기 ${String(d.maturityDateAfter ?? "")} 그대로`; // WP18
+    case "MATURITY_EXTENDED": return `만기 연장 ${String(d.months ?? "")}개월 · 만기 ${String(d.maturityDateBefore ?? "")} → ${String(d.maturityDateAfter ?? "")} · 월 ${won(Number(d.monthlyPaymentBefore ?? 0))} → ${won(Number(d.monthlyPaymentAfter ?? 0))}`; // WP18
     default: return e.type;
   }
 }

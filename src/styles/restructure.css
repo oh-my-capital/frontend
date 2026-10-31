@@ -1,0 +1,49 @@
+/* WP18 상환 유예·만기 연장 패널(S-180~182). 토큰만 쓴다(ui-guidelines §2). 계약 상세 본문 열 안에 들어간다. */
+.restructure { display: grid; gap: var(--sp-4); min-width: 0; }
+.restructure > * { min-width: 0; }
+.restructure .panel-head { margin-bottom: 0; }
+
+.restructure-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-base); line-height: var(--lh-body); }
+
+.restructure-form { display: grid; gap: var(--sp-3); }
+.restructure-type { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: var(--sp-1); }
+.restructure-type > legend { padding: 0; margin-bottom: var(--sp-1); }
+.restructure-type .field-check { align-items: flex-start; }
+.restructure-type .field-check input:disabled + span { color: var(--text-faint); }
+.restructure-months { max-width: var(--aside-w); }
+
+.restructure-summary { padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); border-left: var(--rule-accent) solid var(--primary); background: var(--primary-tint); color: var(--text); font-size: var(--fs-base); line-height: var(--lh-body); }
+
+.restructure-quote { display: grid; gap: var(--sp-3); min-width: 0; }
+.restructure-compare th[scope="row"] { white-space: nowrap; }
+.restructure-compare td.num { white-space: nowrap; }
+/* 차이: 부호(+/−)를 글자로 쓰고 색은 보조. 부담이 늘면 위험색, 줄면 정상색. */
+.restructure-diff { font-weight: var(--fw-semibold); }
+.restructure-diff-up { color: var(--danger); }
+.restructure-diff-down { color: var(--good); }
+
+.restructure-rows .table-scroll { border: 0; }
+.restructure-row-tag { margin-left: var(--sp-2); }
+
+.restructure-apply { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: var(--rule) solid var(--warn-line); background: var(--warn-bg); font-size: var(--fs-small); line-height: var(--lh-body); }
+.restructure-apply .field { max-width: var(--aside-w); }
+
+.restructure-history td.num { white-space: nowrap; }
+.restructure-note { line-height: var(--lh-body); }
+
+@media (max-width: 640px) {
+  .restructure-months, .restructure-apply .field { max-width: none; }
+  .restructure-apply { padding: var(--sp-3); }
+
+  /* 좁은 화면: 비교·한도·이력 표를 행마다 "항목 제목 + 칸 이름이 붙은 값" 묶음으로 쌓는다(가로 스크롤 없이 전·후·차이를 한눈에).
+     머리 행은 화면에서만 숨기고(.sr-only 와 같은 방식) 각 칸은 data-label 을 글자로 보여 준다. */
+  .restructure-stack, .restructure-stack tbody { display: block; }
+  .restructure-stack thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .restructure-stack caption { display: block; }
+  .restructure-stack tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-1) var(--sp-3); padding: var(--sp-3); border-bottom: var(--rule) solid var(--border); }
+  .restructure-stack.restructure-stack-2 tbody tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .restructure-stack tbody tr:last-child { border-bottom: 0; }
+  .restructure-stack tbody th[scope="row"] { order: -1; grid-column: 1 / -1; padding: 0; border: 0; white-space: normal; }
+  .restructure-stack tbody td, .restructure-stack tbody td.num { display: block; padding: 0; border: 0; text-align: left; white-space: normal; }
+  .restructure-stack tbody td::before { content: attr(data-label); display: block; margin-bottom: 2px; color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+}

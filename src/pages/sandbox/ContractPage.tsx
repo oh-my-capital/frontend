@@ -21,6 +21,7 @@ import Tabs from "../../components/Tabs";
 import { useLoad } from "../calculators/parts/useLoad";
 import ClockControl from "./parts/ClockControl";
 import DepositForm from "./parts/DepositForm";
+import RestructurePanel from "./restructure/RestructurePanel"; // WP18 — 상환 유예·만기 연장
 import RightsPanel from "./rights/RightsPanel"; // WP19 — 청약철회·금리인하요구
 import CertificateLink from "./certificates/CertificateLink"; // WP21 — 증명서 발급
 
@@ -225,6 +226,7 @@ export default function ContractPage() {
               ]}
             />
             <Disclosure data={c.disclosure} />
+            <RestructurePanel contract={c} businessDate={s.businessDate} onDone={reloadAll} />
           </div>
 
           <aside aria-label="상환과 시간 진행" className="contract-side">
