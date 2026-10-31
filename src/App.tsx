@@ -30,6 +30,8 @@ import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP26 — 시나리오 프리셋·초기화
+import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -64,6 +66,7 @@ export default function App() {
           <Route path="/sandbox/applications/:id" element={<ProtectedRoute><ApplicationPage /></ProtectedRoute>} />
           <Route path="/sandbox/contracts/:id" element={<ProtectedRoute><ContractPage /></ProtectedRoute>} />
           <Route path="/sandbox/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/sandbox/scenarios" element={<ProtectedRoute><ScenariosPage /></ProtectedRoute>} /> {/* WP26 — 시나리오로 시작 */}
 
           <Route path="/admin" element={<Navigate to="/admin/applications" replace />} />
           <Route path="/admin/applications" element={<ProtectedRoute adminOnly><AdminApplicationsPage /></ProtectedRoute>} />
