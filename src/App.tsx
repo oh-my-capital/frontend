@@ -40,6 +40,8 @@ import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
 // WP20 — 학습 미션
 import MissionPage from "./pages/missions/MissionPage";
 import MissionsPage from "./pages/missions/MissionsPage";
+// WP16 — 자동차 금융 비교
+import AutoFinanceCalculatorPage from "./pages/calculators/AutoFinanceCalculatorPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -73,6 +75,8 @@ export default function App() {
           {/* WP17 — 대환대출 비교·DSR 계산기 */}
           <Route path="/calculators/refinance" element={<RefinanceCalculatorPage />} />
           <Route path="/calculators/dsr" element={<DsrCalculatorPage />} />
+          {/* WP16 — 자동차 금융 비교 */}
+          <Route path="/calculators/auto-finance" element={<AutoFinanceCalculatorPage />} />
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

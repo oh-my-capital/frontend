@@ -1,0 +1,60 @@
+/*
+ * 자동차 금융 비교(S-160, WP16). 계산기 공용 모양(calculators.css)·그림 겉틀(charts.css)·공용 조각(base.css)을 그대로 쓰고,
+ * 이 화면에만 있는 것(네 방식 비교표의 칸 안 보조 줄, 총 지출 구성 막대, 만기 선택지 표)만 여기 둔다.
+ * 색·글자 크기·간격은 tokens.css 토큰만 쓴다(ui-guidelines §2).
+ */
+
+/* 핵심 수치 줄: 방식 이름·금액 옆 보조 글이 좁은 칸을 넘지 않도록 항상 아래 줄로 내린다. */
+.af .figure-row dd small { display: block; margin-left: 0; margin-top: var(--sp-1); }
+
+/* ── 네 방식 비교표 ───────────────────────────────────────────────────────── */
+.af-compare { min-width: 760px; }
+/* 좁은 화면에서 표를 옆으로 넘겨도 항목 이름이 보이게 첫 열을 고정한다. */
+.af-compare th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: inset calc(-1 * var(--rule)) 0 0 var(--border); }
+.af-compare thead th:first-child { background: var(--surface-soft); }
+.af-compare thead th { vertical-align: bottom; }
+.af-compare th[scope='row'] { min-width: 168px; font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+.af-compare td { vertical-align: top; }
+/* 표 칸 안의 보조 줄(가산 금리·리스료 구성·기준 시나리오). 금액 칸과 같은 오른쪽 정렬, 줄바꿈 허용. */
+.af-cell-note, .af-row-note { display: block; margin-top: var(--sp-1); color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-medium); line-height: var(--lh-snug); white-space: normal; }
+.af-row-note { color: var(--text-faint); }
+.af-text { display: block; white-space: normal; line-height: var(--lh-snug); font-size: var(--fs-small); }
+.af-compare tr.is-strong > th { color: var(--text); font-weight: var(--fw-bold); }
+.af-compare tr.is-strong .money-strong { font-size: var(--fs-h4); }
+/* 실질 비용이 가장 작은 열: 옅은 남색 바탕 + 머리의 글자 라벨(색만으로 말하지 않는다). */
+.af-compare .is-cheapest { background: var(--primary-tint); }
+.af-head-chip { display: block; margin-top: var(--sp-1); }
+.af-compare .bar-cell { justify-content: flex-end; }
+.af-compare .bar-track { min-width: 96px; }
+
+/* ── 총 지출 구성 막대(인라인 SVG, 같은 자) ─────────────────────────────────── */
+.af-bars { display: grid; gap: var(--sp-3); margin: 0; padding: var(--sp-4); list-style: none; }
+.af-bar-row { display: grid; grid-template-columns: minmax(96px, 132px) minmax(0, 1fr) minmax(128px, max-content); gap: var(--sp-3); align-items: center; }
+.af-bar-row > .name { color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+.af-bar-tag { display: block; color: var(--primary); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.af-bar-svg { display: block; width: 100%; height: var(--sp-7); padding: 0; border: var(--rule) solid var(--border); }
+.chart .af-bar-svg { padding: 0; }
+.af-bar-retained { fill: var(--primary-line); }
+.af-bar-cut { stroke: var(--primary-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.af-bar-row > .value { display: grid; justify-items: end; font-variant-numeric: tabular-nums; text-align: right; }
+.af-bar-row > .value b { color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-bold); }
+
+/* ── 만기 선택지·가정값 표 ──────────────────────────────────────────────── */
+.af-maturity { min-width: 640px; }
+.af-maturity th[scope='rowgroup'] { vertical-align: top; font-weight: var(--fw-bold); white-space: nowrap; }
+.af-maturity td { vertical-align: top; }
+.af-basis { margin-left: var(--sp-2); }
+.af-desc { color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-snug); }
+.af-assumptions th[scope='row'] { width: 32%; font-weight: var(--fw-semibold); line-height: var(--lh-snug); vertical-align: top; }
+.af-assumptions td { font-size: var(--fs-small); line-height: var(--lh-body); }
+.af-notes { display: grid; gap: var(--sp-1); margin: 0; padding-left: var(--sp-5); }
+
+@media (max-width: 740px) {
+  .af-compare { min-width: 680px; }
+  .af-compare th[scope='row'] { min-width: 120px; }
+  .af-bar-row { grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-3); }
+  .af-bar-row > .name { grid-column: 1; }
+  .af-bar-row > .value { grid-column: 2; grid-row: 1; }
+  .af-bar-svg { grid-column: 1 / -1; }
+  .af-assumptions th[scope='row'] { width: auto; }
+}
