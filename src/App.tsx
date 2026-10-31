@@ -30,6 +30,8 @@ import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import AdminBatchPage from "./pages/admin/AdminBatchPage";
 import AdminContentPage from "./pages/admin/AdminContentPage";
 import AdminPortfolioPage from "./pages/admin/AdminPortfolioPage";
+// WP16 — 자동차 금융 비교
+import AutoFinanceCalculatorPage from "./pages/calculators/AutoFinanceCalculatorPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -57,6 +59,8 @@ export default function App() {
           <Route path="/calculators/schedule" element={<ScheduleCalculatorPage />} />
           <Route path="/calculators/screening" element={<ScreeningCalculatorPage />} />
           <Route path="/calculators/prepayment" element={<PrepaymentCalculatorPage />} />
+          {/* WP16 — 자동차 금융 비교 */}
+          <Route path="/calculators/auto-finance" element={<AutoFinanceCalculatorPage />} />
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
