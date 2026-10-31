@@ -98,7 +98,7 @@
 .reject-list span { color: var(--text-muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
 
 /* ── 계약 상세 ─────────────────────────────────────────────────────────── */
-/* 열 정의가 없으면 암시적 auto 열이 안쪽 표(재산정 회차표 등)의 최소 폭만큼 넓어져 375px 에서 넘친다(WP28-U2). */
+/* 열 정의가 없는 격자는 암시적 auto 열이 안쪽 내용의 최소 폭만큼 넓어질 수 있어 한 열(minmax(0,1fr))로 고정한다. */
 .contract-main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); }
 .contract-side { gap: var(--sp-5); }
 .contract-executed { margin-bottom: var(--sp-5); }

@@ -14,7 +14,9 @@
 
 .restructure-summary { padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); border-left: var(--rule-accent) solid var(--primary); background: var(--primary-tint); color: var(--text); font-size: var(--fs-base); line-height: var(--lh-body); }
 
-.restructure-quote { display: grid; gap: var(--sp-3); min-width: 0; }
+/* 열 정의가 없으면 암시적 auto 열이 펼친 재산정 회차표(6열)의 최소 폭만큼 늘어나 375px 에서 문서가 넘친다(WP28-U2). */
+.restructure-quote { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
+.restructure-quote > * { min-width: 0; }
 .restructure-compare th[scope="row"] { white-space: nowrap; }
 .restructure-compare td.num { white-space: nowrap; }
 /* 차이: 부호(+/−)를 글자로 쓰고 색은 보조. 부담이 늘면 위험색, 줄면 정상색. */
