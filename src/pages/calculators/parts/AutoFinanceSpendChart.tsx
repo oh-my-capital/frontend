@@ -32,6 +32,8 @@ export default function AutoFinanceSpendChart({ options, cheapestType }: { optio
       legend={SEGMENTS.map(s => ({ color: s.color, label: s.label }))}
       summary={summary}
       data={
+        // 7열 값 표는 375px 보다 넓다. 다른 그림의 값 표처럼 가로 스크롤 상자에 담는다(WP28-U1).
+        <div className="table-scroll">
         <table className="table">
           <caption className="sr-only">방식별 총 지출 구성 값</caption>
           <thead>
@@ -51,6 +53,7 @@ export default function AutoFinanceSpendChart({ options, cheapestType }: { optio
             ))}
           </tbody>
         </table>
+        </div>
       }
     >
       <ul className="af-bars">
