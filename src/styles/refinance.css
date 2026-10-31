@@ -1,0 +1,88 @@
+/*
+ * 대환대출 비교(S-170)·DSR 계산기(S-171) — WP17. 계산기 공통 틀(.calc-*)은 calculators.css, 그림은 charts.css 를 그대로 쓰고
+ * 여기에는 두 화면에만 있는 조각만 둔다. 색·크기·간격은 tokens.css 토큰만 쓴다(ui-guidelines §2).
+ */
+
+/* 입력: 기존·새 대출 묶음을 넓은 화면에서 나란히 */
+.refi-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5) var(--sp-6); align-items: start; }
+.refi-sides > .calc-fieldset { padding-top: var(--sp-2); }
+.refi-sides > .calc-fieldset + .calc-fieldset { padding-left: var(--sp-6); border-left: var(--rule) solid var(--border); }
+.refi-sides .calc-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.refi-note { margin: 0; color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-snug); }
+.refi-date { padding-top: var(--sp-4); border-top: var(--rule) solid var(--border-soft); }
+
+/* 판정 한 줄 + 지표 줄 */
+.refi-verdict { display: grid; gap: var(--sp-3); }
+.refi-verdict-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-3); margin: 0; color: var(--text); font-size: var(--fs-body); font-weight: var(--fw-semibold); line-height: var(--lh-body); }
+.refi-verdict-line > span:last-child { flex: 1 1 280px; min-width: 0; }
+/* 지표 옆 보조 설명은 숫자 아래 줄로(좁은 칸에서 숫자와 섞여 줄바꿈되지 않게) */
+.refi-verdict .figure-row dd small { display: block; margin-left: 0; margin-top: 2px; }
+
+/* 비교 표: 차이 열은 싸지면 정상 색, 비싸지면 위험 색 + 부호 글자 */
+.refi-compare th[scope='row'], .refi-rows th[scope='row'] { white-space: nowrap; }
+.refi-compare td.num { white-space: nowrap; }
+.refi-compare tfoot .money-strong { font-size: var(--fs-h4); }
+.refi-diff { color: var(--text-muted); font-variant-numeric: tabular-nums; font-weight: var(--fw-semibold); }
+.refi-diff.is-down { color: var(--good); }
+.refi-diff.is-up { color: var(--danger); }
+.refi-negative { color: var(--danger); }
+.refi-recovered { color: var(--good); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.refi-rows td, .refi-rows th { font-size: var(--fs-small); }
+
+/* DSR: 부채 행 편집기 */
+.dsr-debts { display: grid; gap: var(--sp-3); min-width: 0; }
+.dsr-debts-head { display: grid; gap: var(--sp-1); }
+.dsr-debts-head h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-h4); }
+.dsr-count { color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.dsr-empty { margin: 0; padding: var(--sp-3) var(--sp-4); border: var(--rule) dashed var(--border-strong); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-small); }
+.dsr-debt-list { display: grid; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.dsr-debt-list > li { min-width: 0; }
+.dsr-debt { min-width: 0; margin: 0; padding: var(--sp-3) var(--sp-4) var(--sp-4); border: var(--rule) solid var(--border); border-left: var(--rule-accent) solid var(--primary-line); background: var(--surface-soft); }
+.dsr-debt > legend { padding: 0 var(--sp-1); color: var(--primary); font-size: var(--fs-small); font-weight: var(--fw-bold); }
+.dsr-debt-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--sp-3) var(--sp-4); align-items: end; }
+.dsr-debt-fields > * { min-width: 0; }
+.dsr-debt-remove { display: flex; justify-content: flex-end; }
+.dsr-debt-remove .btn { gap: var(--sp-1); }
+.dsr .btn-row .btn { gap: var(--sp-1); }
+.dsr-new-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* DSR: 표 */
+.dsr-table th[scope='row'] { white-space: nowrap; }
+.dsr-table td.num { white-space: nowrap; }
+.dsr-sub { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-medium); }
+.dsr-basis { min-width: 120px; color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-snug); }
+.dsr-limits th[scope='row'] { white-space: nowrap; }
+.dsr-limits th[scope='row'] .status { margin-left: var(--sp-1); }
+
+/* DSR 게이지: 막대 폭(width %)만으로 그린다. 현재 = 남색 채움(초과면 위험 색), 추가 한도 = 점선 테두리 연한 채움, 상한 = 황토 점선 */
+.dsr-gauge { display: grid; gap: var(--sp-1); padding: var(--sp-4) var(--sp-4) var(--sp-3); }
+.dsr-gauge-head { display: flex; min-width: 0; }
+.dsr-gauge-limit-label { display: block; padding-right: var(--sp-2); border-right: var(--rule-heavy) dashed var(--accent); color: var(--accent); font-size: var(--fs-caption); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.dsr-gauge-track { position: relative; height: 32px; background: var(--surface-sunken); }
+.dsr-gauge-track > i { position: absolute; top: 0; bottom: 0; left: 0; display: block; font-style: normal; }
+.dsr-gauge-extra { border: var(--rule) dashed var(--primary); background: var(--primary-tint); }
+.dsr-gauge-fill { display: flex; align-items: center; justify-content: flex-end; background: var(--primary); }
+.dsr-gauge-track.is-exceeded .dsr-gauge-fill { background: var(--danger); }
+.dsr-gauge-fill > b { padding: 0 var(--sp-2); color: var(--text-on-primary); font-size: var(--fs-caption); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dsr-gauge-fill > b.is-outside { position: absolute; left: 100%; color: var(--text); }
+.dsr-gauge-limit { border-right: var(--rule-heavy) dashed var(--accent); background: transparent; pointer-events: none; }
+.dsr-gauge-scale { display: flex; justify-content: space-between; color: var(--text-faint); font-size: var(--fs-micro); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1240px) and (min-width: 1001px) {
+  .refi-sides { grid-template-columns: 1fr; }
+  .refi-sides > .calc-fieldset + .calc-fieldset { padding-left: 0; padding-top: var(--sp-4); border-left: 0; border-top: var(--rule) solid var(--border-soft); }
+}
+@media (max-width: 740px) {
+  .refi-sides { grid-template-columns: 1fr; }
+  .refi-sides > .calc-fieldset + .calc-fieldset { padding-left: 0; padding-top: var(--sp-4); border-left: 0; border-top: var(--rule) solid var(--border-soft); }
+  .refi-sides .calc-fields { grid-template-columns: 1fr; }
+  .refi .hide-sm, .dsr .hide-sm { display: none; }
+  /* 줄 머리·숫자 칸이 좁은 화면에서 줄바꿈되도록 해 표 안 가로 스크롤을 없앤다 */
+  .refi-compare th[scope='row'], .refi-rows th[scope='row'], .dsr-table th[scope='row'], .dsr-limits th[scope='row'] { white-space: normal; }
+  .refi-compare td.num { white-space: normal; }
+  .refi-compare tfoot .money-strong { font-size: var(--fs-base); }
+  .dsr-debt-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dsr-debt-fields > :nth-child(1), .dsr-debt-fields > :nth-child(2), .dsr-debt-fields > :nth-child(5), .dsr-debt-remove { grid-column: 1 / -1; }
+  .dsr-debt-remove { justify-content: flex-start; }
+  .dsr-new-fields { grid-template-columns: 1fr; }
+}
