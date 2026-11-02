@@ -12,8 +12,12 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
 # 화면 코드는 같은 origin 의 /api 만 부른다(docs contracts/runtime.md). mock 은 배포 빌드에서 끈다.
+# 공개 사이트 주소(예: https://capimate.example). 있으면 sitemap.xml·canonical·og:url 을 절대 주소로 만든다(WP39).
+# 공개 값이라 build-arg 로 받아도 된다. 비우면 sitemap 을 만들지 않는다.
+ARG VITE_SITE_URL=
 ENV VITE_API_BASE_URL=/api \
-    VITE_MOCK=
+    VITE_MOCK= \
+    VITE_SITE_URL=${VITE_SITE_URL}
 RUN npm run build
 
 # 실행 스테이지: Caddy(정적 파일 서버). 관리 API·자동 HTTPS 는 끈다(deploy/Caddyfile).
