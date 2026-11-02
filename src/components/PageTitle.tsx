@@ -1,64 +1,104 @@
 import { useEffect } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { BRAND_NAME } from "./Brand";
+import { NAV_MENUS, SUBPAGE_SECTIONS } from "./nav";
+import { OG_IMAGE_ALT, OG_IMAGE_PATH, PAGE_META, SITE_DESCRIPTION, normalizeSiteUrl, type PageMeta } from "./pageMeta";
 
-/** 경로별 문서 제목(docs/design/screens.md). 먼저 맞는 항목을 쓴다. 상세 패턴을 목록 패턴보다 앞에 둔다. */
-const TITLES: [string, string][] = [
-  ["/", "여신을 배우는 모의 캐피탈"],
-  ["/course", "입문 과정 목차"],
-  ["/learn/:conceptId", "개념 상세"],
-  ["/glossary/:slug", "용어 상세"],
-  ["/glossary", "용어 사전"],
-  ["/calculators/schedule", "상환 스케줄 계산기"],
-  ["/calculators/screening", "심사 시뮬레이터"],
-  ["/calculators/prepayment", "중도상환 견적"],
-  ["/calculators/refinance", "대환 비교"],
-  ["/calculators/dsr", "DSR 계산기"],
-  ["/calculators/auto-finance", "할부·리스·렌트 비교"],
-  ["/calculators", "계산기"],
-  ["/products/:code", "상품 상세"],
-  ["/products", "상품 안내"],
-  ["/missions", "학습 미션"],
-  ["/methodology", "방법론"],
-  ["/me/learning", "내 학습"],
-  ["/sandbox/profile", "가상 고객 프로필"],
-  ["/sandbox/apply", "대출 신청"],
-  ["/sandbox/applications/:id", "신청·심사 결과"],
-  ["/sandbox/contracts/:id", "계약 상세"],
-  ["/sandbox/notifications", "알림함"],
-  ["/sandbox/calendar", "납입 캘린더"],
-  ["/sandbox/scenarios", "시나리오 프리셋"],
-  ["/sandbox", "내 모의 여신"],
-  ["/admin/applications", "심사 큐"],
-  ["/admin/portfolio", "포트폴리오"],
-  ["/admin/content", "콘텐츠 운영"],
-  ["/admin/batch", "배치"],
-  ["/admin/analytics", "운영 분석"],
-  ["/admin/collections", "연체 관리"],
-  ["/admin/audit", "운영 이력"],
-  ["/support/faq", "자주 묻는 질문"],
-  ["/support/notices/:id", "공지 상세"],
-  ["/support/notices", "공지사항"],
-  ["/support/rights", "금융소비자 권리 안내"],
-  ["/support", "고객센터"],
-  ["/admin", "운영"],
-  ["/login", "로그인"],
-  ["/signup", "가입"],
-  ["/settings", "계정 설정"],
-];
-
-/** 라우트가 바뀔 때 document.title을 맞춘다. 화면 안에서 더 구체적인 제목이 필요하면 setDocumentTitle을 부른다. */
+/**
+ * 경로별 문서 메타(docs/design/screens.md, WP39 메타 정책). 라우트가 바뀔 때 다음을 맞춘다.
+ * - `<title>`: "화면 제목 · CapiMATE"
+ * - `<meta name="description">`, Open Graph(og:title·description·type·url·image·site_name·locale), twitter:card
+ * - `<link rel="canonical">`: 사이트 주소 + 경로(쿼리 없음). 검색 노출 화면에만 둔다.
+ * - `<meta name="robots">`: 로그인 필요·운영·가입 흐름·없는 주소는 "noindex, nofollow"(로그인·가입은 "noindex, follow").
+ * 화면 표는 pageMeta.ts. 화면 안에서 더 구체적인 제목(개념 이름 등)이 필요하면 setDocumentTitle 을 부른다.
+ * 사이트 주소는 빌드 환경변수 VITE_SITE_URL, 없으면 지금 접속한 origin 을 쓴다(실제 도메인을 코드에 적지 않는다).
+ */
 export default function PageTitle() {
   const { pathname } = useLocation();
-  useEffect(() => {
-    // 정확히 맞는 항목이 없으면(다른 WP가 더한 하위 경로 등) 가장 먼저 맞는 상위 경로의 제목을 쓴다. 홈("/")은 제외.
-    const found = TITLES.find(([pattern]) => matchPath({ path: pattern, end: true }, pathname))
-      ?? TITLES.find(([pattern]) => pattern !== "/" && matchPath({ path: pattern, end: false }, pathname));
-    document.title = `${found ? found[1] : "없는 주소"} · ${BRAND_NAME}`;
-  }, [pathname]);
+  useEffect(() => { applyPageMeta(pathname); }, [pathname]);
   return null;
 }
 
-export function setDocumentTitle(title: string) {
-  document.title = `${title} · ${BRAND_NAME}`;
+/** 화면 안에서 제목을 더 구체적으로 바꾼다(문서 제목과 og:title 을 함께). description 을 주면 설명도 바꾼다. */
+export function setDocumentTitle(title: string, description?: string) {
+  const full = `${title} · ${BRAND_NAME}`;
+  document.title = full;
+  setMeta("property", "og:title", full);
+  if (description) {
+    setMeta("name", "description", description);
+    setMeta("property", "og:description", description);
+  }
+}
+
+const LOGIN_FLOW = new Set(["/login", "/signup"]);
+
+function findMeta(pathname: string): PageMeta | null {
+  return PAGE_META.find(meta => matchPath({ path: meta.path, end: true }, pathname))
+    ?? navFallback(pathname)
+    // 하위 경로(다른 WP가 더한 상세 등)는 가장 먼저 맞는 상위 경로의 제목을 쓰되 검색에는 내지 않는다. 홈("/")은 제외.
+    ?? withNoindex(PAGE_META.find(meta => meta.path !== "/" && matchPath({ path: meta.path, end: false }, pathname)));
+}
+
+/** pageMeta.ts 에 아직 없는 화면(다른 WP가 메뉴에만 등록한 경로)은 메뉴 이름을 제목으로, noindex 로 둔다. */
+function navFallback(pathname: string): PageMeta | null {
+  const links = [
+    ...NAV_MENUS.flatMap(menu => menu.groups.flatMap(group => group.links)),
+    ...Object.values(SUBPAGE_SECTIONS).flatMap(section => section.links),
+  ];
+  const link = links.find(item => item.to === pathname);
+  return link ? { path: link.to, title: link.label, index: false } : null;
+}
+
+function withNoindex(meta: PageMeta | undefined): PageMeta | null {
+  return meta ? { ...meta, index: false } : null;
+}
+
+function siteOrigin(): string {
+  return normalizeSiteUrl(import.meta.env.VITE_SITE_URL) || window.location.origin;
+}
+
+function applyPageMeta(pathname: string) {
+  const meta = findMeta(pathname);
+  const title = `${meta ? meta.title : "없는 주소"} · ${BRAND_NAME}`;
+  const description = meta?.description ?? SITE_DESCRIPTION;
+  const site = siteOrigin();
+  const url = `${site}${pathname}`;
+  const indexable = meta?.index ?? false;
+
+  document.title = title;
+  setMeta("name", "description", description);
+  setMeta("name", "robots", indexable ? "index, follow" : LOGIN_FLOW.has(pathname) ? "noindex, follow" : "noindex, nofollow");
+  setMeta("property", "og:site_name", BRAND_NAME);
+  setMeta("property", "og:locale", "ko_KR");
+  setMeta("property", "og:type", "website");
+  setMeta("property", "og:title", title);
+  setMeta("property", "og:description", description);
+  setMeta("property", "og:url", url);
+  setMeta("property", "og:image", `${site}${OG_IMAGE_PATH}`);
+  setMeta("property", "og:image:alt", OG_IMAGE_ALT);
+  setMeta("name", "twitter:card", "summary_large_image");
+  setCanonical(indexable ? url : null);
+}
+
+/** `<meta name|property=key>` 를 하나만 두고 값을 바꾼다(없으면 만든다). */
+function setMeta(attr: "name" | "property", key: string, content: string) {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+/** canonical 은 검색 노출 화면에만. noindex 화면에서는 지워 신호가 엇갈리지 않게 한다. */
+function setCanonical(href: string | null) {
+  let el = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!href) { el?.remove(); return; }
+  if (!el) {
+    el = document.createElement("link");
+    el.rel = "canonical";
+    document.head.appendChild(el);
+  }
+  el.href = href;
 }

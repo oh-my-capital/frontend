@@ -67,5 +67,6 @@ export default function DataTable<Row>({ caption, captionNote, columns, rows, ro
       {footer && <tfoot>{footer}</tfoot>}
     </table>
   );
-  return scroll ? <div className="table-scroll">{table}</div> : table;
+  // 가로 스크롤 상자는 키보드로도 밀 수 있게 초점을 받는다(WCAG 2.1.1, WP39 axe scrollable-region-focusable).
+  return scroll ? <div className="table-scroll" tabIndex={0} role="region" aria-label={typeof caption === "string" ? caption : "가로로 밀어 보는 표"}>{table}</div> : table;
 }
