@@ -73,9 +73,11 @@ export const NAV_MENUS: NavMenu[] = [
         links: [
           { to: "/calculators/screening", label: "심사 시뮬레이터" },
           { to: "/calculators/dsr", label: "DSR 계산기" },
+          { to: "/calculators/corporate", label: "기업 심사(사업자·법인)" },
         ],
       },
       { label: "자동차 금융", links: [{ to: "/calculators/auto-finance", label: "할부·리스·렌트 비교" }] },
+      { label: "회사 관점", links: [{ to: "/calculators/unit-economics", label: "대출 한 건의 손익" }] },
     ],
   },
   {
@@ -83,7 +85,7 @@ export const NAV_MENUS: NavMenu[] = [
     label: "배우기",
     to: "/course",
     description: "개념 카드와 확인 문제로 대출 한 건의 생애를 처음부터 끝까지 따라가요.",
-    match: ["/course", "/learn", "/glossary", "/methodology", "/missions", "/me/learning"],
+    match: ["/course", "/learn", "/glossary", "/methodology", "/missions", "/me/learning", "/industry", "/org"],
     groups: [
       {
         label: "과정",
@@ -97,9 +99,16 @@ export const NAV_MENUS: NavMenu[] = [
         links: [
           { to: "/glossary", label: "용어 사전" },
           { to: "/methodology", label: "방법론" },
+          { to: "/industry", label: "업권 비교·공시 읽기" },
         ],
       },
-      { label: "내 기록", links: [{ to: "/me/learning", label: "내 학습", login: true }] },
+      {
+        label: "내 기록",
+        links: [
+          { to: "/me/learning", label: "내 학습", login: true },
+          { to: "/org", label: "내 기관(교육 과정)", login: true },
+        ],
+      },
     ],
   },
   {
@@ -161,6 +170,8 @@ export const NAV_MENUS: NavMenu[] = [
         links: [
           { to: "/admin/applications", label: "심사 큐" },
           { to: "/admin/collections", label: "연체 관리" },
+          { to: "/admin/ledger", label: "회계 원장·대사" },
+          { to: "/admin/rules", label: "규칙 변경 결재" },
         ],
       },
       {
@@ -168,12 +179,15 @@ export const NAV_MENUS: NavMenu[] = [
         links: [
           { to: "/admin/portfolio", label: "포트폴리오" },
           { to: "/admin/analytics", label: "운영 분석" },
+          { to: "/admin/pnl", label: "손익" },
+          { to: "/admin/kpi", label: "서비스 지표" },
         ],
       },
       {
         label: "기록·도구",
         links: [
           { to: "/admin/audit", label: "운영 이력" },
+          { to: "/admin/organizations", label: "기관" },
           { to: "/admin/content", label: "콘텐츠" },
           { to: "/admin/batch", label: "배치" },
         ],
@@ -230,13 +244,30 @@ export const SUBPAGE_SECTIONS = {
   sandbox: sectionOf("sandbox"),
   support: sectionOf("support"),
   admin: sectionOf("admin"),
-  account: { label: "계정", to: "/settings", links: [{ to: "/settings", label: "계정 설정" }] },
+  account: {
+    label: "계정",
+    to: "/settings",
+    links: [
+      { to: "/settings", label: "계정 설정" },
+      { to: "/settings/data", label: "내 데이터" },
+    ],
+  },
+  legal: {
+    label: "약관·정책",
+    to: "/legal/terms",
+    links: [
+      { to: "/legal/terms", label: "이용약관" },
+      { to: "/legal/privacy", label: "개인정보처리방침" },
+    ],
+  },
 } satisfies Record<string, SubPageSection>;
 
 export type SubPageSectionKey = keyof typeof SUBPAGE_SECTIONS;
 
 /** 바닥 정책 링크 줄(rea §4.5). 권리 안내를 맨 앞에 굵게 둔다. */
 export const FOOTER_POLICY_LINKS: { to: string; label: string; strong?: boolean }[] = [
+  { to: "/legal/privacy", label: "개인정보처리방침", strong: true },
+  { to: "/legal/terms", label: "이용약관" },
   { to: "/support/rights", label: "금융소비자 권리 안내", strong: true },
   { to: "/methodology", label: "계산 규칙(방법론)" },
   { to: "/support/faq", label: "자주 묻는 질문" },
