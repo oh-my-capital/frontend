@@ -136,7 +136,7 @@ export default function MethodologyPage() {
               <section id="rate" className="methodology-section">
                 <SectionHead id="rate" />
                 <p>적용 금리 = 기준금리 + 밴드별 스프레드 − 우대금리(자동이체 0.20%p)이다. 결과가 {formatRate(m.legalMaxRate)}를 넘으면 {formatRate(m.legalMaxRate)}로 자르고 rateCapped 를 표시한다. 신용점수가 가장 낮은 밴드의 하한보다 낮으면 자격 단계에서 거절한다.</p>
-                <div className="table-scroll">
+                <div className="table-scroll" tabIndex={0} role="region" aria-label="신용 밴드별 스프레드 표">
                   <table className="table">
                     <caption>신용 밴드별 스프레드(%p)와 소득배수</caption>
                     <thead>
@@ -224,7 +224,7 @@ export default function MethodologyPage() {
               <section id="products" className="methodology-section">
                 <SectionHead id="products" />
                 <p>상품 조건은 교육용 시드 값이다. 자동차 할부의 최대 금액은 차량가 × LTV로 신청마다 정해진다.</p>
-                <div className="table-scroll">
+                <div className="table-scroll" tabIndex={0} role="region" aria-label="상품 조건 표">
                   <table className="table">
                     <caption>상품 {m.products.length}개의 조건</caption>
                     <thead>
@@ -270,7 +270,7 @@ export default function MethodologyPage() {
               <section id="assumptions" className="methodology-section">
                 <SectionHead id="assumptions" />
                 <p>이 서비스가 교육 목적으로 정한 값이다. 실제 금융회사의 운영 수치가 아니며, 제도 수치와 달리 출처가 없다.</p>
-                <div className="table-scroll">
+                <div className="table-scroll" tabIndex={0} role="region" aria-label="가정값 표">
                   <table className="table">
                     <caption>가정값 {m.assumptions.length}건 · 이 서비스가 정한 값<span className="table-caption-note">항목 이름은 규칙 세트의 키이고, 같은 값이 계산기·샌드박스에 그대로 쓰인다.</span></caption>
                     <thead><tr><th scope="col" className="num">번호</th><th scope="col">항목</th><th scope="col" className="num">값</th><th scope="col">설명</th></tr></thead>

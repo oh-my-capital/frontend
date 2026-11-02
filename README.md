@@ -26,6 +26,27 @@ npm run preview        # dist/ 를 5190에서 확인
 | `VITE_API_BASE_URL` | `/api` | API 경로. 배포도 같은 origin의 `/api`를 쓴다 |
 | `VITE_MOCK` | (비움) | `1`이면 `src/api/mock/`의 고정 응답으로 동작 |
 | `API_PROXY_TARGET` | `http://localhost:8090` | dev·preview 서버의 `/api` 프록시 대상(빌드에는 안 들어감) |
+| `VITE_SITE_URL` | (비움) | 배포 사이트 주소(끝 `/` 없이). 있으면 빌드가 `sitemap.xml`·`robots.txt`의 `Sitemap:` 줄·`index.html`의 canonical/og:url/og:image 절대 주소를 만든다. 비우면 만들지 않는다(실제 도메인을 커밋하지 않는다) |
+
+## 라우트·코드 분할·검색 메타(WP39)
+
+화면은 모두 `React.lazy`로 따로 받는다(NFR-21). 첫 방문은 공통 틀(머리·바닥·인증·메타)과 그 화면 조각만 내려받는다.
+조각을 받는 동안·실패했을 때의 표시는 `components/RouteSuspense.tsx` 한 곳(공용 `Loading`·`LoadError`)이 맡는다.
+
+**새 화면을 더하는 법** — `src/App.tsx`에 두 줄, `src/components/pageMeta.ts`에 한 줄:
+
+```tsx
+// App.tsx — 화면 상수(파일은 default export). 정적 import 로 넣지 않는다(첫 화면 JS 에 다시 섞인다).
+const FooPage = lazy(() => import("./pages/foo/FooPage"));
+// App.tsx — RouteSuspense 라우트 안("화면 조각 경계 — 끝" 주석 위)에 Route 한 줄. 로그인 필요면 <ProtectedRoute>, 운영이면 adminOnly.
+<Route path="/foo" element={<FooPage />} />
+// pageMeta.ts — 제목·설명·검색 노출. 공개 고정 경로면 sitemap: true
+{ path: "/foo", title: "푸 화면", index: true, sitemap: true, description: "기능을 설명하는 한두 문장." },
+```
+
+`pageMeta.ts`에 빠뜨리면 `nav.ts`의 메뉴 이름을 제목으로 쓰고 `noindex`로 둔다. 화면 안에서 더 구체적인 제목이 필요하면 `setDocumentTitle(title, description?)`.
+`components/PageTitle.tsx`가 라우트마다 `<title>`·description·Open Graph·canonical·robots를 맞추고, `public/robots.txt`는 로그인 필요·운영 경로를 수집에서 뺀다.
+메타 정책은 docs `design/screens.md`의 `## WP39`.
 
 ## 디자인 시스템 v3
 
@@ -52,7 +73,7 @@ styles/
 └── home · account · learn · glossary · calculators · sandbox · admin   화면별 규칙만
 ```
 
-공용 컴포넌트(`src/components/`): `nav.ts`(메뉴 정의) `Layout`(본문 바로가기 포함) `Header` `SiteFooter` `Brand` `Icon` `PageTitle` `SubPageHeader`
+공용 컴포넌트(`src/components/`): `nav.ts`(메뉴 정의) `Layout`(본문 바로가기 포함) `Header` `SiteFooter` `Brand` `Icon` `PageTitle`(+`pageMeta.ts`) `RouteSuspense` `SubPageHeader`
 `ProtectedRoute`(+`ForbiddenPage`) `Loading` `LoadError` `EmptyState` `Tabs`(+`FilterGroup`) `ProgressBar`
 `Stepper` `Timeline` `DataTable` `StatusChip` `Money` `MoneyInput` `RateInput` `Disclosure` `ConceptDiagram`.
 

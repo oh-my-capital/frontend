@@ -65,7 +65,7 @@ export default function SandboxPage() {
                 <dl className="sandbox-facts">
                   <div>
                     <dt>가상 고객</dt>
-                    <dd>{s.profile ? <>신용점수 {s.profile.creditScore}점 · 연소득 {formatNumber(s.profile.annualIncome)}원 · 기존 연 원리금 {formatNumber(s.profile.existingAnnualDebtService)}원 <Link to="/sandbox/profile">바꾸기</Link></> : <><Link to="/sandbox/profile">프로필을 만들고</Link> 첫 대출을 신청해 봐요</>}</dd>
+                    <dd>{s.profile ? <>신용점수 {s.profile.creditScore}점 · 연소득 {formatNumber(s.profile.annualIncome)}원 · 기존 연 원리금 {formatNumber(s.profile.existingAnnualDebtService)}원 <Link className="text-link" to="/sandbox/profile">바꾸기</Link></> : <><Link className="text-link" to="/sandbox/profile">프로필을 만들고</Link> 첫 대출을 신청해 봐요</>}</dd>
                   </div>
                   <div>
                     <dt>연체</dt>
