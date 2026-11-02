@@ -1,0 +1,27 @@
+/*
+ * 규칙 변경 결재(S-310~S-312, WP31). 공통 배치(.admin-grid·.admin-detail·.admin-form·.admin-def)는 admin.css,
+ * 표·버튼·입력·상태 chip·지표 줄은 base.css 가 준다. 여기에는 이 화면에만 있는 줄만 둔다. 색·글자·간격은 토큰만.
+ */
+.rules-detail { gap: var(--sp-6); }
+.rules-version-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+.rules-compare .def-list dd.num { font-variant-numeric: tabular-nums; }
+.rules-compare .rules-new { color: var(--primary); font-weight: var(--fw-bold); }
+.rules-compare code, .rules-current code { font-size: var(--fs-caption); word-break: break-all; }
+.rules-actions { display: grid; gap: var(--sp-3); padding-top: var(--sp-5); border-top: var(--rule) solid var(--border); }
+.rules-actions h3, .rules-backtest h3 { font-size: var(--fs-lead); }
+.rules-blocked { padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--warn-line); background: var(--warn-bg); color: var(--text); font-size: var(--fs-small); }
+.rules-backtest { display: grid; gap: var(--sp-4); padding-top: var(--sp-5); border-top: var(--rule) solid var(--border); }
+.rules-backtest .section-head { margin-bottom: 0; }
+.rules-population { font-size: var(--fs-small); color: var(--text-muted); }
+.rules-changed { --figure-cols: 3; }
+.rules-flow { display: grid; gap: var(--sp-2); padding-left: var(--sp-5); font-size: var(--fs-small); }
+.rules-form .rules-date { max-width: 260px; }
+.rules-figure-text { font-size: var(--fs-lead); }
+.rules-grid code { font-size: var(--fs-caption); word-break: break-all; }
+
+@media (max-width: 740px) {
+  .rules-changed { --figure-cols: 1; }
+  .rules-changed > div { border-right: 0; border-bottom: var(--rule) solid var(--border); }
+  .rules-changed > div:last-child { border-bottom: 0; }
+  .rules-form .rules-date { max-width: none; }
+}
