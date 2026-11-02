@@ -128,6 +128,20 @@ src/
 - 인터랙티브 요소는 최소 `--touch`(44px). 인라인 `style`은 막대 길이·색 토큰 전달·`--figure-cols`만 허용.
 - 계약(`docs/contracts/CapiMATE-API.yml`)과 `types.ts`가 어긋나면 계약을 먼저 고치고 같은 PR에서 타입을 맞춘다.
 
+## 배포 이미지
+
+`Dockerfile`(다단계): Node 22로 `npm ci && npm run build` → `caddy:2.11.7-alpine`에 `dist/`를 `/srv`로 복사해 **8080**에서 서빙(비루트 uid 10001). 설정은 `deploy/Caddyfile`.
+
+```sh
+docker build -t capimate-web:<태그> .
+docker run --rm -p 127.0.0.1:8080:8080 capimate-web:<태그>   # http://127.0.0.1:8080
+```
+
+- 경로: `/assets/*`는 1년 immutable 캐시, 없는 파일은 404. 그 밖의 경로는 `index.html`(SPA fallback, `no-cache`). `/api/*`는 이 서버에 오면 404 — 앞단 프록시(infra `deploy/Caddyfile`)가 백엔드로 넘긴다.
+- 보안 헤더: docs `contracts/runtime.md`의 프런트 CSP와 `nosniff`·`X-Frame-Options: DENY`·`Referrer-Policy`·`Permissions-Policy`. TLS·HSTS는 앞단 프록시가 붙인다.
+- 빌드 변수는 `VITE_API_BASE_URL=/api`, `VITE_MOCK=` 고정. `.env*`는 `.dockerignore`로 빼서 mock 설정이 번들에 섞이지 않는다. 공개 저장소이므로 build-arg로 내부 주소·비밀값을 넣지 않는다.
+- 운영 compose·배포 절차: infra `deploy/README.md`, docs `operations/runbook.md`.
+
 ## 검수
 
 PR마다 docs `design/ui-guidelines.md` §9 체크리스트와 1440·375 폭 스크린샷을 붙인다.
