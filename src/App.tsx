@@ -57,6 +57,9 @@ const MissionPage = lazy(() => import("./pages/missions/MissionPage"));
 const MissionsPage = lazy(() => import("./pages/missions/MissionsPage"));
 // WP16 — 자동차 금융 비교
 const AutoFinanceCalculatorPage = lazy(() => import("./pages/calculators/AutoFinanceCalculatorPage"));
+// WP33 — 단위경제 계산기·포트폴리오 손익
+const UnitEconomicsCalculatorPage = lazy(() => import("./pages/calculators/UnitEconomicsCalculatorPage"));
+const AdminPnlPage = lazy(() => import("./pages/admin/pnl/AdminPnlPage"));
 // WP32 — 기업 심사 시뮬레이터
 const CorporateScreeningPage = lazy(() => import("./pages/calculators/CorporateScreeningPage"));
 // WP25 — 고객센터·금융소비자 권리 안내
@@ -146,6 +149,9 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
           {/* WP32 — 기업 심사 시뮬레이터 */}
           <Route path="/calculators/corporate" element={<CorporateScreeningPage />} />
+          {/* WP33 — 단위경제 계산기·포트폴리오 손익 */}
+          <Route path="/calculators/unit-economics" element={<UnitEconomicsCalculatorPage />} />
+          <Route path="/admin/pnl" element={<ProtectedRoute adminOnly><AdminPnlPage /></ProtectedRoute>} />
         {/* 화면 조각 경계(WP39) — 끝. 새 Route 는 이 줄 위에 */}
         </Route>
         </Route>
