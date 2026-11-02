@@ -58,6 +58,9 @@ import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
 import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
 import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
+// WP35 — 기관·교육 과정·진척 대시보드
+import OrgPage from "./pages/org/OrgPage";
+import AdminOrganizationsPage from "./pages/admin/organizations/AdminOrganizationsPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -119,6 +122,9 @@ export default function App() {
           <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>} />
           <Route path="/admin/collections" element={<ProtectedRoute adminOnly><AdminCollectionsPage /></ProtectedRoute>} />
           <Route path="/admin/audit" element={<ProtectedRoute adminOnly><AdminAuditPage /></ProtectedRoute>} />
+          {/* WP35 — 기관·교육 과정(내 기관 · 기관 관리) */}
+          <Route path="/org" element={<ProtectedRoute><OrgPage /></ProtectedRoute>} />
+          <Route path="/admin/organizations" element={<ProtectedRoute adminOnly><AdminOrganizationsPage /></ProtectedRoute>} />
 
           {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
           <Route path="/support" element={<SupportHomePage />} />

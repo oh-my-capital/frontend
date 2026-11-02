@@ -1,0 +1,54 @@
+/*
+ * 내 기관(S-350~352)·기관 관리(S-353), WP35. 공통 규칙(.table·.btn·.field-*·.figure-row·.panel·.status-*)은 base.css,
+ * 운영 2열 배치(.admin-grid·.admin-sub·.admin-linklike)는 admin.css. 여기에는 토큰만 쓴다(리터럴 금지).
+ * 375px: 표는 .table-scroll 안에서만 가로로 움직이고, 폼은 한 열로 쌓는다.
+ */
+
+.org .org-stack { gap: var(--sp-6); min-width: 0; }
+.org .page-grid > * { min-width: 0; }
+.org-progress { gap: var(--sp-4); min-width: 0; margin-top: var(--sp-9); }
+
+/* ── 합류 폼 ───────────────────────────────────────────────────────────── */
+.org-join { display: grid; gap: var(--sp-5); }
+.org-code-input { max-width: var(--aside-w); font-variant-numeric: tabular-nums; letter-spacing: var(--ls-wide); text-transform: uppercase; }
+.org-sharing { width: 100%; }
+.org-sharing td { vertical-align: top; }
+.org-aside-text { color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
+.org-note { padding: var(--sp-3) var(--sp-4); border-left: var(--rule-accent) solid var(--accent); background: var(--accent-tint); color: var(--text); font-size: var(--fs-small); line-height: var(--lh-body); }
+
+/* ── 소속 ──────────────────────────────────────────────────────────────── */
+.org .figure-row dd.org-figure-name { font-size: var(--fs-h3); line-height: var(--lh-snug); word-break: keep-all; }
+.org .figure-row dd.org-figure-date { font-size: var(--fs-body); line-height: var(--lh-snug); }
+.org .figure-row dd small { display: block; margin: var(--sp-1) 0 0; }
+.org-shared-list { display: grid; gap: var(--sp-1); padding-left: var(--sp-5); font-size: var(--fs-base); line-height: var(--lh-body); }
+.org-shared-list li::marker { color: var(--accent); }
+.org-leave { display: grid; gap: var(--sp-3); justify-items: start; }
+.org-confirm { display: grid; gap: var(--sp-2); }
+.org-confirm p { color: var(--text); font-size: var(--fs-small); line-height: var(--lh-body); }
+
+/* ── 진척 표 ───────────────────────────────────────────────────────────── */
+.org-member-no { font-variant-numeric: tabular-nums; font-weight: var(--fw-semibold); }
+.org-sub { display: block; margin-top: var(--sp-1); }
+.org-bar { display: grid; gap: var(--sp-1); min-width: var(--sp-12); }
+.org-bar .num { font-variant-numeric: tabular-nums; }
+
+/* ── 운영: 기관 관리 ───────────────────────────────────────────────────── */
+.org-admin .admin-note { margin-bottom: var(--sp-6); }
+.org-create { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); align-items: end; }
+.org-create-name { grid-column: 1 / -1; }
+.org-create-actions { display: grid; gap: var(--sp-3); justify-items: start; grid-column: 1 / -1; }
+.org-steps { display: grid; gap: var(--sp-2); padding-left: var(--sp-5); font-size: var(--fs-small); line-height: var(--lh-body); }
+.org-detail { gap: var(--sp-5); min-width: 0; }
+.org-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+.org-invite-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-3); margin-top: var(--sp-4); }
+.org-invite-form .field { flex: 1 1 var(--aside-w); min-width: 0; }
+.org-issued { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-4); border: var(--rule) solid var(--primary-line); background: var(--primary-tint); }
+.org-issued-label { color: var(--text-muted); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.org-issued-code code { color: var(--primary-strong); font-size: var(--fs-h3); font-weight: var(--fw-bold); letter-spacing: var(--ls-wide); word-break: break-all; }
+.org-issued-warn { color: var(--text); font-size: var(--fs-caption); line-height: var(--lh-snug); }
+
+@media (max-width: 740px) {
+  .org-create { grid-template-columns: minmax(0, 1fr); }
+  .org-code-input { max-width: none; }
+  .org-detail-head { flex-direction: column; }
+}
