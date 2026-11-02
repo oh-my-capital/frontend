@@ -58,6 +58,9 @@ import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
 import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
 import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
+// WP33 — 단위경제 계산기·포트폴리오 손익
+import UnitEconomicsCalculatorPage from "./pages/calculators/UnitEconomicsCalculatorPage";
+import AdminPnlPage from "./pages/admin/pnl/AdminPnlPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -97,6 +100,7 @@ export default function App() {
           <Route path="/calculators/dsr" element={<DsrCalculatorPage />} />
           {/* WP16 — 자동차 금융 비교 */}
           <Route path="/calculators/auto-finance" element={<AutoFinanceCalculatorPage />} />
+          <Route path="/calculators/unit-economics" element={<UnitEconomicsCalculatorPage />} /> {/* WP33 — 대출 한 건의 손익 */}
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -119,6 +123,7 @@ export default function App() {
           <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>} />
           <Route path="/admin/collections" element={<ProtectedRoute adminOnly><AdminCollectionsPage /></ProtectedRoute>} />
           <Route path="/admin/audit" element={<ProtectedRoute adminOnly><AdminAuditPage /></ProtectedRoute>} />
+          <Route path="/admin/pnl" element={<ProtectedRoute adminOnly><AdminPnlPage /></ProtectedRoute>} /> {/* WP33 — 포트폴리오 손익 */}
 
           {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
           <Route path="/support" element={<SupportHomePage />} />
