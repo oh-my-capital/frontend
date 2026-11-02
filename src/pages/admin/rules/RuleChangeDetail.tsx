@@ -20,6 +20,9 @@ export default function RuleChangeDetail({ id, onChanged, onClose }: { id: numbe
   const change = useLoad(() => ruleChangesApi.get(id), [id]);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, [id]);
+  // 행동 결과 문장은 여기(상태가 바뀌어도 다시 만들어지지 않는 자리)에 둔다. Actions 는 상태마다 key 로 새로 만들어지므로
+  // 그 안에 두면 "결재를 요청했어요." 같은 결과가 상태 전이와 함께 지워져 aria-live 로 알려지지 않는다.
+  const [notice, setNotice] = useState<{ id: number; text: string } | null>(null);
 
   return (
     <section className="panel admin-detail rules-detail" aria-labelledby="rules-detail-title">
@@ -35,7 +38,8 @@ export default function RuleChangeDetail({ id, onChanged, onClose }: { id: numbe
       {change.data && (
         <>
           <Comparison c={change.data} />
-          <Actions key={`${change.data.id}-${change.data.status}`} c={change.data} onDone={updated => { change.setData(updated); onChanged(); }} />
+          <Actions key={`${change.data.id}-${change.data.status}`} c={change.data} onDone={(updated, message) => { setNotice({ id: updated.id, text: message }); change.setData(updated); onChanged(); }} />
+          <div aria-live="polite">{notice?.id === id && <p className="form-done">{notice.text}</p>}</div>
           <BacktestSection c={change.data} />
         </>
       )}
@@ -66,22 +70,19 @@ function Comparison({ c }: { c: RuleChange }) {
   );
 }
 
-function Actions({ c, onDone }: { c: RuleChange; onDone: (c: RuleChange) => void }) {
+function Actions({ c, onDone }: { c: RuleChange; onDone: (c: RuleChange, message: string) => void }) {
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
   const length = [...comment.trim()].length;
   const rejectOk = length >= REASON_MIN && length <= REASON_MAX;
 
   const run = async (action: () => Promise<RuleChange>, message: string) => {
     setBusy(true);
     setError(null);
-    setDone(null);
     try {
       const updated = await action();
-      setDone(message);
-      onDone(updated);
+      onDone(updated, message);
     } catch (err) {
       setError(errorMessage(err, "처리하지 못했어요. 잠시 뒤 다시 시도해요."));
     } finally {
@@ -101,12 +102,12 @@ function Actions({ c, onDone }: { c: RuleChange; onDone: (c: RuleChange) => void
             {busy ? "요청하고 있어요…" : "결재 요청"}
           </button>
         </div>
-        <Feedback error={error} done={done} />
+        <Feedback error={error} />
       </div>
     );
   }
   if (c.status !== "PENDING") {
-    return <Feedback error={error} done={done} />;
+    return <Feedback error={error} />;
   }
   const blocked = !c.canReview;
   return (
@@ -131,18 +132,14 @@ function Actions({ c, onDone }: { c: RuleChange; onDone: (c: RuleChange) => void
           반려
         </button>
       </div>
-      <Feedback error={error} done={done} />
+      <Feedback error={error} />
     </div>
   );
 }
 
-function Feedback({ error, done }: { error: string | null; done: string | null }) {
-  return (
-    <div aria-live="polite">
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {done && <p className="form-done">{done}</p>}
-    </div>
-  );
+/** 오류는 role=alert 로 바로 알린다. 성공 문장은 RuleChangeDetail 의 고정 aria-live 줄이 맡는다. */
+function Feedback({ error }: { error: string | null }) {
+  return error ? <p className="form-error" role="alert">{error}</p> : null;
 }
 
 function BacktestSection({ c }: { c: RuleChange }) {
