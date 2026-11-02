@@ -58,6 +58,8 @@ import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
 import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
 import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
+// WP30 — 회계 원장·대사
+import AdminLedgerPage from "./pages/admin/ledger/AdminLedgerPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -119,6 +121,8 @@ export default function App() {
           <Route path="/admin/analytics" element={<ProtectedRoute adminOnly><AdminAnalyticsPage /></ProtectedRoute>} />
           <Route path="/admin/collections" element={<ProtectedRoute adminOnly><AdminCollectionsPage /></ProtectedRoute>} />
           <Route path="/admin/audit" element={<ProtectedRoute adminOnly><AdminAuditPage /></ProtectedRoute>} />
+          {/* WP30 — 회계 원장·대사 */}
+          <Route path="/admin/ledger" element={<ProtectedRoute adminOnly><AdminLedgerPage /></ProtectedRoute>} />
 
           {/* WP25 — 고객센터·금융소비자 권리 안내(공개) */}
           <Route path="/support" element={<SupportHomePage />} />

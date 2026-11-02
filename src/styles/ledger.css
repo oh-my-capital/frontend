@@ -1,0 +1,42 @@
+/*
+ * 회계 원장·대사(S-300~S-302, WP30). admin.css·admin-analytics.css·base.css 위에 이 화면에만 있는 규칙을 더한다.
+ * 색·글자·간격은 tokens.css 토큰만 쓴다.
+ */
+
+.ledger-notice { margin: 0 0 var(--sp-6); padding: var(--sp-3) var(--sp-4); border-left: var(--rule-accent) solid var(--accent); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-small); line-height: 1.6; }
+.ledger-notice strong { color: var(--text); }
+.ledger-section { margin-top: var(--sp-6); }
+.ledger-field-narrow { min-width: 120px; max-width: 160px; }
+.ledger-filter-gap { margin-top: var(--sp-5); }
+
+/* 분개 한 행 안의 차변·대변 줄 목록 */
+.ledger-side { display: grid; gap: 2px; min-width: 200px; margin: 0; padding: 0; list-style: none; }
+.ledger-side li { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); white-space: nowrap; }
+.ledger-side .money { font-variant-numeric: tabular-nums; }
+.ledger-account { display: inline-flex; align-items: baseline; gap: 6px; }
+.ledger-code { color: var(--text-faint); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.ledger-contract { display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.ledger-contract small { color: var(--text-muted); font-size: var(--fs-caption); }
+.ledger-right { justify-items: end; }
+.ledger-memo { display: block; min-width: 160px; color: var(--text-muted); font-size: var(--fs-small); }
+
+/* 시산표 검사 줄 */
+.ledger-check { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-5); margin-bottom: var(--sp-4); color: var(--text-muted); font-size: var(--fs-small); }
+.ledger-check .money { color: var(--text); }
+.ledger-note { margin-top: var(--sp-4); color: var(--text-muted); font-size: var(--fs-small); line-height: 1.6; }
+.ledger-note.faint { color: var(--text-faint); font-size: var(--fs-caption); }
+
+/* 대사 */
+.ledger-figures { --figure-cols: 5; }
+.ledger-figures dd.good { color: var(--good); }
+.ledger-figures dd.danger { color: var(--danger); }
+.ledger-figure-time { font-size: var(--fs-base); }
+.ledger-diff { color: var(--danger); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.ledger-diff-zero { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ledger-failures { display: grid; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); list-style: none; color: var(--text-muted); font-size: var(--fs-small); overflow-wrap: anywhere; }
+.ledger-failures strong { color: var(--text); }
+
+@media (max-width: 740px) {
+  .ledger-field-narrow { max-width: none; }
+  .ledger-check { flex-direction: column; align-items: flex-start; }
+}
