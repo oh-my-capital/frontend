@@ -58,6 +58,8 @@ const MissionPage = lazy(() => import("./pages/missions/MissionPage"));
 const MissionsPage = lazy(() => import("./pages/missions/MissionsPage"));
 // WP16 — 자동차 금융 비교
 const AutoFinanceCalculatorPage = lazy(() => import("./pages/calculators/AutoFinanceCalculatorPage"));
+// WP30 — 회계 원장·대사
+const AdminLedgerPage = lazy(() => import("./pages/admin/ledger/AdminLedgerPage"));
 // WP31 — 규칙 변경 결재·백테스트
 const AdminRulesPage = lazy(() => import("./pages/admin/rules/AdminRulesPage"));
 // WP35 — 기관·교육 과정
@@ -180,6 +182,8 @@ export default function App() {
           <Route path="/admin/organizations" element={<ProtectedRoute adminOnly><AdminOrganizationsPage /></ProtectedRoute>} />
           {/* WP31 — 규칙 변경 결재·백테스트 */}
           <Route path="/admin/rules" element={<ProtectedRoute adminOnly><AdminRulesPage /></ProtectedRoute>} />
+          {/* WP30 — 회계 원장·대사 */}
+          <Route path="/admin/ledger" element={<ProtectedRoute adminOnly><AdminLedgerPage /></ProtectedRoute>} />
         {/* 화면 조각 경계(WP39) — 끝. 새 Route 는 이 줄 위에 */}
         </Route>
         </Route>
