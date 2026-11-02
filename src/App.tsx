@@ -17,6 +17,7 @@ import Layout from "./components/Layout";
 import PageTitle from "./components/PageTitle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RouteSuspense from "./components/RouteSuspense";
+import ReconsentNotice from "./pages/legal/ReconsentNotice"; // WP36 — 모든 화면 공통 띠라 정적으로 둔다
 import { AuthProvider } from "./context/AuthContext";
 const HomePage = lazy(() => import("./pages/HomePage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -57,6 +58,10 @@ const MissionPage = lazy(() => import("./pages/missions/MissionPage"));
 const MissionsPage = lazy(() => import("./pages/missions/MissionsPage"));
 // WP16 — 자동차 금융 비교
 const AutoFinanceCalculatorPage = lazy(() => import("./pages/calculators/AutoFinanceCalculatorPage"));
+// WP36 — 약관·개인정보처리방침·내 데이터
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
+const MyDataPage = lazy(() => import("./pages/settings/MyDataPage"));
 // WP40 — 서비스 지표
 const AdminKpiPage = lazy(() => import("./pages/admin/kpi/AdminKpiPage"));
 // WP33 — 단위경제 계산기·포트폴리오 손익
@@ -85,6 +90,7 @@ export default function App() {
   return (
     <AuthProvider>
       <PageTitle />
+      <ReconsentNotice /> {/* WP36 — 로그인 사용자에게 재동의가 필요할 때만 화면 아래 띠(Layout 은 WP40 소유라 여기에 둔다) */}
       <Routes>
         <Route element={<Layout />}>
         {/* 화면 조각 경계(WP39). 화면 Route 는 모두 이 안에 둔다 — 시작 */}
@@ -156,6 +162,10 @@ export default function App() {
           <Route path="/admin/pnl" element={<ProtectedRoute adminOnly><AdminPnlPage /></ProtectedRoute>} />
           {/* WP40 — 서비스 지표 */}
           <Route path="/admin/kpi" element={<ProtectedRoute adminOnly><AdminKpiPage /></ProtectedRoute>} />
+          {/* WP36 — 약관·개인정보처리방침·내 데이터 */}
+          <Route path="/legal/terms" element={<TermsPage />} />
+          <Route path="/legal/privacy" element={<PrivacyPage />} />
+          <Route path="/settings/data" element={<ProtectedRoute><MyDataPage /></ProtectedRoute>} />
         {/* 화면 조각 경계(WP39) — 끝. 새 Route 는 이 줄 위에 */}
         </Route>
         </Route>
