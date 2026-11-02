@@ -57,6 +57,8 @@ const MissionPage = lazy(() => import("./pages/missions/MissionPage"));
 const MissionsPage = lazy(() => import("./pages/missions/MissionsPage"));
 // WP16 — 자동차 금융 비교
 const AutoFinanceCalculatorPage = lazy(() => import("./pages/calculators/AutoFinanceCalculatorPage"));
+// WP40 — 서비스 지표
+const AdminKpiPage = lazy(() => import("./pages/admin/kpi/AdminKpiPage"));
 // WP33 — 단위경제 계산기·포트폴리오 손익
 const UnitEconomicsCalculatorPage = lazy(() => import("./pages/calculators/UnitEconomicsCalculatorPage"));
 const AdminPnlPage = lazy(() => import("./pages/admin/pnl/AdminPnlPage"));
@@ -152,6 +154,8 @@ export default function App() {
           {/* WP33 — 단위경제 계산기·포트폴리오 손익 */}
           <Route path="/calculators/unit-economics" element={<UnitEconomicsCalculatorPage />} />
           <Route path="/admin/pnl" element={<ProtectedRoute adminOnly><AdminPnlPage /></ProtectedRoute>} />
+          {/* WP40 — 서비스 지표 */}
+          <Route path="/admin/kpi" element={<ProtectedRoute adminOnly><AdminKpiPage /></ProtectedRoute>} />
         {/* 화면 조각 경계(WP39) — 끝. 새 Route 는 이 줄 위에 */}
         </Route>
         </Route>
