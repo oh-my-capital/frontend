@@ -25,3 +25,12 @@
   .rules-changed > div:last-child { border-bottom: 0; }
   .rules-form .rules-date { max-width: none; }
 }
+
+/* 변경 불가 제도 수치: 보조 열이 좁아 표 대신 이름(키) / 값·출처 두 줄로 쌓는다. */
+.rules-locked { display: grid; gap: var(--sp-3); font-size: var(--fs-small); }
+.rules-locked > div { display: grid; gap: var(--sp-1); padding-bottom: var(--sp-3); border-bottom: var(--rule) solid var(--border); }
+.rules-locked > div:last-child { padding-bottom: 0; border-bottom: 0; }
+.rules-locked dt { font-weight: var(--fw-semibold); }
+.rules-locked dt code { display: block; margin-top: 2px; color: var(--text-muted); }
+.rules-locked dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.rules-locked .num { font-variant-numeric: tabular-nums; font-weight: var(--fw-bold); }

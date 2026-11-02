@@ -91,17 +91,18 @@ export default function AdminRulesPage() {
                   <h3>바꿀 수 없는 제도 수치</h3>
                   <p>출처가 법령인 값. 법이 바뀌면 업무 규칙 문서와 새 규칙 세트 버전으로 반영한다.</p>
                 </div>
-                <DataTable
-                  caption="제도 수치"
-                  columns={[
-                    { key: "label", header: "이름", rowHeader: true, render: l => <>{l.label}<span className="admin-sub faint"><code>{l.key}</code></span></> },
-                    { key: "value", header: "값", numeric: true, nowrap: true, render: l => l.value || "—" },
-                    { key: "source", header: "출처", render: l => <><a href={l.sourceUrl} target="_blank" rel="noreferrer">법령 보기</a>{l.checkedOn && <span className="admin-sub faint">확인 {formatDate(l.checkedOn)}</span>}</> },
-                  ]}
-                  rows={catalog.data.locked}
-                  rowKey={l => l.key}
-                  compact
-                />
+                <dl className="rules-locked">
+                  {catalog.data.locked.map(l => (
+                    <div key={l.key}>
+                      <dt>{l.label}<code>{l.key}</code></dt>
+                      <dd>
+                        <span className="num">{l.value || "—"}</span>
+                        <a href={l.sourceUrl} target="_blank" rel="noreferrer">법령 보기</a>
+                        {l.checkedOn && <span className="faint">확인 {formatDate(l.checkedOn)}</span>}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             )}
             <Disclosure />
@@ -136,8 +137,8 @@ function ChangeTable({ items, selected, onSelect }: { items: RuleChange[]; selec
         return <><StatusChip label={s.label} tone={s.tone} />{c.targetVersion && <span className="admin-sub faint">{c.targetVersion}</span>}</>;
       },
     },
-    { key: "drafter", header: "기안", nowrap: true, render: c => <>{c.drafter.label}{c.draftedByMe && <span className="admin-sub faint">내 기안</span>}</> },
-    { key: "reviewer", header: "결재", nowrap: true, render: c => c.reviewer?.label ?? <span className="faint">—</span> },
+    { key: "drafter", header: "기안", render: c => <>{c.drafter.label}{c.draftedByMe && <span className="admin-sub faint">내 기안</span>}</> },
+    { key: "reviewer", header: "결재", render: c => c.reviewer?.label ?? <span className="faint">—</span> },
   ];
   return (
     <DataTable
