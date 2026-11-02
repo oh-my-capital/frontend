@@ -58,6 +58,11 @@ import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
 import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
 import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
+// WP36 — 약관·개인정보처리방침·내 데이터·재동의 안내
+import PrivacyPage from "./pages/legal/PrivacyPage";
+import ReconsentNotice from "./pages/legal/ReconsentNotice";
+import TermsPage from "./pages/legal/TermsPage";
+import MyDataPage from "./pages/settings/MyDataPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -67,6 +72,7 @@ export default function App() {
   return (
     <AuthProvider>
       <PageTitle />
+      <ReconsentNotice /> {/* WP36 — 로그인 사용자에게 재동의가 필요할 때만 화면 아래 띠(Layout 은 WP40 소유라 여기에 둔다) */}
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
@@ -127,6 +133,11 @@ export default function App() {
           <Route path="/support/notices/:id" element={<NoticePage />} />
           <Route path="/support/rights" element={<RightsPage />} />
           <Route path="/support/guide" element={<GuidePage />} />
+
+          {/* WP36 — 약관·개인정보처리방침(공개)·내 데이터 */}
+          <Route path="/legal/terms" element={<TermsPage />} />
+          <Route path="/legal/privacy" element={<PrivacyPage />} />
+          <Route path="/settings/data" element={<ProtectedRoute><MyDataPage /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

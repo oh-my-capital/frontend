@@ -1,0 +1,70 @@
+/*
+ * 약관·처리방침·내 데이터·재동의 안내(WP36): S-360·S-361·S-362·S-363.
+ * 토큰·기반 규칙은 tokens.css·base.css 를 그대로 쓴다. 색·글자 크기·간격 리터럴을 여기에 적지 않는다.
+ * 상태 라벨은 StatusChip(.status-*), 접힘은 .fold, 표는 .table(.table-scroll)을 쓴다.
+ */
+
+/* ---------- 문서 화면(S-360·S-361) ---------- */
+.legal .page-grid > div, .legal .page-grid > article { min-width: 0; }
+.legal .state-box { margin-top: var(--sp-5); }
+.legal-draft { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-6); padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--accent-line); border-left: var(--rule-accent) solid var(--accent); background: var(--accent-tint); font-size: var(--fs-small); line-height: var(--lh-body); }
+.legal-draft strong { color: var(--accent-strong); font-weight: var(--fw-bold); }
+.legal-draft span:last-child { color: var(--text-muted); }
+.legal-body { display: grid; gap: var(--sp-7); max-width: var(--measure); }
+.legal-doc-title { font-size: var(--fs-h2-lg); }
+.legal-summary { margin-top: calc(var(--sp-4) * -1); color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-loose); }
+.legal-article { display: grid; gap: var(--sp-3); scroll-margin-top: calc(var(--header-height) + var(--sp-4)); }
+.legal-article h3 { display: flex; align-items: baseline; gap: var(--sp-3); padding-bottom: var(--sp-2); border-bottom: var(--rule) solid var(--border); font-size: var(--fs-h3); }
+.legal-article-no { flex-shrink: 0; color: var(--primary); font-size: var(--fs-small); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.legal-article > p { font-size: var(--fs-body); line-height: var(--lh-loose); }
+.legal-items { display: grid; gap: var(--sp-2); margin: 0; padding-left: var(--sp-6); list-style: decimal; font-size: var(--fs-body); line-height: var(--lh-body); }
+.legal-table td, .legal-table th { vertical-align: top; line-height: var(--lh-body); }
+.legal-basis { color: var(--text-faint); font-size: var(--fs-caption); }
+.legal-toc ol { display: grid; margin: 0; padding: 0; list-style: none; }
+.legal-toc a { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--touch); font-size: var(--fs-base); font-weight: var(--fw-semibold); }
+.legal-toc-no { min-width: var(--sp-10); color: var(--text-faint); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.legal-placeholders { display: grid; gap: var(--sp-2); margin: 0; padding-left: var(--sp-5); list-style: disc; font-size: var(--fs-small); line-height: var(--lh-body); }
+.legal-sources { display: grid; margin: 0; padding: 0; list-style: none; }
+.legal-sources li { display: grid; gap: var(--sp-1); padding: var(--sp-2) 0; border-bottom: var(--rule) solid var(--border); font-size: var(--fs-small); }
+.legal-sources li:last-child { border-bottom: 0; }
+.legal-sources a { font-weight: var(--fw-semibold); overflow-wrap: anywhere; }
+
+/* ---------- 내 데이터(S-362) ---------- */
+.legal-stack { grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
+.legal-stack > * { min-width: 0; }
+.my-data .panel h2 { font-size: var(--fs-h3); }
+.my-data .panel > p.muted { margin-top: var(--sp-1); margin-bottom: var(--sp-4); font-size: var(--fs-base); line-height: var(--lh-loose); }
+.legal-scope, .legal-rights { margin-bottom: var(--sp-5); line-height: var(--lh-body); }
+.legal-live:empty { display: none; }
+.legal-live { margin-top: var(--sp-3); color: var(--good); font-size: var(--fs-small); font-weight: var(--fw-semibold); }
+.legal-reconsent-row { margin-top: var(--sp-4); }
+.legal-history { margin-top: var(--sp-4); }
+.legal-history ol { display: grid; gap: var(--sp-1); margin: 0; padding-left: var(--sp-5); list-style: decimal; font-variant-numeric: tabular-nums; }
+.my-data .btn-row { margin-top: var(--sp-4); }
+
+/* ---------- 가입 화면 동의(S-31 확장) ---------- */
+.signup-consents { display: grid; gap: var(--sp-3); min-width: 0; margin: 0; padding: 0; border: 0; }
+.signup-consents-title { float: left; width: 100%; margin-bottom: var(--sp-1); padding: 0 0 var(--sp-2); border-bottom: var(--rule) solid var(--border); font-size: var(--fs-small); font-weight: var(--fw-bold); }
+.signup-consents-title + * { clear: both; }
+.signup-consent { display: grid; gap: var(--sp-1); }
+.signup-consent .fold > summary { min-height: var(--touch); font-size: var(--fs-small); }
+.signup-consent .fold-body { display: grid; gap: var(--sp-2); font-size: var(--fs-small); }
+.signup-consent .fold-body a { font-weight: var(--fw-semibold); }
+
+/* ---------- 재동의 안내 띠(S-363) ---------- */
+.reconsent { position: fixed; right: 0; bottom: 0; left: 0; z-index: var(--z-overlay); border-top: var(--rule-heavy) solid var(--primary); background: var(--surface); box-shadow: var(--shadow-overlay); }
+.reconsent-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-6); width: min(100% - var(--content-gutter), var(--content-w)); margin: 0 auto; padding: var(--sp-4) 0; }
+.reconsent-text { display: grid; gap: var(--sp-2); min-width: 0; font-size: var(--fs-base); line-height: var(--lh-body); }
+.reconsent-text ul { display: grid; gap: var(--sp-1); margin: 0; padding: 0; list-style: none; font-size: var(--fs-small); }
+.reconsent-text a { font-weight: var(--fw-semibold); }
+.reconsent-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+@media (max-width: 1000px) {
+  .legal .page-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 740px) {
+  .legal-body { gap: var(--sp-6); }
+  .reconsent-inner { width: min(100% - var(--sp-8), var(--content-w)); }
+  .reconsent-actions { width: 100%; }
+  .reconsent-actions .btn { flex: 1 1 0; }
+}
