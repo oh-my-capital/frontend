@@ -42,6 +42,8 @@ import MissionPage from "./pages/missions/MissionPage";
 import MissionsPage from "./pages/missions/MissionsPage";
 // WP16 — 자동차 금융 비교
 import AutoFinanceCalculatorPage from "./pages/calculators/AutoFinanceCalculatorPage";
+// WP32 — 기업 심사 시뮬레이터
+import CorporateScreeningPage from "./pages/calculators/CorporateScreeningPage";
 // WP25 — 고객센터·금융소비자 권리 안내
 import FaqPage from "./pages/support/FaqPage";
 import GuidePage from "./pages/support/GuidePage";
@@ -97,6 +99,8 @@ export default function App() {
           <Route path="/calculators/dsr" element={<DsrCalculatorPage />} />
           {/* WP16 — 자동차 금융 비교 */}
           <Route path="/calculators/auto-finance" element={<AutoFinanceCalculatorPage />} />
+          {/* WP32 — 기업 심사 시뮬레이터 */}
+          <Route path="/calculators/corporate" element={<CorporateScreeningPage />} />
 
           <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
           <Route path="/sandbox/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

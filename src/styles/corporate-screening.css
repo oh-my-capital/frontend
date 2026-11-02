@@ -1,0 +1,32 @@
+/* 기업 심사 시뮬레이터(S-320, WP32). 공용 토큰만 쓴다. 그림은 공용 RateWaterfall·LimitLadder, 이 파일은 등급 사다리·전결 표·부호 입력만. */
+
+.corp-signed { display: grid; gap: var(--sp-1); align-content: start; }
+.corp-signed .field-check { font-size: var(--fs-caption); }
+
+.corp-grade { margin: 0; }
+.corp-grade-title strong { font-weight: var(--fw-bold); }
+.corp-grade-ladder { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: var(--sp-1); margin: 0; padding: var(--sp-4); list-style: none; }
+.corp-grade-step { position: relative; display: grid; gap: var(--sp-1); padding: var(--sp-2); border: var(--rule) solid var(--border); border-top: var(--rule-heavy) solid var(--primary-line); background: var(--surface); text-align: center; font-variant-numeric: tabular-nums; }
+.corp-grade-step.is-rejected { border-top-color: var(--danger-line); background: var(--surface-soft); color: var(--text-muted); }
+.corp-grade-step.is-current { border-color: var(--primary); border-top-color: var(--primary); background: var(--primary-tint); }
+.corp-grade-step.is-current.is-rejected { border-color: var(--danger); border-top-color: var(--danger); background: var(--danger-bg); }
+.corp-grade-no { font-size: var(--fs-h3); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
+.corp-grade-unit { margin-left: var(--sp-1); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+.corp-grade-min,
+.corp-grade-spread { font-size: var(--fs-micro); line-height: var(--lh-snug); }
+.corp-grade-spread { color: var(--text-muted); font-weight: var(--fw-semibold); }
+.corp-grade-step.is-rejected .corp-grade-spread { color: var(--danger); }
+.corp-grade-mark { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--primary-strong); }
+.corp-grade-step.is-rejected .corp-grade-mark { color: var(--danger); }
+
+.corp-cell-hit { font-weight: var(--fw-bold); box-shadow: inset 0 0 0 var(--rule-heavy) var(--accent); }
+.corp-howto dd { font-size: var(--fs-small); }
+.corp-skip { color: var(--text-muted); font-size: var(--fs-small); }
+
+@media (max-width: 740px) {
+  .corp-grade-ladder { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* 결정 요약 지표 줄: 기업 금액은 9~10자리라 공용 --fs-figure 로는 4칸에 넘친다. 한 단계 작은 글자로 줄이고 보조 글자는 아래 줄로. */
+.corp .decision .figure-row dd { font-size: var(--fs-h3); overflow-wrap: anywhere; }
+.corp .decision .figure-row dd small { display: block; margin-left: 0; margin-top: var(--sp-1); }
