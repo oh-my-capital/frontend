@@ -58,6 +58,8 @@ import ScenariosPage from "./pages/sandbox/scenarios/ScenariosPage";
 import AdminAnalyticsPage from "./pages/admin/analytics/AdminAnalyticsPage";
 import AdminAuditPage from "./pages/admin/audit/AdminAuditPage";
 import AdminCollectionsPage from "./pages/admin/collections/AdminCollectionsPage";
+// WP34 — 업권 비교·공시 읽기
+import IndustryPage from "./pages/industry/IndustryPage";
 
 /**
  * 라우트 전체(docs/design/screens.md). 공개 화면은 로그인 없이, 샌드박스·내 학습·설정은 ProtectedRoute, 운영은 adminOnly.
@@ -127,6 +129,8 @@ export default function App() {
           <Route path="/support/notices/:id" element={<NoticePage />} />
           <Route path="/support/rights" element={<RightsPage />} />
           <Route path="/support/guide" element={<GuidePage />} />
+
+          <Route path="/industry" element={<IndustryPage />} /> {/* WP34 — 업권 비교·공시 읽기(공개) */}
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
