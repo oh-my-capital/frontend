@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import Icon from "./Icon";
 import { SUBPAGE_SECTIONS, type SubPageSection, type SubPageSectionKey } from "./nav";
@@ -30,6 +30,7 @@ export default function SubPageHeader({ section, current, title, description, me
   const currentLabel = group.links.find(link => link.to === current)?.label ?? title;
   const showTabs = tabs && group.links.length > 1;
   const showGroupCrumb = group.to !== current || !!detail;
+  const titleId = useId();
   return (
     <div className="subpage-head">
       <div className="subpage-crumbs">
@@ -43,17 +44,18 @@ export default function SubPageHeader({ section, current, title, description, me
           </ol>
         </nav>
       </div>
-      <div className="subpage-inner subpage-band">
+      {/* 제목 띠는 <main> 앞에 오므로 이름 붙은 구역(region)으로 둔다(WP39 axe region). */}
+      <section className="subpage-inner subpage-band" aria-labelledby={titleId}>
         <div className="subpage-title">
           <div>
-            <h1>{title}</h1>
+            <h1 id={titleId}>{title}</h1>
             {description && <p className="subpage-description">{description}</p>}
             {meta && <p className="subpage-meta">{meta}</p>}
             {notice}
           </div>
           {actions && <div className="subpage-actions">{actions}</div>}
         </div>
-      </div>
+      </section>
       {showTabs && (
         <nav className="subpage-tabs" aria-label={`${group.label} 메뉴`}>
           <div className="subpage-inner">

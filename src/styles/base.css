@@ -60,6 +60,8 @@ h3 { font-size: var(--fs-h3); line-height: var(--lh-snug); font-weight: var(--fw
 h4 { font-size: var(--fs-h4); line-height: var(--lh-snug); font-weight: var(--fw-bold); }
 a { color: var(--primary); text-decoration: none; }
 a:hover { color: var(--primary-strong); text-decoration: underline; text-underline-offset: 3px; }
+/* 문장 안 링크는 색만으로 구분하지 않는다(WCAG 1.4.1, WP39 axe link-in-text-block). 문단(p) 안 클래스 없는 링크와 .text-link(문단이 아닌 곳의 문장 속 링크). 링크 목록·버튼·탭은 제외. */
+p a:not([class]), a.text-link { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: var(--rule); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }

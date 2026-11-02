@@ -1,0 +1,47 @@
+# CapiMATE 웹 정적 서빙(WP38). 이미지 안 경로: /etc/caddy/Caddyfile, 정적 파일: /srv
+# 이 서버는 compose 내부망에서만 8080 으로 열린다. TLS·/api 프록시·HSTS 는 앞단 프록시(infra deploy/Caddyfile)가 맡는다.
+{
+	# 관리 API(2019)를 닫는다. 설정을 바꾸면 컨테이너를 새로 띄운다.
+	admin off
+	persist_config off
+	auto_https off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	# 보안 헤더. CSP 는 docs contracts/runtime.md 의 "프런트 CSP" 와 같은 값이다(외부 CDN 없음, 폰트 self-host).
+	# 화면 코드가 style 속성을 쓰므로 style-src 에 'unsafe-inline' 이 남는다. 인라인 스크립트는 없다.
+	header {
+		Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	# 해시가 붙은 빌드 산출물은 1년 캐시. 나머지(index.html·favicon·폰트 등)는 매번 재검증한다.
+	@hashed path /assets/*
+	@unhashed not path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	header @unhashed Cache-Control "no-cache"
+
+	# /api 는 앞단 프록시가 백엔드로 넘긴다. 여기까지 왔다면 잘못된 경로이므로 index.html 로 감추지 않는다.
+	handle /api/* {
+		respond 404
+	}
+
+	# 없는 /assets/* 는 404(옛 해시 파일 요청이 HTML 로 바뀌어 MIME 오류가 나지 않게).
+	handle /assets/* {
+		file_server
+	}
+
+	# 그 밖의 경로는 react-router 가 처리하도록 index.html 로 되돌린다(SPA fallback).
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}

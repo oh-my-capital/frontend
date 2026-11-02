@@ -1,0 +1,87 @@
+/* WP34 업권 비교·공시 읽기(S-340~344). 토큰만 쓴다(ui-guidelines §2·3). 막대·구성 막대 모양은 charts.css(.ladder·.mixbar)를 그대로 쓴다. */
+.industry-fictional { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-semibold); line-height: var(--lh-snug); }
+.industry-figures { --figure-cols: 4; margin-bottom: var(--sp-8); }
+.industry-main { display: grid; gap: var(--sp-10); min-width: 0; }
+.industry-main > * { min-width: 0; }
+.industry-section { display: grid; gap: var(--sp-6); min-width: 0; scroll-margin-top: calc(var(--header-height) + var(--sp-4)); }
+.industry-section > .section-head { margin-bottom: 0; }
+.industry-block { display: grid; gap: var(--sp-3); min-width: 0; }
+.industry-block > h3, .industry-bars > h3 { font-size: var(--fs-h3); }
+.industry-bars { display: grid; gap: var(--sp-3); min-width: 0; }
+.industry-lead { color: var(--text-muted); font-size: var(--fs-base); line-height: var(--lh-loose); }
+.industry-note { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
+
+/* 회사 이름 + "가상" 라벨 */
+.industry-company { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); }
+.industry-company strong { white-space: nowrap; }
+.industry-types td { vertical-align: top; line-height: var(--lh-body); }
+.industry-types th[scope="row"] { vertical-align: top; }
+.industry-bullets { display: grid; gap: var(--sp-1); margin: 0; padding-left: var(--sp-4); font-size: var(--fs-small); line-height: var(--lh-body); }
+
+/* 지표 비교표 */
+.industry-sub { display: block; margin-top: 2px; color: var(--text-faint); font-size: var(--fs-caption); font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+.industry-direction { color: var(--text-muted); font-size: var(--fs-caption); }
+.industry-compare td.is-best { background: var(--primary-tint); color: var(--primary-strong); font-weight: var(--fw-bold); }
+.industry-best { display: block; color: var(--primary); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+.industry-rates tfoot th, .industry-rates tfoot td { border-top: var(--rule-heavy) solid var(--text); font-weight: var(--fw-bold); }
+.industry-rates thead th[scope="colgroup"] { text-align: center; }
+
+/* 막대 비교 */
+.industry-bars .tabs-wrap { min-width: 0; }
+.industry-bars .tabs { flex-wrap: wrap; }
+.industry-ladder { padding-top: var(--sp-5); }
+
+/* 자산 구성 */
+.industry-mixes { display: grid; gap: var(--sp-4); }
+
+/* 지표 정의 */
+.industry-defs { display: grid; margin: 0; border: var(--rule) solid var(--border); background: var(--surface); }
+.industry-def { display: grid; grid-template-columns: minmax(160px, 220px) minmax(0, 1fr); gap: var(--sp-2) var(--sp-5); padding: var(--sp-4) var(--sp-5); border-bottom: var(--rule) solid var(--border); scroll-margin-top: calc(var(--header-height) + var(--sp-4)); }
+.industry-def:last-child { border-bottom: 0; }
+.industry-def dt { display: grid; align-content: start; gap: var(--sp-2); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
+.industry-def-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.industry-def dd { display: grid; gap: var(--sp-2); margin: 0; font-size: var(--fs-base); line-height: var(--lh-body); }
+.industry-formula { padding: var(--sp-2) var(--sp-3); border-left: var(--rule-accent) solid var(--accent-line); background: var(--surface-soft); font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+.industry-terms { font-size: var(--fs-small); color: var(--text-muted); }
+
+/* 해석 문항: learn.css 의 .quiz 모양을 쓰고 위 여백과 제목 크기만 맞춘다 */
+.industry-quiz { margin-top: 0; }
+.industry-quiz .quiz-head h3 { font-size: var(--fs-h3); }
+.industry-quiz .quiz-head h3 em { color: var(--primary); font-style: normal; }
+
+/* 공식 출처 */
+.industry-sources td, .industry-sources th[scope="row"] { vertical-align: top; line-height: var(--lh-body); }
+.industry-sources th[scope="row"] { min-width: 160px; }
+.industry-org { display: block; margin-bottom: var(--sp-1); }
+.industry-external { font-weight: var(--fw-semibold); word-break: keep-all; }
+.industry-sources td:nth-child(2) { min-width: 180px; }
+.industry-sources td:nth-child(3) { min-width: 240px; font-size: var(--fs-small); }
+.industry-sources td:nth-child(4) { min-width: 140px; font-size: var(--fs-small); }
+.industry-disclosure { margin-top: 0; }
+
+/* 보조 열 */
+.industry .page-grid > aside { position: sticky; top: calc(var(--header-height) + var(--sp-6)); }
+.industry-toc ol { display: grid; margin: 0; padding: 0; list-style: none; }
+.industry-toc li { border-bottom: var(--rule) solid var(--border-soft); }
+.industry-toc li:last-child { border-bottom: 0; }
+.industry-toc a { display: flex; align-items: center; gap: var(--sp-3); min-height: var(--touch); color: var(--text); font-size: var(--fs-small); font-weight: var(--fw-semibold); text-decoration: none; }
+.industry-toc a:hover { color: var(--primary); }
+.industry-toc-no { color: var(--accent); font-size: var(--fs-caption); font-weight: var(--fw-heavy); font-variant-numeric: tabular-nums; }
+.industry-aside-note h3 { font-size: var(--fs-small); margin-bottom: var(--sp-2); }
+.industry-steps { display: grid; gap: var(--sp-2); margin: 0; padding-left: var(--sp-5); color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
+
+@media (max-width: 1000px) {
+  .industry .page-grid > aside { position: static; }
+}
+@media (max-width: 740px) {
+  .industry-figures { --figure-cols: 2; }
+  .industry-def { grid-template-columns: 1fr; padding: var(--sp-4); }
+  /* 유형 표는 가로 스크롤 대신 행을 쌓는다 */
+  .industry-types { overflow-x: visible; }
+  .industry-types thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .industry-types tr { display: grid; gap: var(--sp-2); padding: var(--sp-4); border-bottom: var(--rule) solid var(--border); }
+  .industry-types tbody tr:last-child { border-bottom: 0; }
+  .industry-types th, .industry-types td { display: block; padding: 0; border-bottom: 0; }
+  .industry-types td.nowrap { color: var(--text-muted); font-size: var(--fs-caption); }
+  .industry-sources td:nth-child(3) { min-width: 200px; }
+}

@@ -21,6 +21,15 @@ export default function SettingsPage() {
             <WithdrawForm />
           </div>
           <aside>
+            {/* WP36 — 내 데이터 내려받기·동의 기록(S-362) */}
+            <div className="panel">
+              <h3>내 데이터와 동의 기록</h3>
+              <p className="muted">계정·학습·샌드박스 기록을 JSON 파일 하나로 내려받고, 약관·처리방침 동의 기록과 탈퇴 시 지워지는 범위를 확인해요.</p>
+              <div className="btn-row">
+                <Link className="btn btn-secondary btn-small" to="/settings/data">내 데이터</Link>
+                <Link className="btn btn-secondary btn-small" to="/legal/privacy">개인정보처리방침</Link>
+              </div>
+            </div>
             <div className="panel panel-soft">
               <h3>내 샌드박스와 학습</h3>
               <p className="muted">계정과 함께 보관되는 것은 가상 고객 프로필, 신청·계약·거래, 가상 시계, 확인 문제 기록이에요.</p>
@@ -122,7 +131,7 @@ function WithdrawForm() {
   return (
     <section className="panel settings-danger" aria-labelledby="withdraw-title">
       <h2 id="withdraw-title">탈퇴</h2>
-      <p>탈퇴하면 가상 고객 프로필, 신청·계약·거래 내역, 가상 시계, 알림, 확인 문제 기록이 모두 지워지고 되돌릴 수 없어요. 같은 이메일로 다시 가입할 수는 있어요.</p>
+      <p>탈퇴하면 가상 고객 프로필, 신청·계약·거래 내역, 가상 시계, 알림, 확인 문제 기록, 미션, 약관 동의 기록이 모두 지워지고 되돌릴 수 없어요. 필요하면 먼저 <Link to="/settings/data">내 데이터</Link>에서 내려받아요. 같은 이메일로 다시 가입할 수는 있어요.</p>
       {isAdmin ? (
         <p className="muted">관리자 계정은 심사 변경 이력을 남겨야 하므로 여기서 탈퇴할 수 없어요.</p>
       ) : (

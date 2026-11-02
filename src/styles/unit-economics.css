@@ -1,0 +1,23 @@
+/*
+ * 대출 한 건의 손익(S-330, WP33). 계산기 공통 틀(.calc-*)은 calculators.css, 판정 줄은 refinance.css, 그림 겉틀은 charts.css 를 그대로 쓰고
+ * 이 화면에만 있는 규칙(손해 막대 색, 민감도 표 칸, 가정값 안내)만 더한다. 색·글자·간격은 tokens.css 토큰만 쓴다.
+ */
+.ue-bar-loss { fill: var(--danger); }
+.ue-assume-hint { margin: 0 0 var(--sp-3); }
+.calc-fieldset legend .status { margin-left: var(--sp-2); vertical-align: middle; }
+.ue-aside-lead { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: var(--fs-small); line-height: var(--lh-body); }
+.ue-assumptions { grid-template-columns: 1fr; gap: var(--sp-1) 0; font-size: var(--fs-small); }
+.ue-assumptions dd { margin-bottom: var(--sp-3); color: var(--text-muted); line-height: var(--lh-body); }
+.ue-assumptions dd strong { margin-right: var(--sp-1); color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* 민감도 표: 칸 = ROA(굵게) + 세전이익(작게) + 라벨. 손해는 붉은 tint, 입력 칸은 남색 왼쪽 선. */
+.ue-sens-scroll { position: relative; }
+.ue-sens-corner { color: var(--text-muted); font-size: var(--fs-caption); white-space: nowrap; }
+.ue-sens-cell { min-width: 108px; border-left: var(--rule) solid var(--border-soft); vertical-align: top; }
+.ue-sens-roa { display: block; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.ue-sens-sub { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; }
+.ue-sens-tag { display: block; margin-top: 2px; color: var(--text); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+.ue-sens-cell.is-loss { background: var(--danger-bg); }
+.ue-sens-cell.is-loss .ue-sens-roa, .ue-sens-cell.is-loss .ue-sens-tag { color: var(--danger); }
+.ue-sens-cell.is-base { background: var(--primary-tint); box-shadow: inset var(--rule-accent) 0 0 var(--primary); }
+.ue-sens-cell.is-base.is-loss { background: var(--danger-bg); }

@@ -1,0 +1,27 @@
+/*
+ * 서비스 지표(S-400, WP40). admin.css·charts.css·base.css 위에 이 화면에만 있는 규칙을 더한다.
+ * 색·글자·간격은 tokens.css 토큰만 쓴다.
+ */
+.kpi-controls { margin-bottom: var(--sp-5); }
+.kpi-controls .tabs { align-self: flex-end; }
+
+/* ---------- 일별 추이 ---------- */
+.kpi-line { fill: none; stroke: var(--kpi-color); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.kpi-dot { fill: var(--surface); stroke: var(--kpi-color); stroke-width: 1.5; }
+.kpi-s-visitors { --kpi-color: var(--primary); }
+.kpi-s-signups { --kpi-color: var(--accent); }
+.kpi-s-learners { --kpi-color: var(--good); }
+
+/* ---------- 샌드박스 도달률 ---------- */
+.kpi-funnel-label { fill: var(--text); font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.kpi-funnel-value { fill: var(--text); }
+.kpi-funnel-bar { fill: var(--primary); }
+.kpi-funnel-signed_up { fill: var(--series-balance); }
+.kpi-funnel-profile_saved { fill: var(--primary-strong); }
+.kpi-funnel-applied { fill: var(--primary); }
+.kpi-funnel-executed { fill: var(--accent); }
+
+/* ---------- 표 ---------- */
+.kpi-run-bar { display: block; height: 100%; background: var(--accent); }
+.kpi-path { font-size: var(--fs-caption); word-break: break-all; }
+.kpi-purge-result { min-height: var(--sp-5); margin-top: var(--sp-3); }

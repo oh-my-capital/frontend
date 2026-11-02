@@ -26,8 +26,10 @@ export default function FigureFlow({ figure }: { figure: Figure }) {
                 {node.kind && KIND_LABEL[node.kind] && <small>{KIND_LABEL[node.kind]}</small>}
               </span>
               {next && (
-                <span className="figure-flow-link" aria-label={edge ? `${edge.from === node.id ? "다음으로" : "앞으로"}: ${edge.label ?? ""}` : "다음"}>
+                <span className="figure-flow-link">
                   <i aria-hidden="true">{edge && edge.from !== node.id ? "↑" : "↓"}</i>
+                  {/* 방향은 화살표 대신 글로 읽힌다(span 에는 aria-label 을 쓸 수 없다 — WP39 axe aria-prohibited-attr). */}
+                  <span className="sr-only">{edge ? (edge.from === node.id ? "다음으로:" : "앞으로:") : "다음"}</span>
                   {edge?.label && <span>{edge.label}</span>}
                 </span>
               )}

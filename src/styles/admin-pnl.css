@@ -1,0 +1,12 @@
+/*
+ * 포트폴리오 손익(S-331, WP33). admin.css·charts.css·base.css 위에 이 화면에만 있는 규칙을 더한다. 색·글자·간격은 tokens.css 토큰만 쓴다.
+ */
+.pnl-notice { margin: 0 0 var(--sp-5); padding: var(--sp-3) var(--sp-4); border-left: var(--rule-accent) solid var(--accent); background: var(--accent-tint); color: var(--text); font-size: var(--fs-small); line-height: var(--lh-body); }
+.pnl-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+.pnl-controls .field { min-width: 180px; }
+.pnl-bar-profit { fill: var(--series-fee); }
+.pnl-bar-loss { fill: var(--danger); }
+.pnl-table td.is-loss, .pnl-table .is-loss { color: var(--danger); }
+.pnl-table tfoot th, .pnl-table tfoot td { font-weight: var(--fw-bold); border-top: var(--rule-heavy) solid var(--border-strong); }
+.pnl-def { grid-template-columns: 1fr; gap: var(--sp-1) 0; font-size: var(--fs-small); }
+.pnl-def dd { margin-bottom: var(--sp-3); color: var(--text-muted); line-height: var(--lh-body); }
