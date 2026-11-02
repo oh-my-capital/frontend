@@ -58,6 +58,8 @@ const MissionPage = lazy(() => import("./pages/missions/MissionPage"));
 const MissionsPage = lazy(() => import("./pages/missions/MissionsPage"));
 // WP16 — 자동차 금융 비교
 const AutoFinanceCalculatorPage = lazy(() => import("./pages/calculators/AutoFinanceCalculatorPage"));
+// WP34 — 업권 비교·공시 읽기
+const IndustryPage = lazy(() => import("./pages/industry/IndustryPage"));
 // WP36 — 약관·개인정보처리방침·내 데이터
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/legal/PrivacyPage"));
@@ -166,6 +168,8 @@ export default function App() {
           <Route path="/legal/terms" element={<TermsPage />} />
           <Route path="/legal/privacy" element={<PrivacyPage />} />
           <Route path="/settings/data" element={<ProtectedRoute><MyDataPage /></ProtectedRoute>} />
+          {/* WP34 — 업권 비교·공시 읽기 */}
+          <Route path="/industry" element={<IndustryPage />} />
         {/* 화면 조각 경계(WP39) — 끝. 새 Route 는 이 줄 위에 */}
         </Route>
         </Route>
