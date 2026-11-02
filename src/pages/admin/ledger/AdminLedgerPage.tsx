@@ -39,7 +39,7 @@ export default function AdminLedgerPage() {
         title="회계 원장·대사"
         description="대출 실행·상환·연체이자 수납·기한이익상실·월마감 충당금이 회사 장부에 어떻게 찍히는지 복식부기 분개로 보여요. 시계를 진행하면 일마감 묶음이 끝난 뒤 그날까지의 사건을 전기하고, 계약 잔액과 장부 잔액을 대사해요."
       />
-      <main className="page-main admin-main">
+      <main className="page-main admin-main ledger-main">
         <p className="ledger-notice">
           교육용 단순화 계정과목이며 이자는 <strong>받은 날 수익으로 인식(현금주의)</strong>한다. 실제 회계(K-IFRS 1109 유효이자율법·발생주의, 기대신용손실 충당금)와 다르다.
           {" "}<Link to="/methodology">방법론</Link>

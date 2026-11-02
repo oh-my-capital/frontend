@@ -6,6 +6,8 @@
 .ledger-notice { margin: 0 0 var(--sp-6); padding: var(--sp-3) var(--sp-4); border-left: var(--rule-accent) solid var(--accent); background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-small); line-height: 1.6; }
 .ledger-notice strong { color: var(--text); }
 .ledger-section { margin-top: var(--sp-6); }
+/* 넓은 표가 탭 패널(격자 항목)을 밀어 페이지가 넓어지지 않도록 최소 너비를 0으로 둔다. 표는 .table-scroll 안에서만 움직인다. */
+.ledger-main > *, .ledger-main .tabs-wrap, .ledger-main .tabpanel, .ledger-section { min-width: 0; max-width: 100%; }
 .ledger-field-narrow { min-width: 120px; max-width: 160px; }
 .ledger-filter-gap { margin-top: var(--sp-5); }
 
@@ -30,7 +32,7 @@
 .ledger-figures { --figure-cols: 5; }
 .ledger-figures dd.good { color: var(--good); }
 .ledger-figures dd.danger { color: var(--danger); }
-.ledger-figure-time { font-size: var(--fs-base); }
+.ledger-figures dd.ledger-figure-time { font-size: var(--fs-base); }
 .ledger-diff { color: var(--danger); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 .ledger-diff-zero { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .ledger-failures { display: grid; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: var(--sp-3) var(--sp-4); border: var(--rule) solid var(--border); list-style: none; color: var(--text-muted); font-size: var(--fs-small); overflow-wrap: anywhere; }
